@@ -1,0 +1,24 @@
+Package: BiocBook.template
+Title: What the Package Does (One Line, Title Case)
+Version: 0.99.0
+Date: 2023-08-03
+Authors@R: 
+    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: What the package does (one paragraph).
+URL: https://github.com/js2264/BiocBook.template
+BugReports: https://github.com/js2264/BiocBook.template
+Depends:
+    R (>= 4.3)
+Imports:
+    Biobase, 
+    rebook
+Suggests:
+    knitr
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+biocViews: 
+	Infrastructure, 
+    ReportWriting, 
+    Software

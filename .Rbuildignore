@@ -1,0 +1,8 @@
+^_extensions$
+^\.github$
+^LICENSE\.md$
+^NOTES\.md$
+^README\.Rmd$
+^_quarto\.yml$
+^index\.qmd$
+^Dockerfile$

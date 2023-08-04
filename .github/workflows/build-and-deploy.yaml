@@ -1,0 +1,95 @@
+name: biocbook
+
+on:
+  push:
+    branches:
+      - devel
+      - RELEASE_**
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    name: ${{ github.ref_name }}
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: 📝 Get book info
+        id: info
+        run: |
+          echo version=$(grep -m1 -E '^Version: +' DESCRIPTION | sed -E 's/.*: +//') >> "${GITHUB_ENV}"
+
+      - name: 🔐 Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏷 Get metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ github.workflow }}
+          tags: |
+            type=raw,value=latest,enable=true
+            type=raw,value=${{ env.version}},enable=true
+            type=raw,value=bioc_${{ github.ref_name }},enable=true
+
+      - name: 👷 Build and push multi-arch Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/amd64
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          outputs: type=image,annotation-index.org.opencontainers.image.description=${{ github.workflow }}
+          build-args: |
+            BIOC_VERSION=${{ github.ref_name }}
+    
+    outputs:
+      uniqueVMActionsTag: ${{ steps.info.outputs.uniqueVMActionsTag }}
+      vmName: ${{ steps.info.outputs.vmName }}
+      
+  render-deploy:
+    needs: build-push
+    runs-on: ubuntu-latest
+    container: ghcr.io/${{ github.repository_owner }}/${{ github.workflow }}:bioc_${{ github.ref_name }}
+    permissions:
+      contents: write
+      packages: read
+
+    steps:
+
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: 📚 Install rsync
+        run: |
+          apt-get update && apt-get install -y rsync
+
+      - name: 🔧 Install quarto dependencies    
+        run: |
+          quarto install tinytex
+
+      - name: 🖌 Render book from versionized container    
+        run: |
+          quarto render
+    
+      - name: 🚀 Deploy book to Github Pages on versionized branch
+        uses: JamesIves/github-pages-deploy-action@v4.4.3
+        with:
+          folder: docs/ 
+          target-folder: docs/ 
+          branch: ${{ github.ref_name }} 
+          clean: false 

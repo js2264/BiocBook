@@ -1,0 +1,35 @@
+project:
+  type: book
+  output-dir: docs
+
+book:
+  title: "Orchestrating Hi-C analysis with Bioconductor"
+  page-footer:
+    right: |
+      This book was built with <a href="https://quarto.org/">Quarto</a> and <a href="https://github.com/js2264/BiocBook/">BiocBook</a>.
+  cover-image: inst/docs/cover.jpg
+  site-url: https://js2264.github.io/BiocBook/
+  repo-url: https://github.com/js2264/BiocBook/
+  repo-branch: devel
+  repo-actions: [edit, issue]
+  chapters:
+    - index.qmd
+
+format:
+  html:
+    theme:
+      - yeti
+      - inst/docs/book.scss
+    code-link: true
+    highlight-style: inst/docs/atom-one-dark.theme
+    citations-hover: true
+    toc: true
+    toc-float: 
+      collapsed: false
+    toc-depth: 3
+    website: 
+      sidebar: 
+        search: true
+        collapse-level: 5
+
+editor: visual

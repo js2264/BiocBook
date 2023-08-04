@@ -1,0 +1,63 @@
+---
+filters:
+  - _extensions/pandoc-ext/section-bibliographies/section-bibliographies.lua
+reference-section-title: References
+bibliography: inst/docs/bibliography.bib
+---
+
+```{r}
+#| echo: false
+source("inst/docs/_common.R")
+.gh_url <- file.path('https://github.com', rmarkdown::metadata[['github-repo']])
+```
+
+# Welcome {-}
+
+This is the landing page of the `BiocBook` entitled ...  
+This book introduces the reader to key concepts in ...   
+
+`r rebook::openingDetails(Source=.gh_url)`
+
+# Reproducibility {-}
+
+This `BiocBook` has been written using the 
+[`BiocBook` package](https://github.com/js2264/BiocBook) from `Bioconductor`, 
+and also relies on other packages, including (but not only): 
+
+- `devtools`
+- `quarto`
+- `rebook`
+
+To build this book locally, you can run: 
+
+```{sh eval = FALSE, filename="bash"}
+git clone git@github.com:js2264/OHCA.git && cd OHCA
+quarto render
+```
+
+::: {.callout-warning}
+All dependencies listed above will be required!
+:::
+
+The actual rendering of this book is done by GitHub Actions, and the 
+rendered static website is hosted by GitHub Pages. 
+
+## Session info {-}
+
+```{r}
+#| echo: false
+#| results: "hide"
+#| message: false
+#| warning: false
+library("HiCExperiment")
+library("HiCool")
+library("HiContacts")
+library("HiContactsData")
+library("fourDNData")
+library("DNAZooData")
+library("OHCA")
+```
+
+```{r}
+sessioninfo::session_info()
+```
