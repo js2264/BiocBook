@@ -1,4 +1,4 @@
-name: biocbook
+name: biocbook.template
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 jobs:
   build-push:
     runs-on: ubuntu-latest
-    name: ${{ github.ref_name }}
+    name: Build and push Docker [${{ github.ref_name }}]
     permissions:
       contents: write
       packages: write
@@ -24,7 +24,7 @@ jobs:
       - name: 📝 Get book info
         id: info
         run: |
-          echo version=$(grep -m1 -E '^Version: +' DESCRIPTION | sed -E 's/.*: +//') >> "${GITHUB_ENV}"
+          echo pkgversion=$(grep -m1 -E '^Version: +' DESCRIPTION | sed -E 's/.*: +//') >> "${GITHUB_ENV}"
 
       - name: 🔐 Log in to the Container registry
         uses: docker/login-action@v2
@@ -39,9 +39,8 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ github.workflow }}
           tags: |
-            type=raw,value=latest,enable=true
-            type=raw,value=${{ env.version}},enable=true
-            type=raw,value=bioc_${{ github.ref_name }},enable=true
+            type=raw,value=${{ env.pkgversion}},enable=true
+            type=raw,value=${{ github.ref_name }},enable=true
 
       - name: 👷 Build and push multi-arch Docker image
         uses: docker/build-push-action@v4
@@ -55,14 +54,11 @@ jobs:
           build-args: |
             BIOC_VERSION=${{ github.ref_name }}
     
-    outputs:
-      uniqueVMActionsTag: ${{ steps.info.outputs.uniqueVMActionsTag }}
-      vmName: ${{ steps.info.outputs.vmName }}
-      
   render-deploy:
     needs: build-push
     runs-on: ubuntu-latest
-    container: ghcr.io/${{ github.repository_owner }}/${{ github.workflow }}:bioc_${{ github.ref_name }}
+    name: Render and publish book [${{ github.ref_name }}]
+    container: ghcr.io/${{ github.repository_owner }}/${{ github.workflow }}:${{ github.ref_name }}
     permissions:
       contents: write
       packages: read
@@ -74,6 +70,12 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: 📦 List installed packages
+        run: |
+          pkgs <- installed.packages()[,"Package"]
+          sessioninfo::session_info(pkgs, include_base = TRUE)
+        shell: Rscript {0}
+
       - name: 📚 Install rsync
         run: |
           apt-get update && apt-get install -y rsync
@@ -82,14 +84,23 @@ jobs:
         run: |
           quarto install tinytex
 
+      - name: 🔧 Install python dependencies    
+        uses: py-actions/py-dependency-install@v4
+        with:
+          path: "inst/assets/requirements.txt"
+  
       - name: 🖌 Render book from versionized container    
         run: |
           quarto render
-    
+
+      - name: 🏷 Get gh-branch directory to deploy to
+        run: |
+          echo folder=$(echo ${{ github.ref_name }} | sed 's,RELEASE_,,' | tr '_' '.') >> "${GITHUB_ENV}"
+
       - name: 🚀 Deploy book to Github Pages on versionized branch
         uses: JamesIves/github-pages-deploy-action@v4.4.3
         with:
           folder: docs/ 
-          target-folder: docs/ 
-          branch: ${{ github.ref_name }} 
+          target-folder: docs/${{ env.folder }}/ 
+          branch: gh-pages
           clean: false 
