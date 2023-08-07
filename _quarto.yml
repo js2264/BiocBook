@@ -1,45 +1,69 @@
+## --- Book-specific options
+
 book:
   title: "Building reproducible books with Bioconductor (template)"
   chapters:
     - index.qmd
     - pages/preamble.qmd
-    - part: "Part 1"
-      chapters: 
-        - pages/Part-1/Chapter-1.qmd
-        - pages/Part-1/Chapter-2.qmd
+    - pages/Chapter-1.qmd
+    - pages/Chapter-2.qmd
+    - pages/Chapter-3.qmd
+  cover-image: inst/assets/BiocBook.png
+  favicon: inst/assets/bioc.png
+  sidebar: 
+    tools:
+      - icon: git
+        menu:
+          - text: Source Code
+            url:  https://github.com/js2264/BiocBook.template/
+          - text: Browse version `devel`
+            url:  https://js2264.github.io/BiocBook.template/devel/
+    style: "docked"
+    background: "light"
+    border: true
+    search: true
+    collapse-level: 5
+  search: 
+    location: sidebar
   page-footer:
+    background: light
     left: |
-      This book was built <a href="https://github.com/js2264/BiocBook/">BiocBook</a> with ❤️.
-  cover-image: inst/assets/cover.jpg
-  site-url: https://js2264.github.io/BiocBook.template/
-  repo-url: https://github.com/js2264/BiocBook.template/
+      This book was built with <a href="https://github.com/js2264/BiocBook/">BiocBook</a> with ❤️
   repo-branch: devel
   repo-actions: [edit, issue]
+  open-graph: true
+
+website:
+  back-to-top-navigation: true
+
+## --- Project-wide settings
 
 project:
   type: book
   output-dir: docs
 
-format:
+## --- Format options
+
+format: 
   html:
     grid:
-      sidebar-width: 350px
-    theme:
+      sidebar-width: 500px
+      body-width: 1100px
+    theme: 
+      - cosmo
       - inst/assets/book.scss
     highlight-style: atom-one
     code-link: true
-    citations-hover: true
-    toc: true
-    toc-float: 
-      collapsed: false
-    toc-depth: 3
-    website: 
-      sidebar: 
-        search: true
-        collapse-level: 5
+    editor: visual
+    citation-location: margin
+    bibliography: inst/assets/bibliography.bib
 
-editor: visual
-reference-section-title: References
-bibliography: inst/assets/bibliography.bib
-filters:
-  - inst/extensions/pandoc-ext/section-bibliographies/section-bibliographies.lua
+## --- knitr options
+
+knitr:
+  opts_chunk: 
+    collapse: true
+    comment: "## " 
+    cache: false
+    fig.align: "center"
+    python.reticulate: false

@@ -1,0 +1,49 @@
+# Write a `BiocBook` package
+
+## Creating a `BiocBook` package
+
+## Adding new `BiocBook` pages
+
+## Adding references
+
+## Executing code
+
+It's super easy to execute actual code from any `BiocBook` page when rendering the `BiocBook` website. 
+
+### `R` code
+
+`R` code can be executed and rendered: 
+
+```{r filename="R"}
+utils::packageVersion("BiocVersion")
+```
+
+### `bash` code
+
+`bash` code can also be executed and rendered: 
+
+```{sh filename="bash"}
+ls -l 
+```
+
+### `python` code
+
+Finally, `python` code can also be executed and rendered: 
+
+```{python filename="python"}
+import os
+os.getcwd()
+```
+
+For the rendering of `python` code, you will be limited to 
+the `python` packages installed in the Github worker. These packages can be 
+listed in the `inst/assets/requirements.txt` file, e.g.: 
+
+```{txt filename="requirements.txt"}
+#| eval: false
+numpy
+pandas >= 2.0.0
+```
+
+
+

@@ -1,8 +1,7 @@
 # Welcome {-}
 
-```{r "meta"}
+```{r "intro"}
 #| echo: false
-source("inst/assets/common.R")
 .gh_url <- file.path('https://github.com', rmarkdown::metadata[['github-repo']])
 intro <- rebook::openingDetails(Source=.gh_url)
 pkg <- readLines("DESCRIPTION") |> 
@@ -11,8 +10,10 @@ pkg <- readLines("DESCRIPTION") |>
 intro <- glue::glue("**Package:** {pkg}<br/>\n {intro}")
 ```
 
-This is the landing page of the `BiocBook` entitled ...  
-This book introduces the reader to key concepts in ...   
+This is the landing page of the `BiocBook` entitled 
+*Write, containerize, publish and versionize Quarto books with Bioconductor*.  
+
+This book introduces the reader to the `BiocBook` package, Docker image and website.
 
 `r intro`
 

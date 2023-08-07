@@ -83,11 +83,12 @@ jobs:
       - name: 🔧 Install quarto dependencies    
         run: |
           quarto install tinytex
-
-      - name: 🔧 Install python dependencies    
-        uses: py-actions/py-dependency-install@v4
-        with:
-          path: "inst/assets/requirements.txt"
+          quarto check
+          
+      # - name: 🔧 Install python dependencies    
+      #   uses: py-actions/py-dependency-install@v4
+      #   with:
+      #     path: "inst/assets/requirements.txt"
   
       - name: 🖌 Render book from versionized container    
         run: |
