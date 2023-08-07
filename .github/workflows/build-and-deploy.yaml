@@ -1,4 +1,4 @@
-name: biocbook.template
+name: biocbook
 
 on:
   push:

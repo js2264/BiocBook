@@ -26,11 +26,13 @@ utils::packageVersion("BiocVersion")
 ls -l 
 ```
 
+<!-- 
 ### `python` code
 
 Finally, `python` code can also be executed and rendered: 
 
 ```{python filename="python"}
+#| eval: false
 import os
 os.getcwd()
 ```
@@ -44,6 +46,6 @@ listed in the `inst/assets/requirements.txt` file, e.g.:
 numpy
 pandas >= 2.0.0
 ```
-
+ -->
 
 

@@ -1,7 +1,7 @@
 ## --- Book-specific options
 
 book:
-  title: "Building reproducible books with Bioconductor (template)"
+  title: "Writing reproducible books with Bioconductor"
   chapters:
     - index.qmd
     - pages/preamble.qmd
@@ -15,9 +15,9 @@ book:
       - icon: git
         menu:
           - text: Source Code
-            url:  https://github.com/js2264/BiocBook.template/
+            url:  https://github.com/js2264/BiocBook/
           - text: Browse version `devel`
-            url:  https://js2264.github.io/BiocBook.template/devel/
+            url:  https://js2264.github.io/BiocBook/devel/
     style: "docked"
     background: "light"
     border: true

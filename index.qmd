@@ -13,7 +13,8 @@ intro <- glue::glue("**Package:** {pkg}<br/>\n {intro}")
 This is the landing page of the `BiocBook` entitled 
 *Write, containerize, publish and versionize Quarto books with Bioconductor*.  
 
-This book introduces the reader to the `BiocBook` package, Docker image and website.
+This book introduces the reader to the `BiocBook` **package** and the 
+auto-generated, versionized **Docker images** and **website**.
 
 `r intro`
 
@@ -21,7 +22,7 @@ This book introduces the reader to the `BiocBook` package, Docker image and webs
 
 A `Docker` image built from this repository is available here: 
 
-👉 [ghcr.io/js2264/biocbook.template](https://ghcr.io/js2264/biocbook.template) 🐳
+👉 [ghcr.io/js2264/biocbook](https://ghcr.io/js2264/biocbook) 🐳
 
 ::: {.callout-tip icon='true'}
 ## Get started now 🎉
@@ -31,7 +32,7 @@ using this command in a terminal:
 
 ```{sh "docker", filename="bash"}
 #| eval: false
-docker run -it ghcr.io/js2264/biocbook.template:devel R
+docker run -it ghcr.io/js2264/biocbook:devel R
 ```
 
 :::
@@ -46,7 +47,7 @@ docker run \
     --volume <local_folder>:<destination_folder> \
     -e PASSWORD=OHCA \
     -p 8787:8787 \
-    ghcr.io/js2264/biocbook.template:devel
+    ghcr.io/js2264/biocbook:devel
 ```
 
 The initiated RStudio Server instance will be available at 
@@ -66,7 +67,7 @@ To build this book locally, you can run:
 
 ```{sh "reproducibility", filename="bash"}
 #| eval: false
-git clone git@github.com:js2264/BiocBook.template.git && cd BiocBook.template
+git clone git@github.com:js2264/BiocBook.git && cd BiocBook
 Rscript -e 'remotes::install_local(".", force = TRUE)'
 quarto render
 ```

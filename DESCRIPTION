@@ -1,4 +1,4 @@
-Package: BiocBook.template
+Package: BiocBook
 Title: What the Package Does (One Line, Title Case)
 Version: 0.99.0
 Date: 2023-08-03
@@ -9,11 +9,10 @@ Authors@R:
         comment = c(ORCID = "YOUR-ORCID-ID")
     )
 Description: What the package does (one paragraph).
-URL: https://github.com/js2264/BiocBook.template
-BugReports: https://github.com/js2264/BiocBook.template
+URL: https://github.com/js2264/BiocBook
+BugReports: https://github.com/js2264/BiocBook
 Depends:
-    R (>= 4.3), 
-    BiocBook
+    R (>= 4.3)
 Imports:
     glue,
     rebook,
@@ -22,8 +21,6 @@ Imports:
 Suggests:
     knitr, 
     quarto
-Remotes:
-    github::js2264/BiocBook
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
