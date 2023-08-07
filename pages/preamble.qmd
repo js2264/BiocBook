@@ -72,8 +72,8 @@ The different versions of a `BiocBook` **Docker image** are availabed at the fol
 
 For example, for this package (`BiocBook`), the following **Docker image** versions are available: 
 
-- [ghcr.io/js2264/biocbook:3.17](https://github.com/js2264/BiocBook/pkgs/container/biocbook/115910386?tag=RELEASE_3_17)
-- [ghcr.io/js2264/biocbook:devel](https://github.com/js2264/BiocBook/pkgs/container/biocbook/116021423?tag=devel) **<-- Current**
+- [ghcr.io/js2264/biocbook:3.17](https://github.com/js2264?tab=packages&repo_name=BiocBook)
+- [ghcr.io/js2264/biocbook:devel](https://github.com/js2264?tab=packages&repo_name=BiocBook) **<-- Current**
 
 ### Website versioning
 

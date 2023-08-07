@@ -1,5 +1,6 @@
 Package: BiocBook
 Title: What the Package Does (One Line, Title Case)
+Description: What the package does (one paragraph).
 Version: 0.99.0
 Date: 2023-08-03
 Authors@R: 
@@ -8,7 +9,6 @@ Authors@R:
         role = c("aut", "cre"),
         comment = c(ORCID = "YOUR-ORCID-ID")
     )
-Description: What the package does (one paragraph).
 URL: https://github.com/js2264/BiocBook
 BugReports: https://github.com/js2264/BiocBook
 Depends:

@@ -1,16 +1,84 @@
 # Write a `BiocBook` package
 
-## Creating a `BiocBook` package
+## Register a Github account in R
 
-## Adding new `BiocBook` pages
+### Easy as 1. : Create a token... 
 
-## Adding references
+Don't forget to select whichever setting 
+is best-suited for you in the `Expiration` dropdown menu!
 
-## Executing code
+```{r}
+#| eval: false
+usethis::create_github_token(
+    description = "BiocBook", 
+    scopes = c("repo", "user", "gist", "workflow", "write:packages")
+)
+## Select an Expiration date 
+## Click on "Generate token" at the bottom of the page
+## Copy your Github token displayed in the Github web page
+```
+
+### 2. ... Register it in R... 
+
+```{r}
+#| eval: false
+gitcreds::gitcreds_set()
+## Paste your new Github token here and press "Enter"
+```
+
+### 3. ... Check that it worked!
+
+```{r}
+#| eval: false
+gh::gh_whoami()
+```
+
+## Initiate a `BiocBook` package
+
+::: {.panel-tabset group="tools-tabset"}
+
+### R console
+
+```{r}
+#| eval: false
+create_from_template(
+    package = "Package_name", 
+    title = "One sentence", 
+    description = "One paragraph", 
+    author = person(
+        "First", "Last", , "first.last@example.com", 
+        role = c("aut", "cre"),
+        comment = c(ORCID = "YOUR-ORCID-ID")
+    )
+)
+```
+
+### From GitHub
+
+#### Use the `BiocBook.template` package template {-}
+
+#### Clone it locally  {-}
+
+#### Change placeholders where needed!  {-}
+
+```{r}
+#| eval: false
+update_template()
+```
+
+:::
+
+## Add new `BiocBook` pages
+
+
+
+## Writing features 
+
+### Executing code
 
 It's super easy to execute actual code from any `BiocBook` page when rendering the `BiocBook` website. 
 
-### `R` code
+#### `R` code
 
 `R` code can be executed and rendered: 
 
@@ -18,16 +86,16 @@ It's super easy to execute actual code from any `BiocBook` page when rendering t
 utils::packageVersion("BiocVersion")
 ```
 
-### `bash` code
+#### `bash` code
 
 `bash` code can also be executed and rendered: 
 
 ```{sh filename="bash"}
-ls -l 
+find ../ -name "*.qmd"
 ```
 
 <!-- 
-### `python` code
+#### `python` code
 
 Finally, `python` code can also be executed and rendered: 
 
@@ -49,3 +117,5 @@ pandas >= 2.0.0
  -->
 
 
+
+### Adding references
