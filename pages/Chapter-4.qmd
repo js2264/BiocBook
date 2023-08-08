@@ -13,7 +13,7 @@ gert::git_commit_all("Commit current changes")
 - Create a new branch named `RELEASE_X_Y` and checkout
 
 ```{r}
-gert::git_branch_checkout("RELEASE_3_17")
+gert::git_branch_create("RELEASE_3_17")
 ```
 
 - Push local `RELEASE_X_Y` to Github
@@ -42,7 +42,7 @@ gert::git_remote_add(name = 'upstream', url = 'git@git.bioconductor.org:packages
 - Create a new local `RELEASE_X_Y` branch 
 
 ```{r}
-gert::git_branch_checkout("RELEASE_3_15")
+gert::git_branch_create("RELEASE_3_15")
 ```
 
 - Pull the `upstream` `RELEASE_X_Y` commits
