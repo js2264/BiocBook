@@ -17,8 +17,9 @@ intro <- glue::glue(
     "**BioC version:** {BiocManager::version()}<br/>\n", 
     "**License:** {license}<br/>"
 )
-intro
 ```
+
+`r intro`
 
 This is the landing page of the `BiocBook` entitled 
 *Write, containerize, publish and versionize Quarto books with Bioconductor*.  
@@ -26,7 +27,14 @@ This is the landing page of the `BiocBook` entitled
 This book introduces the reader to the `BiocBook` **package** and the 
 auto-generated, versionized **Docker images** and **website**.
 
-![](../inst/img/workflow.png)
+![](inst/img/workflow.png)
+
+# Main features {-}
+
+- Create a fully configured `BiocBook` without leaving R (`BiocBook`)
+- Write book chapters in `.qmd` files and enhanced markdown 
+- Generate different book versions for different Bioconductor releases
+- Provide different Docker images of your book for different Bioconductor releases
 
 # Docker image {-}
 
