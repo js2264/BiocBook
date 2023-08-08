@@ -18,7 +18,7 @@ This is the landing page of the `BiocBook` entitled
 This book introduces the reader to the `BiocBook` **package** and the 
 auto-generated, versionized **Docker images** and **website**.
 
-![](../inst/assets/workflow.png){width=50%}
+![](../inst/img/workflow.png){width=50%}
 
 # Docker image {-}
 
