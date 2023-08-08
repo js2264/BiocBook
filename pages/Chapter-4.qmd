@@ -1,3 +1,7 @@
+---
+eval: false
+---
+
 # Containerize and Publish against specific Bioconductor release versions
 
 ## For a `BiocBook` package not currently in Bioconductor
