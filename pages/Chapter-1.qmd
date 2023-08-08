@@ -9,7 +9,7 @@ check this by typing:
 
 ```{r}
 #| eval: false
-gitcreds::gitcreds_get()
+usethis::git_sitrep()
 ```
 
 :::
@@ -19,6 +19,10 @@ is best-suited for you in the `Expiration` dropdown menu!
 
 ```{r}
 #| eval: false
+## ------ Indicate git login details 
+gert::git_config_global_set("user.name", "Bobby")
+gert::git_config_global_set("user.email", "bobby@cat.com")
+
 ## ------ Create a new Github token
 usethis::create_github_token(
     description = "BiocBook", 
@@ -33,7 +37,7 @@ gitcreds::gitcreds_set()
 ## Paste your new Github token here and press "Enter"
 
 ## ------ Double check you are logged in
-gitcreds::gitcreds_get()
+usethis::git_sitrep()
 ```
 
 ## Initiate a `BiocBook` package

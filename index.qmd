@@ -3,14 +3,22 @@
 ```{r "intro"}
 #| echo: false
 .gh_url <- file.path('https://github.com', rmarkdown::metadata[['github-repo']])
-intro <- rebook::openingDetails(Source=.gh_url)
-pkg <- readLines("DESCRIPTION") |> 
-    grep("Package: ", x = _, value = TRUE) |> 
-    gsub("Package: ", "", x = _)
-intro <- glue::glue("**Package:** {pkg}<br/>\n {intro}")
+pkglines <- read.dcf("DESCRIPTION")
+pkg <- pkglines[, "Package"][[1]]
+version <- pkglines[, "Version"][[1]]
+authors <- eval(parse(text = pkglines[, "Authors@R"]))
+license <- pkglines[, "License"][[1]]
+intro <- glue::glue(
+    "**Package:** {pkg}<br/>\n", 
+    "**Authors:** {paste(format(authors, include = c('given', 'family', 'role')), collapse = ', ')}<br/>\n", 
+    "**Compiled:** {as.character(Sys.Date())}<br/>\n", 
+    "**Package version:** {version}<br/>\n", 
+    "**R version:** {R.version.string}<br/>\n", 
+    "**BioC version:** {BiocManager::version()}<br/>\n", 
+    "**License:** {license}<br/>"
+)
+intro
 ```
-
-`r intro`
 
 This is the landing page of the `BiocBook` entitled 
 *Write, containerize, publish and versionize Quarto books with Bioconductor*.  
@@ -63,7 +71,6 @@ and also relies on other packages, including (but not only):
 
 - `quarto` (@Allaire_Quarto_2022)
 - `devtools` (@Wickham2022)
-- `rebook` (@lun2023)
 
 To build this book locally, you can run: 
 
