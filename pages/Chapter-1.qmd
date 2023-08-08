@@ -118,4 +118,4 @@ pandas >= 2.0.0
 
 References can be listed as `.bib` entries in the bibliography file located in 
 `inst/assets/bibliography.bib`. The references can be added in-line using the @ notation, 
- e.g. by typing **\@serizay2023**, this will insert the following reference: **@serizay2023**. 
+e.g. by typing **\@serizay2023**, this will insert the following reference: **@serizay2023**. 

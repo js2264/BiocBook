@@ -13,15 +13,16 @@ BugReports: https://github.com/js2264/BiocBook
 Depends:
     R (>= 4.3)
 Imports: 
+    BiocGenerics, 
     available,
     cli, 
+    glue,
     gert, 
     gh, 
     gitcreds,
     httr, 
     usethis,
 Suggests:
-    glue,
     sessioninfo, 
     knitr, 
     quarto

@@ -31,10 +31,10 @@ auto-generated, versionized **Docker images** and **website**.
 
 # Main features {-}
 
-- Create a fully configured `BiocBook` without leaving R (`BiocBook`)
+- Create a fully configured `BiocBook` without leaving R with the `BiocBook` package
 - Write book chapters in `.qmd` files and enhanced markdown 
-- Generate different book versions for different Bioconductor releases
-- Provide different Docker images of your book for different Bioconductor releases
+- Publish different book versions for different Bioconductor releases
+- Containerize different Docker images of your book for different Bioconductor releases
 
 # Docker image {-}
 
