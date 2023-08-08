@@ -18,7 +18,7 @@ Authors@R:
 URL: https://github.com/js2264/BiocBook
 BugReports: https://github.com/js2264/BiocBook
 Depends:
-    R (>= 4.3)
+    R (>= 4.1)
 Imports: 
     BiocGenerics, 
     available,
