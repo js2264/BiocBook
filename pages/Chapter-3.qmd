@@ -1,5 +1,2 @@
 # Publish a `BiocBook` package as a website
 
-## Naming the main branch 
-
-## Rendering the `BiocBook` website using different Bioconductor releases 

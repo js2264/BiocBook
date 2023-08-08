@@ -17,7 +17,16 @@ Imports:
     glue,
     rebook,
     reticulate,
-    sessioninfo
+    sessioninfo, 
+    available, 
+    cli, 
+    gert, 
+    gh, 
+    gitcreds,
+    here, 
+    httr, 
+    usethis, 
+    yaml
 Suggests:
     knitr, 
     quarto

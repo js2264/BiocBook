@@ -8,8 +8,9 @@ book:
     - pages/Chapter-1.qmd
     - pages/Chapter-2.qmd
     - pages/Chapter-3.qmd
-  cover-image: inst/assets/BiocBook.png
-  favicon: inst/assets/bioc.png
+    - pages/Chapter-4.qmd
+  cover-image: inst/assets/cover.png
+  favicon: inst/assets/favicon.png
   sidebar: 
     tools:
       - icon: git
@@ -28,7 +29,7 @@ book:
   page-footer:
     background: light
     left: |
-      This book was built with <a href="https://github.com/js2264/BiocBook/">BiocBook</a> with ❤️
+      This book was built with <a href="https://github.com/js2264/BiocBook/">BiocBook</a> with :heart:
   repo-branch: devel
   repo-actions: [edit, issue]
   open-graph: true
@@ -57,6 +58,7 @@ format:
     editor: visual
     citation-location: margin
     bibliography: inst/assets/bibliography.bib
+    from: markdown+emoji
 
 ## --- knitr options
 

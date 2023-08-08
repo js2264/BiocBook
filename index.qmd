@@ -10,13 +10,15 @@ pkg <- readLines("DESCRIPTION") |>
 intro <- glue::glue("**Package:** {pkg}<br/>\n {intro}")
 ```
 
+`r intro`
+
 This is the landing page of the `BiocBook` entitled 
 *Write, containerize, publish and versionize Quarto books with Bioconductor*.  
 
 This book introduces the reader to the `BiocBook` **package** and the 
 auto-generated, versionized **Docker images** and **website**.
 
-`r intro`
+![](../inst/assets/workflow.png){width=50%}
 
 # Docker image {-}
 

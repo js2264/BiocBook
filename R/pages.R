@@ -10,7 +10,7 @@ add_chapter <- function() {
 
 }
 
-add_appendices <- function() {
+add_appendix <- function() {
 
 }
 

@@ -2,13 +2,24 @@
 
 ## Register a Github account in R
 
-### Easy as 1. : Create a token... 
+::: {.callout-warning icon='true'}
+
+Skip this section if your Github account is already registered. You can 
+check this by typing: 
+
+```{r}
+#| eval: false
+gitcreds::gitcreds_get()
+```
+
+:::
 
 Don't forget to select whichever setting 
 is best-suited for you in the `Expiration` dropdown menu!
 
 ```{r}
 #| eval: false
+## ------ Create a new Github token
 usethis::create_github_token(
     description = "BiocBook", 
     scopes = c("repo", "user", "gist", "workflow", "write:packages")
@@ -16,21 +27,13 @@ usethis::create_github_token(
 ## Select an Expiration date 
 ## Click on "Generate token" at the bottom of the page
 ## Copy your Github token displayed in the Github web page
-```
 
-### 2. ... Register it in R... 
-
-```{r}
-#| eval: false
+## ------ Register your new token in R
 gitcreds::gitcreds_set()
 ## Paste your new Github token here and press "Enter"
-```
 
-### 3. ... Check that it worked!
-
-```{r}
-#| eval: false
-gh::gh_whoami()
+## ------ Double check you are logged in
+gitcreds::gitcreds_get()
 ```
 
 ## Initiate a `BiocBook` package
@@ -41,36 +44,25 @@ gh::gh_whoami()
 
 ```{r}
 #| eval: false
-create_from_template(
-    package = "Package_name", 
-    title = "One sentence", 
-    description = "One paragraph", 
-    author = person(
-        "First", "Last", , "first.last@example.com", 
-        role = c("aut", "cre"),
-        comment = c(ORCID = "YOUR-ORCID-ID")
-    )
-)
+create_BiocBook(new_package = "BiocBook")
 ```
 
 ### From GitHub
 
 #### Use the `BiocBook.template` package template {-}
 
-#### Clone it locally  {-}
+#### Clone it locally {-}
 
-#### Change placeholders where needed!  {-}
-
-```{r}
-#| eval: false
-update_template()
-```
+#### Edit placeholders where needed! {-}
 
 :::
 
 ## Add new `BiocBook` pages
 
-
+- New chapters can be created with `add_chapter()`; 
+- The `add_part()` helper allows the author to group multiple chapters in different parts; 
+- `add_preamble()` is used to add one (or more) pages after the Welcome page but before the chapters begin; 
+- `add_appendix()` is used to add one (or more) pages after the chapters, in a separate "Appendices" section. 
 
 ## Writing features 
 
@@ -119,3 +111,7 @@ pandas >= 2.0.0
 
 
 ### Adding references
+
+References can be listed as `.bib` entries in the bibliography file located in 
+`inst/assets/bibliography.bib`. The references can be added in-line using the @ notation, 
+ e.g. by typing **\@serizay2023**, this will insert the following reference: **@serizay2023**. 
