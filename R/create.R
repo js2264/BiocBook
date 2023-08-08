@@ -85,13 +85,13 @@ create_BiocBook <- function(new_package = "BiocBook") {
     Package = new_package
     package = tolower(new_package)
     
-    # ---- in `_quarto.yml`
-    yml <- readLines(file.path(repo, "_quarto.yml"))
+    # ---- in `inst/assets/_book.yml`
+    yml <- readLines(file.path(repo, "inst/assets/_book.yml"))
     yml <- gsub("<Package_name>", Package, yml)
     yml <- gsub("<package_name>", package, yml)
     yml <- gsub("<github_user>", user, yml)
-    writeLines(yml, file.path(repo, "_quarto.yml"))
-    cli::cli_alert_success("Filled out `_quarto.yml` fields")
+    writeLines(yml, file.path(repo, "inst/assets/_book.yml"))
+    cli::cli_alert_success("Filled out `inst/assets/_book.yml` fields")
     cli::cli_alert_info("If you wish to change the cover picture, please replace the following file:")
     cli::cli_ul(c(
         "`inst/assets/bioc.png`"

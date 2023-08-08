@@ -1,50 +1,13 @@
-## --- Book-specific options
-
-book:
-  title: "Writing reproducible books with Bioconductor"
-  chapters:
-    - index.qmd
-    - pages/preamble.qmd
-    - pages/Chapter-1.qmd
-    - pages/Chapter-2.qmd
-    - pages/Chapter-3.qmd
-    - pages/Chapter-4.qmd
-  cover-image: inst/assets/cover.png
-  favicon: inst/assets/favicon.png
-  sidebar: 
-    tools:
-      - icon: git
-        menu:
-          - text: Source Code
-            url:  https://github.com/js2264/BiocBook/
-          - text: Browse version `devel`
-            url:  https://js2264.github.io/BiocBook/devel/
-    style: "docked"
-    background: "light"
-    border: true
-    search: true
-    collapse-level: 5
-  search: 
-    location: sidebar
-  page-footer:
-    background: light
-    left: |
-      This book was built with <a href="https://github.com/js2264/BiocBook/">BiocBook</a> with :heart:
-  repo-branch: devel
-  repo-actions: [edit, issue]
-  open-graph: true
-
-website:
-  back-to-top-navigation: true
-
 ## --- Project-wide settings
-
 project:
   type: book
   output-dir: docs
 
-## --- Format options
+metadata-files:
+  - inst/assets/_book.yml
+  - inst/assets/_website.yml
 
+## --- Format options
 format: 
   html:
     grid:
@@ -61,7 +24,6 @@ format:
     from: markdown+emoji
 
 ## --- knitr options
-
 knitr:
   opts_chunk: 
     collapse: true

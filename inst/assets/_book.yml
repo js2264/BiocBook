@@ -1,0 +1,30 @@
+book:
+  title: "Writing reproducible books with Bioconductor"
+  chapters:
+    - index.qmd
+    - pages/preamble.qmd
+    - pages/Chapter-1.qmd
+    - pages/Chapter-2.qmd
+    - pages/Chapter-3.qmd
+    - pages/Chapter-4.qmd
+  cover-image: inst/assets/cover.png
+  favicon: inst/assets/favicon.png
+  sidebar: 
+    tools:
+      - icon: git
+        menu:
+          - text: Source Code
+            url:  https://github.com/js2264/BiocBook/
+          - text: Browse version `devel`
+            url:  https://js2264.github.io/BiocBook/devel/
+          - text: Browse version `3.17`
+            url:  https://js2264.github.io/BiocBook/3.17/
+          - text: Browse version `3.16`
+            url:  https://js2264.github.io/BiocBook/3.16/
+          - text: Browse version `3.15`
+            url:  https://js2264.github.io/BiocBook/3.15/
+    style: "docked"
+    background: "light"
+    border: true
+    search: true
+    collapse-level: 5
