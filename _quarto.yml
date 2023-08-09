@@ -31,3 +31,7 @@ knitr:
     cache: false
     fig.align: "center"
     python.reticulate: false
+
+## --- Additional lua filters 
+filters:
+  - inst/extensions/tools-tabset-ext/tools-tabset.lua

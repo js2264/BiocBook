@@ -50,28 +50,76 @@ You may also want to add your Github token to `~/.Renviron` to save it for
 futur use. You can edit the `~/.Renviron` by typing `usethis::edit_r_environ()`, 
 and the following environment variable should be created: 
 
-```{txt filename="~/.Renviron"}
-GITHUB_PAT="<YOUR-TOKEN>"`
+```{txt filename=".Renviron"}
+GITHUB_PAT="<YOUR-TOKEN>"
 ```
 
 ## Initiate a `BiocBook` package
 
 ::: {.panel-tabset group="tools-tabset"}
 
-### R console
+### R
+
+Creating a `BiocBook` in `R` is straightforward with the `BiocBook` package. 
 
 ```{r}
 #| eval: false
+if (require(BiocBook)) remotes::install_github('js2264/BiocBook')
+library(BiocBook)
 BiocBook_init("BiocBook")
 ```
 
-### From GitHub
+The steps performed under the hood by `BiocBook_init()` are detailed in the 
+console. Briefly, the following steps are followed: 
+
+1. Creating a Github repository in your account, using the `js2264/BiocBook.template` repository as a template
+2. Clone the Github package locally
+3. Fillout placeholders from the template
+4. Committing and pushing the changes to Github
+
+### VS Code
 
 #### Use the `BiocBook.template` package template {-}
 
-#### Clone it locally {-}
+This template is available from 
+[`js2264/BiocBook.template`](https://github.com/js2264/BiocBook.template)
 
-#### Edit placeholders where needed! {-}
+![](images/use_template.png)
+
+#### Create a new repo {-}
+
+![](images/new_repo.png){width="70%"}
+
+#### Enter VS Code editor by pressing `.` {-}
+
+![](images/github_vscode.png)
+
+#### Fillout placeholders {-}
+
+::: {.callout-warning icon='true'}
+
+Three types of placeholders need to be replaced: 
+
+1. `<Package_name>`
+2. `<package_name>`
+3. `<github_user>`
+
+Four different files contain these placeholders: 
+
+1. `/inst/assets/_book.yml`
+2. `/DESCRIPTION`
+3. `/index.qmd`
+4. `/.github/workflows/build-and-deploy.yaml`
+
+:::
+
+![](images/github_edit.png)
+
+#### Commit changes {-}
+
+![](images/github_commit.png)
+
+#### Clone the package to a local computer
 
 :::
 
@@ -80,6 +128,25 @@ BiocBook_init("BiocBook")
 - New chapters can be created with `add_chapter(biocbook, file, title)`; 
 - `add_preamble(biocbook)` is used to add an unnumbered extra page after the Welcome 
 page but before the chapters begin; 
+
+::: {.callout-tip icon='true'}
+
+Once you are done writing pages of your new book, you should always commit 
+your changes and push them to Github. 
+
+:::
+
+## Enable `Github Pages` to be deployed
+
+Once you have pushed a first commit to Github, you will need to enable the 
+Github Pages service. 
+
+- Go to your new `Github` repository
+- Open the "Settings" tab
+- On the leftside bar, clik on the "Pages" tab
+- Select the `gh-pages` branch and the `/docs` folder to deploy your Github Pages
+
+![](images/gh_pages.png)
 
 ## Writing features 
 
