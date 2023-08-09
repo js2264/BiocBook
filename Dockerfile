@@ -5,7 +5,8 @@ FROM bioconductor/bioconductor_docker:${BIOC_VERSION}
 COPY . /opt/BiocBook
 
 RUN apt-get update && apt-get install gdebi-core -y
-RUN curl -LO https://quarto.org/download/latest/quarto-linux-amd64.deb && gdebi --non-interactive quarto-linux-amd64.deb
+# RUN curl -LO https://quarto.org/download/latest/quarto-linux-amd64.deb && gdebi --non-interactive quarto-linux-amd64.deb
+RUN curl -LO https://github.com/quarto-dev/quarto-cli/releases/download/v1.4.309/quarto-1.4.309-linux-amd64.deb && gdebi --non-interactive quarto-1.4.309-linux-amd64.deb
 RUN Rscript -e 'install.packages("pak", repos = "https://r-lib.github.io/p/pak/devel/")'
 RUN Rscript -e 'write(paste0("R_BIOC_VERSION=", gsub(".[0-9]*$$", "", as.character(packageVersion("BiocVersion")))), paste0(Sys.getenv("R_HOME"), "/etc/Renviron.site"), append = TRUE)'
 RUN Rscript -e 'write(paste0("BIOCBOOK_PACKAGE=", gsub(".*: ", "", grep("Package: ", readLines("/opt/BiocBook/DESCRIPTION"), value = TRUE))), paste0(Sys.getenv("R_HOME"), "/etc/Renviron.site"), append = TRUE)'
