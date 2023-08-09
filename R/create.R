@@ -13,9 +13,11 @@
 #' @importFrom gh gh_whoami
 #' @importFrom gitcreds gitcreds_get
 #' @importFrom gert git_push
+#' @importFrom gert git_config_global
 #' @importFrom gert git_commit_all
 #' @importFrom gert git_remote_list
 #' @importFrom gert git_clone
+#' @importFrom gert git_signature
 #' @importFrom usethis proj_activate
 #' @importFrom usethis git_sitrep
 #' @export

@@ -1,24 +1,45 @@
-add_preamble <- function(book, file, title) {
-    .check_biocbook_proj()
+#' @export 
+
+add_page <- function(book, file, title, position = NULL) {
+    full_path <- .find_path(glue::glue('pages/{file}'), book)
+    path_from_book_root <- .find_path(glue::glue('pages/{file}'), book, .from_book_root = TRUE)
+    path_from_book_root <- gsub("^/", "", path_from_book_root)
+    if (tools::file_ext(file) != 'qmd') {
+        cli::cli_abort("Please provide a file name ending with `.qmd`")
+        stop()
+    }
+    if (file.exists(full_path)) {
+        cli::cli_abort("File `{full_path}` already exists")
+        stop()
+    }
+
+    ## Create file in `pages/`
     writeLines(
-        text = glue::glue("# {title} {{-}}"), 
-        is_biocbook$find_file(glue::glue("pages/{file}"))
+        text = glue::glue("# {title}"), 
+        full_path 
     )
-}
-
-add_part <- function(book, part = "Part") {
-    .check_biocbook_proj()
-    book.yml <- is_biocbook$find_file(glue::glue("inst/assets/_book.yml"))
+    
+    ## Add entry in `_book.yml`
+    book.yml <- .find_path('inst/assets/_book.yml', book)
     book.yml.lines <- readLines(book.yml)
-    book.yml.last <- grep("cover-image: ", book.yml.lines) - 1
-    book.yml.lines[1:book.yml.last]
+    if (is.null(position)) position <- length(chapters(book)) + 1
+    temp <- tempfile()
+    writeLines(book.yml.lines[seq(1, position+3-1)], temp)
+    write(glue::glue("    - {path_from_book_root}"), temp, append = TRUE)
+    write(book.yml.lines[seq(position+3, length(book.yml.lines))], temp, append = TRUE)
+    file.copy(temp, book.yml, overwrite = TRUE)
+    cli::cli_alert_success("File created @ `{full_path}`")
+    invisible(full_path)
 }
 
-add_chapter <- function(book, file, title) {
+#' @export 
 
+add_preamble <- function(book) {
+    add_page(book, file = "preamble.qmd", title = "Preamble {-}", position = 2)
 }
 
-add_appendix <- function(book, file, title) {
+#' @export 
 
+add_chapter <- function(book, file, title, position = NULL) {
+    add_page(book, file, title, position)
 }
-

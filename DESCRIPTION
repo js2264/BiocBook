@@ -22,6 +22,13 @@ Imports:
     gitcreds,
     httr, 
     usethis,
+    dplyr, 
+    purrr, 
+    tibble, 
+    methods, 
+    rprojroot, 
+    stringr, 
+    yaml
 Suggests:
     sessioninfo, 
     knitr, 

@@ -35,6 +35,8 @@ usethis::create_github_token(
 ## ------ Register your new token in R
 gitcreds::gitcreds_set()
 ## Paste your new Github token here and press "Enter"
+## Ideally, also add it to `~/.Renviron`: `GITHUB_PAT="<YOUR-TOKEN>"`. 
+## You can edit the `~/.Renviron` by typing `usethis::edit_r_environ()`
 
 ## ------ Double check you are logged in
 usethis::git_sitrep()

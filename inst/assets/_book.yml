@@ -1,5 +1,5 @@
 book:
-  title: "Writing reproducible books with Bioconductor"
+  title: "Write, containerize, publish and versionize Quarto books with Bioconductor"
   chapters:
     - index.qmd
     - pages/preamble.qmd
