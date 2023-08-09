@@ -12,6 +12,10 @@ add_page <- function(book, file, title, position = NULL) {
         cli::cli_abort("File `{full_path}` already exists")
         stop()
     }
+    if (file.exists(full_path)) {
+        cli::cli_abort("File `{full_path}` already exists")
+        stop()
+    }
 
     ## Create file in `pages/`
     writeLines(

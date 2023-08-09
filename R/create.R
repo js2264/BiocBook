@@ -22,7 +22,7 @@
 #' @importFrom usethis git_sitrep
 #' @export
 
-create_BiocBook <- function(new_package = "BiocBook", template = "js2264/BiocBook.template") {
+BiocBook_init <- function(new_package = "BiocBook", skip.availability = TRUE, template = "js2264/BiocBook.template") {
 
     ## Check that a folder named `new_package` can be created 
     cli::cli_progress_message("{cli::pb_spin} Checking that no folder named `{new_package}` already exists")
@@ -50,13 +50,26 @@ create_BiocBook <- function(new_package = "BiocBook", template = "js2264/BiocBoo
     ))
 
     ## Check that package name is valid
-    cli::cli_progress_message("{cli::pb_spin} Checking package name availability")
-    avail <- available::available(name = new_package, browse = FALSE)
-    if (any(!unlist(avail[1:3]))) {
-        print(avail)
-        cli::cli_abort("Package name is not available. Please pick another name for this BiocBook.")
+    if (!skip.availability) {
+        cli::cli_progress_message("{cli::pb_spin} Checking package name availability")
+        tryCatch(
+            expr = {
+                x <- available::available(name = new_package, browse = FALSE)
+                if (any(!unlist(x[1:3]))) {
+                    print(x)
+                    cli::cli_abort("Package name is not available. Please pick another name for this BiocBook.")
+                    stop()
+                }
+                cli::cli_alert_success("Package name `{new_package}` is available")
+            }, 
+            warning = function(e) {
+                cli::cli_alert_warning("`available` server is currently unavailable. Skipping validation...")
+            }, 
+            error = function(e) {
+                cli::cli_alert_warning("`available` server is currently unavailable. Skipping validation...")
+            }
+        )
     }
-    cli::cli_alert_success("Package name `{new_package}` is available")
 
     ## Create new repo from BiocBook.template 
     cli::cli_progress_message("{cli::pb_spin} Creating new Github repository from `{template}`")
@@ -79,69 +92,49 @@ create_BiocBook <- function(new_package = "BiocBook", template = "js2264/BiocBoo
     repo <- gert::git_clone(glue::glue("https://github.com/{user}/{new_package}"))
     cli::cli_alert_success("Remote Github repository `{user}/{new_package}` cloned: `{repo}`")
 
-    ## Activate project in newly cloned package
-    msg <- glue::glue("Is it ok to change directory and go to {repo}?")
-    if (usethis::ui_yeah(msg)) {
-        setwd(repo)
-        cli::cli_alert_success("BiocBook `{new_package}` package active: {repo}")
-    }
-    else {
-        cli::cli_alert_info("BiocBook `{new_package}` package correctly created @ {repo}")
-        cli::cli_alert_warning("Placeholders in several files have to be manually filled out before the BiocBook is functional: ")
-        cli::cli_ul(list(
-            "inst/assets/_book.yml",
-            "DESCRIPTION",
-            "index.qmd",
-            ".github/workflows/build-and-deploy.yaml"
-        ))
-        cli::cli_alert_success("Finishing now.")
-        invisible(repo)
-    }
-
     ## Fix placeholders
     # ---- in `inst/assets/_book.yml`
-    yml.path <- is_biocbook$find_file("inst/assets/_book.yml")
-    yml <- readLines(yml.path)
+    path <- file.path("inst", "assets", "_book.yml")
+    full.path <- file.path(repo, path)
+    yml <- readLines(full.path)
     yml <- gsub("<Package_name>", new_package, yml)
     yml <- gsub("<package_name>", tolower(new_package), yml)
     yml <- gsub("<github_user>", user, yml)
-    writeLines(yml, yml.path)
-    cli::cli_alert_success("Filled out `inst/assets/_book.yml` fields")
-    cli::cli_alert_success("Filled out `inst/assets/_book.yml` fields")
-    cli::cli_alert_info("If you wish to change the cover picture, please replace the following file:")
-    cli::cli_ul(c(
-        "`inst/assets/bioc.png`"
-    ))
+    writeLines(yml, full.path)
+    cli::cli_alert_success("Filled out `{path}` fields")
 
     # ---- in `DESCRIPTION`
-    descr.path <- is_biocbook$find_file("DESCRIPTION")
-    descr <- readLines(descr.path)
+    path <- "DESCRIPTION"
+    full.path <- file.path(repo, path)
+    descr <- readLines(full.path)
     descr <- gsub("<Package_name>", new_package, descr)
     descr <- gsub("<github_user>", user, descr)
-    writeLines(descr, descr.path)
-    cli::cli_alert_success("Filled out `DESCRIPTION` fields")
-    cli::cli_alert_info("Please finish editing the `DESCRIPTION` file, including:")
+    writeLines(descr, full.path)
+    cli::cli_alert_success("Filled out `{path}` fields")
+    cli::cli_alert_info("Please finish editing the `{path}` fields, including:")
     cli::cli_ul(c(
         "Title", "Description", "Authors@R"
     ))
 
     # ---- in `index.qmd`
-    idx.path <- is_biocbook$find_file("index.qmd")
-    idx <- readLines(idx.path)
+    path <- "index.qmd"
+    full.path <- file.path(repo, path)
+    idx <- readLines(full.path)
     idx <- gsub("<Package_name>", new_package, idx)
     idx <- gsub("<package_name>", tolower(new_package), idx)
     idx <- gsub("<github_user>", user, idx)
-    writeLines(idx, idx.path)
-    cli::cli_alert_success("Filled out `index.qmd` file")
-    cli::cli_alert_info("Please finish editing the `index.qmd` file, including the `Welcome` section")
+    writeLines(idx, full.path)
+    cli::cli_alert_success("Filled out `{path}` file")
+    cli::cli_alert_info("Please finish editing the `{path}` file, including the `Welcome` section")
 
     # ---- in GHA workflow
-    gha.path <- is_biocbook$find_file(".github/workflows/build-and-deploy.yaml")
-    gha <- readLines(gha.path)
+    path <- file.path(".github", "workflows", "build-and-deploy.yaml")
+    full.path <- file.path(repo, path)
+    gha <- readLines(full.path)
     gha <- gsub("<package_name>", tolower(new_package), gha)
     gha <- gsub("<github_user>", tolower(user), gha)
-    writeLines(gha, gha.path)
-    cli::cli_alert_success("Filled out `.github/workflows/build-and-deploy.yaml` file")
+    writeLines(gha, full.path)
+    cli::cli_alert_success("Filled out `{path}` file")
 
     ## Committing everything 
     cli::cli_alert_info("Several files need to be pushed to Github: ")
@@ -152,6 +145,12 @@ create_BiocBook <- function(new_package = "BiocBook", template = "js2264/BiocBoo
         gert::git_push()
         cli::cli_alert_success("Pushed all changes to origin: `{gert::git_remote_list()$url[1]}`")
     }
+
+    ## Remaining placeholders
+    cli::cli_alert_info("If you wish to change the cover picture, please replace the following file:")
+    cli::cli_ul(c(
+        file.path("inst", "assets", "bioc.png")
+    ))
 
     return(BiocBook(repo))
 
