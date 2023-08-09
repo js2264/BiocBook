@@ -138,12 +138,12 @@ BiocBook_init <- function(new_package = "BiocBook", skip.availability = TRUE, te
 
     ## Committing everything 
     cli::cli_alert_info("Several files need to be pushed to Github: ")
-    cli::cli_ul(gert::git_status()$file)
+    cli::cli_ul(gert::git_status(repo = repo)$file)
     msg <- glue::glue("Is it ok to commit and push them to Github?")
     if (usethis::ui_yeah(msg)) {
-        commit <- gert::git_commit_all(message = "Fillout placeholders", sig)
-        gert::git_push()
-        cli::cli_alert_success("Pushed all changes to origin: `{gert::git_remote_list()$url[1]}`")
+        commit <- gert::git_commit_all(repo = repo, message = "Fillout placeholders", sig)
+        gert::git_push(repo = repo)
+        cli::cli_alert_success("Pushed changes to origin: `{gert::git_remote_list(repo = repo)$url[1]}`")
     }
 
     ## Remaining placeholders

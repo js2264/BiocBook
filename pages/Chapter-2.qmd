@@ -1,2 +1,132 @@
-# Containerize a `BiocBook` package into a Docker image
+# Writing a `BiocBook` package
 
+## Register a Github account in R
+
+::: {.callout-info icon='true'}
+
+Skip this section if your `git` credentials and Github account are already 
+registered. You can check this by typing: 
+
+```{r}
+#| eval: false
+usethis::git_sitrep()
+```
+
+:::
+
+::: {.callout-warning icon='true'}
+
+### Both `git` and Github credentials must be set up!
+
+:::
+
+Don't forget to select whichever setting 
+is best-suited for you in the `Expiration` dropdown menu!
+
+```{r}
+#| eval: false
+## ------ Indicate git login details 
+gert::git_config_global_set("user.name", "Bobby")
+gert::git_config_global_set("user.email", "bobby@cat.com")
+
+## ------ Create a new Github token
+usethis::create_github_token(
+    description = "BiocBook", 
+    scopes = c("repo", "user", "gist", "workflow", "write:packages")
+)
+## Select an Expiration date 
+## Click on "Generate token" at the bottom of the page
+## Copy your Github token displayed in the Github web page
+
+## ------ Register your new token in R
+gitcreds::gitcreds_set()
+## Paste your new Github token here and press "Enter"
+
+## ------ Double check you are logged in
+usethis::git_sitrep()
+```
+
+You may also want to add your Github token to `~/.Renviron` to save it for 
+futur use. You can edit the `~/.Renviron` by typing `usethis::edit_r_environ()`, 
+and the following environment variable should be created: 
+
+```{txt filename="~/.Renviron"}
+GITHUB_PAT="<YOUR-TOKEN>"`
+```
+
+## Initiate a `BiocBook` package
+
+::: {.panel-tabset group="tools-tabset"}
+
+### R console
+
+```{r}
+#| eval: false
+BiocBook_init("BiocBook")
+```
+
+### From GitHub
+
+#### Use the `BiocBook.template` package template {-}
+
+#### Clone it locally {-}
+
+#### Edit placeholders where needed! {-}
+
+:::
+
+## Add new `BiocBook` pages
+
+- New chapters can be created with `add_chapter(biocbook, file, title)`; 
+- `add_preamble(biocbook)` is used to add an unnumbered extra page after the Welcome 
+page but before the chapters begin; 
+
+## Writing features 
+
+### Executing code
+
+It's super easy to execute actual code from any `BiocBook` page when rendering the `BiocBook` website. 
+
+#### `R` code
+
+`R` code can be executed and rendered: 
+
+```{r filename="R"}
+utils::packageVersion("BiocVersion")
+```
+
+#### `bash` code
+
+`bash` code can also be executed and rendered: 
+
+```{sh filename="bash"}
+find ../ -name "*.qmd"
+```
+
+<!-- 
+#### `python` code
+
+Finally, `python` code can also be executed and rendered: 
+
+```{python filename="python"}
+#| eval: false
+import os
+os.getcwd()
+```
+
+For the rendering of `python` code, you will be limited to 
+the `python` packages installed in the Github worker. These packages can be 
+listed in the `inst/assets/requirements.txt` file, e.g.: 
+
+```{txt filename="requirements.txt"}
+#| eval: false
+numpy
+pandas >= 2.0.0
+```
+ -->
+
+### Adding references
+
+References can be listed as `.bib` entries in the bibliography file located in 
+`inst/assets/bibliography.bib`. The references can be added in-line using the @ notation, 
+e.g. by typing **\@serizay2023**, this will insert the following reference: **@serizay2023**. 

@@ -90,7 +90,7 @@ jobs:
       #   with:
       #     path: "inst/assets/requirements.txt"
   
-      - name: 🖌 Render book from versionized container    
+      - name: 🖌 Render book from versioned container    
         run: |
           quarto render
 
@@ -98,7 +98,7 @@ jobs:
         run: |
           echo folder=$(echo ${{ github.ref_name }} | sed 's,RELEASE_,,' | tr '_' '.') >> "${GITHUB_ENV}"
 
-      - name: 🚀 Deploy book to Github Pages on versionized branch
+      - name: 🚀 Deploy book to Github Pages on versioned branch
         uses: JamesIves/github-pages-deploy-action@v4.4.3
         with:
           folder: docs/ 

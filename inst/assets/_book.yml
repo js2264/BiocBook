@@ -1,12 +1,10 @@
 book:
-  title: "Write, containerize, publish and versionize Quarto books with Bioconductor"
+  title: "Write, containerize and publish versioned Quarto books with Bioconductor"
   chapters:
     - index.qmd
-    - pages/preamble.qmd
     - pages/Chapter-1.qmd
     - pages/Chapter-2.qmd
     - pages/Chapter-3.qmd
-    - pages/Chapter-4.qmd
   cover-image: inst/assets/cover.png
   favicon: inst/assets/favicon.png
   sidebar: 

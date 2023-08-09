@@ -18,6 +18,7 @@ add_page <- function(book, file, title, position = NULL) {
     }
 
     ## Create file in `pages/`
+    if (!file.exists(dirname(full_path))) {dir.create(dirname(full_path))}
     writeLines(
         text = glue::glue("# {title}"), 
         full_path 
@@ -47,3 +48,5 @@ add_preamble <- function(book) {
 add_chapter <- function(book, file, title, position = NULL) {
     add_page(book, file, title, position)
 }
+
+

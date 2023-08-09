@@ -1,5 +1,3 @@
-# Welcome {-}
-
 ```{r "intro"}
 #| echo: false
 .gh_url <- file.path('https://github.com', rmarkdown::metadata[['github-repo']])
@@ -13,37 +11,74 @@ intro <- glue::glue(
     "**Authors:** {paste(format(authors, include = c('given', 'family', 'role')), collapse = ', ')}<br/>\n", 
     "**Compiled:** {as.character(Sys.Date())}<br/>\n", 
     "**Package version:** {version}<br/>\n", 
-    "**R version:** {R.version.string}<br/>\n", 
-    "**BioC version:** {BiocManager::version()}<br/>\n", 
+    "**R version:** <b style='color:red;'>{R.version.string}</b><br/>\n", 
+    "**BioC version:** <b style='color:red;'>{BiocManager::version()}</b><br/>\n", 
     "**License:** {license}<br/>"
 )
 ```
 
 `r intro`
 
-This is the landing page of the `BiocBook` entitled 
-*Write, containerize, publish and versionize Quarto books with Bioconductor*.  
+# What are `BiocBook`s? {-}
 
-This book introduces the reader to the `BiocBook` **package** and the 
-auto-generated, versionized **Docker images** and **website**.
+`BiocBook`s are **package-based, versioned online books** with a **supporting
+`Docker` image** for each book version. 
+
+A `BiocBook` can be created by authors (e.g. `R` developers, but also scientists, teachers, communicators, ...) who wish to: 
+
+1. *Write*: compile a **body of biological and/or bioinformatics knowledge**;
+2. *Containerize*: provide **Docker images** to reproduce the examples illustrated in the compendium;
+3. *Publish*: deploy an **online book** to disseminate the compendium; 
+4. *Versionize*: **automatically** generate specific online book versions and Docker images for specific [Bioconductor releases](https://contributions.bioconductor.org/use-devel.html). 
+
+::: {.callout-tip icon='true'}
+
+A `BiocBook`-based package in Bioconductor `devel` or release `X.Y` (i.e. with a branch named `RELEASE_X_Y`) provides: 
+
+- A **Docker image**: hosted on [ghcr.io](https://github.com/features/packages);
+- A **`BiocBook` online book (a.k.a website)**: hosted on the repository `gh-pages` branch;
+
+Both are built against the specific Bioconductor release `X.Y`.
+
+:::
 
 ![](inst/img/workflow.png)
 
-# Main features {-}
+# What is this `BiocBook` package? {-}
 
-- Create a fully configured `BiocBook` without leaving R with the `BiocBook` package
-- Write book chapters in `.qmd` files and enhanced markdown 
-- Publish different book versions for different Bioconductor releases
-- Containerize different Docker images of your book for different Bioconductor releases
+The [`BiocBook` **package**](https://github.com/js2264/BiocBook) 
+offers a streamlined approach to creating `BiocBook`s, 
+with several important benefits: 
 
-# Docker image {-}
+- The author creates a `BiocBook`-based package without leaving R;
+- The author writes book chapters in `pages/*.qmd` files using enhanced markdown; 
+- The author can submit its `BiocBook`-based package to Bioconductor.
 
-A `Docker` image built from this repository is available here: 
+The containerization and publishing of the new `BiocBook`-based package is automated:
+
+- Github Action workflow generates different Docker images for different Bioconductor releases, with the packages used in the book pre-installed;
+- A Github Action workflow publishes different book versions for different Bioconductor releases.
+
+# Main features of `BiocBook`s {-}
+
+## Automated versioning of Docker images {-}
+
+A separate Docker image is built for each branch (named `devel` or `RELEASE_X_Y`) 
+of a `BiocBook`-based Github repository.  
+
+Each Docker image provides pre-installed `R` packages: 
+
+- Bioconductor release `X.Y`;
+- Specific `BiocBook` book dependencies from Bioconductor release `X.Y` (listed in `DESCRIPTION`);
+- The `BiocBook` package itself
+
+For example, `Docker` images built from this `BiocBook` package repository are available here: 
 
 👉 [ghcr.io/js2264/biocbook](https://ghcr.io/js2264/biocbook) 🐳
 
 ::: {.callout-tip icon='true'}
-## Get started now 🎉
+
+### Get started now 🎉
 
 You can get access to all the packages used in this book in < 1 minute, 
 using this command in a terminal: 
@@ -55,9 +90,18 @@ docker run -it ghcr.io/js2264/biocbook:devel R
 
 :::
 
+## Automated versioning of the online book {-}
+
+A separate online book version is published for each branch (named `devel` or `RELEASE_X_Y`) of a `BiocBook`-based Github repository.  
+
+For example, the online book version matching the `devel` version of this `BiocBook` package is available from: 
+
+👉 [http://js2264.github.io/BiocBook/devel/](http://js2264.github.io/BiocBook/devel/) 📘
+
 # RStudio Server {-}
 
-An RStudio Server instance can be initiated from the `Docker` image as follows: 
+An RStudio Server instance based on a specific Bioconductor `<version>` (`devel` or `RELEASE_X_Y`) 
+can be initiated from the corresponding `Docker` image as follows: 
 
 ```{sh "rstudio", filename="bash"}
 #| eval: false
@@ -65,36 +109,27 @@ docker run \
     --volume <local_folder>:<destination_folder> \
     -e PASSWORD=OHCA \
     -p 8787:8787 \
-    ghcr.io/js2264/biocbook:devel
+    ghcr.io/<github_user>/<biocbook_repo>:<version>
 ```
 
 The initiated RStudio Server instance will be available at 
 [https://localhost:8787](https://localhost:8787).
 
-# Reproducibility {-}
-
-This `BiocBook` has been written using the 
-[`BiocBook` package](https://github.com/js2264/BiocBook) (@serizay2023), 
-and also relies on other packages, including (but not only): 
-
-- `quarto` (@Allaire_Quarto_2022)
-- `devtools` (@Wickham2022)
-
-To build this book locally, you can run: 
-
-```{sh "reproducibility", filename="bash"}
-#| eval: false
-git clone git@github.com:js2264/BiocBook.git && cd BiocBook
-Rscript -e 'remotes::install_local(".", force = TRUE)'
-quarto render
-```
+Further instructions regarding Bioconductor-based Docker images are 
+available [here](https://bioconductor.org/help/docker/). 
 
 # Session info {-}
 
-```{r "session info", filename="R"}
+::: {.callout-note collapse="true"}
+
+## Click to expand 👇
+
+```{r "session info"}
 #| cache: false
 sessioninfo::session_info(
     installed.packages()[,"Package"], 
     include_base = TRUE
 )
 ```
+
+:::

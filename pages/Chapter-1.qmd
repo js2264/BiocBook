@@ -1,123 +1,145 @@
-# Write a `BiocBook` package
-
-## Register a Github account in R
+# Versioning `BiocBook`s
 
 ::: {.callout-warning icon='true'}
 
-Skip this section if your Github account is already registered. You can 
-check this by typing: 
+## Important points
+
+- Any **package** built using the `BiocBook` package is itself a `BiocBook` package;
+- As such, it follows the release schedule from `Bioconducor`; 
+- The `pages/` folder contains a number of pages which are rendered as a **website** using Quarto; 
+- The **name** of the branch (`devel` or `RELEASE_X_Y`) is ***crucial***, as it is used to select a 
+Bioconductor version to 1) build a **Docker image** for the `BiocBook` package 
+and 2) render the `BiocBook` **website**. 
+
+:::
+
+## Continuous Integration and Continuous Delivery
+
+### From local to Github
+
+When pushing a `BiocBook`-based **package** from a local `devel` branch to Github,
+(e.g. when writing new articles), two jobs are automatically triggered from a single Github Actions workflow: 
+
+1. First, a **Docker image** will be created to build the `BiocBook` package against the Bioconductor `devel` branch and push the resulting image to `ghcr.io/<github_user>/<package_name>:devel`;
+2. Then, this image will be used to render the `BiocBook` **website** and deploy it to `https://<github_user>.github.io/<package_name>/devel/`
+
+![](../inst/img/local_to_gh.png)
+
+Additional commits on the `devel` branch will trigger regeneration of the `devel` Docker image and the online book `devel` version. 
+
+![](../inst/img/commits.png)
+
+### Package submission to Bioconductor
+
+Submission to Biconductor can follow the [same reviewing process](https://contributions.bioconductor.org/bioconductor-package-submissions.html#whattoexpect) as other standard packages. 
+
+- Changes pushed to the author's Github repository will update the `devel` Docker image and the online book `devel` version. 
+- Package version bumps pushed to `upstream` (Bioconductor's `git`) will also trigger new checks by the *Bioconductor build system* (BBS). 
+
+![](../inst/img/submission.png)
+
+After acceptance by the Bioconductor reviewers, the author's `devel` branch should be synchronized with the upstream `devel` branch from Bioconductor. Thus, any commit made to the `BiocBook`-based package will result 
+in regeneration of the `devel` Docker image and the online book `devel` version. 
+
+![](../inst/img/more_commits.png)
+
+### New Bioconductor releases
+
+When Bioconductor releases a version `X.Y`, the core team will automatically create a new `upstream:<package_name>@RELEASE_X_Y`. 
+When this occurs, the `upstream` branch should be pulled 
+to `origin:<package_name>@RELEASE_X_Y`. This will automatically: 
+
+1. Create a **Docker image** @ `ghcr.io/<github_user>/<package_name>:RELEASE_X_Y`, with the `BiocBook` **package** installed using Bioconductor `X.Y`;
+2. Publish the `BiocBook` **website** to `https://<github_user>.github.io/<package_name>/X.Y/`, using packages from Bioconductor `X.Y`.
+
+![](../inst/img/new_release.png)
+
+::: {.callout-note icon='true'}
+
+A `BiocBook` **package** can follow its own release life cycle if the autor does 
+not intend to submit it to Bioconductor.  
+
+If the author of a `BiocBook` 
+**package** intends to submit this package/book/website 
+to Bioconductor, two points should be kept in mind: 
+
+- When developing the `BiocBook` **package** (before and during submission), the `BiocBook` **package** version should be between `0.99.0` and `1.0.0`. 
+- Once Bioconductor submission is accepted and Bioconductor releases a new version `X.Y`, the `BiocBook` **package** version will automatically be bumped to `1.0.0` in Bioconductor release `X.Y` and to `1.1.0` in the continuing Bioconductor `devel`.
+
+:::
+
+### Updates 
+
+After new releases, updates and/or hot fixes can still made, both on the latest Bioconductor release and on the `devel` branch. New commits will automatically trigger the regeneration of the Docker image and the online book for the modified branch(es). 
+
+![](../inst/img/hot_fixes.png)
+
+Additional Bioconductor releases will generate new versions of the Docker image and of the online book. 
+
+![](../inst/img/next_release.png)
+
+## Access to versioned Docker and online book
+
+### Docker images versioning
+
+The different versions of a `BiocBook` **Docker image** are availabed at the following URL: 
+
+`ghcr.io/<github_user>/<package_name>`
+
+For example, for this package (`BiocBook`), the following **Docker image** versions are available: 
+
+- [ghcr.io/js2264/biocbook:devel](https://github.com/js2264?tab=packages&repo_name=BiocBook) 
+- [ghcr.io/js2264/biocbook:3.17](https://github.com/js2264?tab=packages&repo_name=BiocBook)
+- [ghcr.io/js2264/biocbook:3.16](https://github.com/js2264?tab=packages&repo_name=BiocBook)
+- [ghcr.io/js2264/biocbook:3.15](https://github.com/js2264?tab=packages&repo_name=BiocBook)
+
+### Website versioning
+
+The different versions of a `BiocBook` **website** are hosted at the following URL: 
+
+`https://<github_user>.github.io/<package_name>/<version>`
+
+For example, for this package (`BiocBook`), the following **website** versions are available: 
+
+- [https://js2264.github.io/BiocBook/devel/](https://js2264.github.io/BiocBook/devel/) 
+- [https://js2264.github.io/BiocBook/3.17/](https://js2264.github.io/BiocBook/3.17/)
+- [https://js2264.github.io/BiocBook/3.16/](https://js2264.github.io/BiocBook/3.16/)
+- [https://js2264.github.io/BiocBook/3.15/](https://js2264.github.io/BiocBook/3.15/)
+
+## Does this really work? 
+
+The `R_BIOC_VERSION` variable is set in all the Docker images from a `BiocBook`-based package. 
+For instance, this version of the `BiocBook` package online book relies on: 
 
 ```{r}
-#| eval: false
-usethis::git_sitrep()
+Sys.getenv("R_BIOC_VERSION")
+```
+
+::: {.callout-tip icon='true'}
+
+Note that this variable will always match the `X.Y` version returned by `BiocVersion` 
+used to render the online book. 
+
+```{r}
+packageVersion("BiocVersion")
 ```
 
 :::
 
-Don't forget to select whichever setting 
-is best-suited for you in the `Expiration` dropdown menu!
+## So what packages can I use? 
+
+Any package that has been released in the Bioconductor version you are using
+(in this book version, this is `r Sys.getenv("R_BIOC_VERSION")`).
+
+The `HiContacts` package is available in Bioconductor since `3.16`, 
+while the `HiCExperiment` package was only made available in `3.17`. 
+`MICSQTL` has recently been accepted in `3.18` (current `devel`, on `r date()`).
+Let's check this!
 
 ```{r}
-#| eval: false
-## ------ Indicate git login details 
-gert::git_config_global_set("user.name", "Bobby")
-gert::git_config_global_set("user.email", "bobby@cat.com")
-
-## ------ Create a new Github token
-usethis::create_github_token(
-    description = "BiocBook", 
-    scopes = c("repo", "user", "gist", "workflow", "write:packages")
-)
-## Select an Expiration date 
-## Click on "Generate token" at the bottom of the page
-## Copy your Github token displayed in the Github web page
-
-## ------ Register your new token in R
-gitcreds::gitcreds_set()
-## Paste your new Github token here and press "Enter"
-## Ideally, also add it to `~/.Renviron`: `GITHUB_PAT="<YOUR-TOKEN>"`. 
-## You can edit the `~/.Renviron` by typing `usethis::edit_r_environ()`
-
-## ------ Double check you are logged in
-usethis::git_sitrep()
+Sys.getenv("R_BIOC_VERSION")
+BiocManager::available("HiContacts")
+BiocManager::available("HiCExperiment")
+BiocManager::available("MICSQTL")
 ```
 
-## Initiate a `BiocBook` package
-
-::: {.panel-tabset group="tools-tabset"}
-
-### R console
-
-```{r}
-#| eval: false
-create_BiocBook(new_package = "BiocBook")
-```
-
-### From GitHub
-
-#### Use the `BiocBook.template` package template {-}
-
-#### Clone it locally {-}
-
-#### Edit placeholders where needed! {-}
-
-:::
-
-## Add new `BiocBook` pages
-
-- New chapters can be created with `add_chapter()`; 
-- The `add_part()` helper allows the author to group multiple chapters in different parts; 
-- `add_preamble()` is used to add one (or more) pages after the Welcome page but before the chapters begin; 
-- `add_appendix()` is used to add one (or more) pages after the chapters, in a separate "Appendices" section. 
-
-## Writing features 
-
-### Executing code
-
-It's super easy to execute actual code from any `BiocBook` page when rendering the `BiocBook` website. 
-
-#### `R` code
-
-`R` code can be executed and rendered: 
-
-```{r filename="R"}
-utils::packageVersion("BiocVersion")
-```
-
-#### `bash` code
-
-`bash` code can also be executed and rendered: 
-
-```{sh filename="bash"}
-find ../ -name "*.qmd"
-```
-
-<!-- 
-#### `python` code
-
-Finally, `python` code can also be executed and rendered: 
-
-```{python filename="python"}
-#| eval: false
-import os
-os.getcwd()
-```
-
-For the rendering of `python` code, you will be limited to 
-the `python` packages installed in the Github worker. These packages can be 
-listed in the `inst/assets/requirements.txt` file, e.g.: 
-
-```{txt filename="requirements.txt"}
-#| eval: false
-numpy
-pandas >= 2.0.0
-```
- -->
-
-
-
-### Adding references
-
-References can be listed as `.bib` entries in the bibliography file located in 
-`inst/assets/bibliography.bib`. The references can be added in-line using the @ notation, 
-e.g. by typing **\@serizay2023**, this will insert the following reference: **@serizay2023**. 
