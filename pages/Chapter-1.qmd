@@ -1,4 +1,4 @@
-# Versioning `BiocBook`s
+# `BiocBook` versioning system
 
 ::: {.callout-warning icon='true'}
 
