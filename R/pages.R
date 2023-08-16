@@ -1,6 +1,7 @@
 #' @export 
 
-add_page <- function(book, file, title, position = NULL) {
+add_page <- function(book, title, file = NA, position = NULL) {
+    if (is.na(file)) file <- sanitize_filename(title)
     full_path <- .find_path(glue::glue('pages/{file}'), book)
     path_from_book_root <- .find_path(glue::glue('pages/{file}'), book, .from_book_root = TRUE)
     path_from_book_root <- gsub("^/", "", path_from_book_root)
@@ -45,8 +46,10 @@ add_preamble <- function(book) {
 
 #' @export 
 
-add_chapter <- function(book, file, title, position = NULL) {
-    add_page(book, file, title, position)
+add_chapter <- function(book, title, file = NA, position = NULL) {
+    if (is.na(file)) file <- .sanitize_filename(title)
+    print(file)
+    add_page(book, title, file, position)
 }
 
 
