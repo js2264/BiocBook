@@ -64,7 +64,7 @@ Creating a `BiocBook` in `R` is straightforward with the `BiocBook` package.
 
 ```{r}
 #| eval: false
-if (require(BiocBook)) remotes::install_github('js2264/BiocBook')
+if (!require(BiocBook)) remotes::install_github('js2264/BiocBook')
 library(BiocBook)
 BiocBook_init("BiocBook")
 ```
