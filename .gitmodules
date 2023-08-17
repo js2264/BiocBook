@@ -1,0 +1,3 @@
+[submodule "inst/BiocBook.GRanges"]
+	path = inst/BiocBook.GRanges
+	url = git@github.com:js2264/BiocBook.GRanges.git
