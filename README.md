@@ -15,7 +15,30 @@ A `BiocBook` can be created by authors (e.g. `R` developers, but also scientists
 3. *Publish*: deploy an **online book** to disseminate the compendium; 
 4. *Versionize*: **automatically** generate specific online book versions and Docker images for specific [Bioconductor releases](https://contributions.bioconductor.org/use-devel.html). 
 
-## Creating a `BiocBook`
+## Installation
+
+To install the most recent version of `BiocBook`, you can use:
+
+```r
+install.packages("devtools")
+devtools::install_github("js2264/BiocBook")
+```
+
+## tl;dr
+
+```r
+library(BiocBook)
+BiocBook_init("myNewPackage")
+bb <- BiocBook("./myNewPackage")
+add_preamble(bb)
+add_chapter(bb, title = "Chapter 1")
+add_chapter(bb, title = "Chapter 2")
+gert::git_commit_all("adding 2 chapters", repo = path(bb))
+```
+
+## Working with `BiocBook`s
+
+### 1. Creating a `BiocBook`
 
 A new `BiocBook` should be created using the `BiocBook_init(new_package = "...")` function.  
 This function performs the following operations: 
@@ -28,7 +51,7 @@ This function performs the following operations:
 
 The `BiocBook_init(new_package = "...")` function returns a `BiocBook` object. 
 
-## The `BiocBook` class
+### 2. The `BiocBook` class
 
 A `BiocBook` object acts as a pointer to a local package directory, with 
 book chapters contained in a `pages/` folder as `.qmd` files.  
@@ -36,7 +59,7 @@ book chapters contained in a `pages/` folder as `.qmd` files.
 This package directory requires a specific architecture, which is 
 best set up using the `BiocBook_init()` function. 
 
-## Editing an existing `BiocBook`
+### 3. Editing an existing `BiocBook`
 
 `BiocBook` objects can be modified using the following helper functions: 
 
@@ -44,7 +67,7 @@ best set up using the `BiocBook_init()` function.
 - `add_chapter(biocbook, title = "...")` to start writing a new chapter;  
 - `edit_page(biocbook, page = "...")` to edit an existing chapter.
 
-## Publishing an existing `BiocBook`
+### 4. Publishing an existing `BiocBook`
 
 As long as the local `BiocBook` has been initiated with `BiocBook_init()`, 
 the writer simply has to commit changes and push them to the `origin` remote.  
