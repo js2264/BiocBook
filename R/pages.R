@@ -1,19 +1,24 @@
-add_page <- function(book, title, file = NA, position = NULL) {
-    if (is.na(file)) file <- sanitize_filename(title)
-    full_path <- .find_path(glue::glue('pages/{file}'), book)
-    path_from_book_root <- .find_path(glue::glue('pages/{file}'), book, .from_book_root = TRUE)
-    path_from_book_root <- gsub("^/", "", path_from_book_root)
+#' @importFrom usethis edit_file
+
+.add_page <- function(book, title, file = NA, position = NULL) {
+    if (is.na(file)) file <- .sanitize_filename(title)
+    full_path <- .find_path(file.path('pages', file), book)
+    path_from_book_root <- .find_path(file.path('pages', file), book, .from_book_root = TRUE)
+    path_from_book_root <- gsub("^[/\\]", "", path_from_book_root)
+
+    ## Check new file name
     if (tools::file_ext(file) != 'qmd') {
         cli::cli_abort("Please provide a file name ending with `.qmd`")
-        stop()
     }
+
+    ## If file exists, offer to edit it instead
     if (file.exists(full_path)) {
-        cli::cli_abort("File `{full_path}` already exists")
-        stop()
-    }
-    if (file.exists(full_path)) {
-        cli::cli_abort("File `{full_path}` already exists")
-        stop()
+        cli::cli_alert_warning("File `{full_path}` already exists.")
+        msg <- glue::glue("Do you want to edit {full_path}?")
+        if (usethis::ui_yeah(msg)) {
+            usethis::edit_file(full_path)
+        }
+        return(invisible(full_path))
     }
 
     ## Create file in `pages/`
@@ -24,7 +29,7 @@ add_page <- function(book, title, file = NA, position = NULL) {
     )
     
     ## Add entry in `_book.yml`
-    book.yml <- .find_path('inst/assets/_book.yml', book)
+    book.yml <- .find_path(file.path('inst', 'assets', '_book.yml'), book)
     book.yml.lines <- readLines(book.yml)
     if (is.null(position)) position <- length(chapters(book)) + 1
     temp <- tempfile()
@@ -33,21 +38,46 @@ add_page <- function(book, title, file = NA, position = NULL) {
     write(book.yml.lines[seq(position+3, length(book.yml.lines))], temp, append = TRUE)
     file.copy(temp, book.yml, overwrite = TRUE)
     cli::cli_alert_success("File created @ `{full_path}`")
+
+    ## Open new page and edit
+    usethis::edit_file(full_path)
+
     invisible(full_path)
 }
 
-#' @name BiocBook
-#' @param book A `BiocBook` object, created by `BiocBook` or `BiocBook_init()`
+#' @rdname BiocBook
 #' @export 
 
 add_preamble <- function(book) {
-    add_page(book, file = "preamble.qmd", title = "Preamble {-}", position = 2)
+    if (any(names(chapters(book)) == 'Preamble')) {
+        cli::cli_alert_warning("A preamble already exists.")
+        msg <- glue::glue("Do you want to edit the preamble?")
+        if (usethis::ui_yeah(msg)) {
+            usethis::edit_file(chapters(book)[['Preamble']])
+        }
+        return(invisible(chapters(book)[['Preamble']]))
+    }
+    .add_page(book, file = "preamble.qmd", title = "Preamble {-}", position = 2)
 }
 
+#' @rdname BiocBook
 #' @export 
 
 add_chapter <- function(book, title, file = NA, position = NULL) {
     if (is.na(file)) file <- .sanitize_filename(title)
-    print(file)
-    add_page(book, title, file, position)
+    .add_page(book, title, file, position)
+}
+
+#' @rdname BiocBook
+#' @export 
+
+edit_page <- function(book, file) {
+
+    file <- gsub("^[/\\]", "", file)
+    full_path <- .find_path(file, book)
+    if (!file.exists(full_path)) {
+        cli::cli_abort("File `{full_path}` does not exist. To create a new chapter, please use `add_chapter()` instead.", wrap = TRUE)
+    }
+    usethis::edit_file(full_path)
+
 }

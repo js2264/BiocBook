@@ -48,3 +48,10 @@ biocViews:
     ReportWriting, 
     Software
 License: MIT + file LICENSE
+Collate: 
+    'BiocBook.R'
+    'BiocBook-methods.R'
+    'check.R'
+    'globals.R'
+    'pages.R'
+    'utils.R'
