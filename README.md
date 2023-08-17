@@ -4,3 +4,54 @@
 👉 [Repo](https://github.com/js2264/BiocBook)  
 👉 [Book](https://js2264.github.io/BiocBook/devel) [![pages-build-deployment](https://github.com/js2264/BiocBook/actions/workflows/pages/pages-build-deployment/badge.svg?branch=gh-pages)](https://github.com/js2264/BiocBook/actions/workflows/pages/pages-build-deployment)  
 👉 [Docker](https://github.com/js2264/BiocBook/pkgs/container/BiocBook) [![BiocBook](https://github.com/js2264/BiocBook/actions/workflows/build-and-deploy.yaml/badge.svg)](https://github.com/js2264/BiocBook/actions/workflows/build-and-deploy.yaml)  
+
+`BiocBook`s are **package-based, versioned online books** with a **supporting
+`Docker` image** for each book version. 
+
+A `BiocBook` can be created by authors (e.g. `R` developers, but also scientists, teachers, communicators, ...) who wish to: 
+
+1. *Write*: compile a **body of biological and/or bioinformatics knowledge**;
+2. *Containerize*: provide **Docker images** to reproduce the examples illustrated in the compendium;
+3. *Publish*: deploy an **online book** to disseminate the compendium; 
+4. *Versionize*: **automatically** generate specific online book versions and Docker images for specific [Bioconductor releases](https://contributions.bioconductor.org/use-devel.html). 
+
+## Creating a `BiocBook`
+
+A new `BiocBook` should be created using the `BiocBook_init(new_package = "...")` function.  
+This function performs the following operations: 
+
+1. It checks that the provided package name is available;
+2. It logs in the GitHub user accounts; 
+3. It creates a new **remote** Github repository using the `BiocBook` template from `js2264/BiocBook`; 
+4. It clones the **remote** Github repository to a local folder; 
+5. It edits several placeholders from the template and commits the changes. 
+
+The `BiocBook_init(new_package = "...")` function returns a `BiocBook` object. 
+
+## The `BiocBook` class
+
+A `BiocBook` object acts as a pointer to a local package directory, with 
+book chapters contained in a `pages/` folder as `.qmd` files.  
+
+This package directory requires a specific architecture, which is 
+best set up using the `BiocBook_init()` function. 
+
+## Editing an existing `BiocBook`
+
+`BiocBook` objects can be modified using the following helper functions: 
+
+- `add_preamble(biocbook)` to start writing a preamble; 
+- `add_chapter(biocbook, title = "...")` to start writing a new chapter;  
+- `edit_page(biocbook, page = "...")` to edit an existing chapter.
+
+## Publishing an existing `BiocBook`
+
+As long as the local `BiocBook` has been initiated with `BiocBook_init()`, 
+the writer simply has to commit changes and push them to the `origin` remote.  
+
+In `R`, this can be done as follows: 
+
+`gert::git_commit_all(message, repo = path(biocbook))`
+
+The different available versions published in the `origin` `gh-pages` branch 
+can be listed using `BiocBook_versions(biocbook)`. 
