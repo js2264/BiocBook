@@ -11,11 +11,26 @@ methods::setClass("BiocBook",
     )
 )
 
+#' @title Handling BiocBook directories
+#' @description 
+#' 
+#' The `BiocBook()` function creates an S4 object of class `BiocBook`.  
+#' The `BiocBook` S4 class ensures that the input path points towards a 
+#' directory matching `BiocBook` structure requirements (a `./_quarto.yml` file, 
+#' a `./inst/assets/_book.yml`, etc.). 
+#' 
+#' `BiocBook` objects can be used to create new chapters with 
+#' `add_chapter(biocbook, title = "...")`, add a preamble with 
+#' `add_preamble(biocbook)`, add an appendix with `add_appendix()`, ...
+#' 
+#' @param path Path to the directory of a BiocBook. 
 #' @export 
+#' 
 #' @importFrom methods new
 #' @importFrom rprojroot find_root_file
 #' @importFrom rprojroot has_file
 #' @importFrom yaml read_yaml
+#' 
 
 BiocBook <- function(path = '.') {
     tryCatch(
@@ -75,11 +90,6 @@ BiocBook <- function(path = '.') {
 #' @importMethodsFrom methods show
 #' @importFrom stringr str_trunc
 #' @importFrom stringr str_pad
-#' @exportMethod releases
-#' @exportMethod chapters
-#' @exportMethod path
-#' @exportMethod title
-#' @exportMethod show
 
 setMethod("path", signature("BiocBook"), function(object) object@local_path)
 setGeneric("releases", function(object) {standardGeneric("releases")})
@@ -105,15 +115,13 @@ setMethod("chapters", signature("BiocBook"), function(object) {
     }) |> unlist()
     return(chapters)
 })
-setGeneric("title", function(object) {standardGeneric("title")})
-setMethod("title", signature("BiocBook"), function(object) object@title)
 setMethod("show", signature("BiocBook"), function(object) {
 
     cat('BiocBook object\n')
     cat(paste0('local path:   ', path(object)), '\n')
     cat(paste0('remote url:   ', object@remote_repository), '\n')
     cat('-----------------\n')
-    cat(paste0('Title: ', title(object), '\n'))
+    cat(paste0('Title: ', object@title, '\n'))
     cat(paste0("Releases(", length(releases(object)), "):\n"))
     writeLines(paste0('  ', releases(object)))
     cat(paste0("Chapters(", length(chapters(object)), "):\n"))

@@ -1,5 +1,3 @@
-#' @export 
-
 add_page <- function(book, title, file = NA, position = NULL) {
     if (is.na(file)) file <- sanitize_filename(title)
     full_path <- .find_path(glue::glue('pages/{file}'), book)
@@ -38,6 +36,8 @@ add_page <- function(book, title, file = NA, position = NULL) {
     invisible(full_path)
 }
 
+#' @name BiocBook
+#' @param book A `BiocBook` object, created by `BiocBook` or `BiocBook_init()`
 #' @export 
 
 add_preamble <- function(book) {
@@ -51,5 +51,3 @@ add_chapter <- function(book, title, file = NA, position = NULL) {
     print(file)
     add_page(book, title, file, position)
 }
-
-

@@ -69,8 +69,11 @@ of a `BiocBook`-based Github repository.
 Each Docker image provides pre-installed `R` packages: 
 
 - Bioconductor release `X.Y`;
-- Specific `BiocBook` book dependencies from Bioconductor release `X.Y` (listed in `DESCRIPTION`);
-- The `BiocBook` package itself
+- Specific book dependencies from Bioconductor release `X.Y` (listed in `DESCRIPTION`);
+- The book package itself
+
+The Docker images also include a `micromamba`-based environment, named `BiocBook`, 
+in which all the softwares listed in `requirements.yml` are installed. 
 
 For example, `Docker` images built from this `BiocBook` package repository are available here: 
 

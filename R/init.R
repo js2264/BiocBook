@@ -20,9 +20,10 @@
 #' @importFrom gert git_signature
 #' @importFrom usethis proj_activate
 #' @importFrom usethis git_sitrep
+#' @importFrom usethis ui_yeah
 #' @export
 
-BiocBook_init <- function(new_package = "BiocBook", skip.availability = TRUE, template = "js2264/BiocBook.template") {
+BiocBook_init <- function(new_package = "BiocBook", skip_availability = TRUE, template = "js2264/BiocBook.template") {
 
     ## Check that a folder named `new_package` can be created 
     cli::cli_progress_message("{cli::pb_spin} Checking that no folder named `{new_package}` already exists")
@@ -50,7 +51,7 @@ BiocBook_init <- function(new_package = "BiocBook", skip.availability = TRUE, te
     ))
 
     ## Check that package name is valid
-    if (!skip.availability) {
+    if (!skip_availability) {
         cli::cli_progress_message("{cli::pb_spin} Checking package name availability")
         tryCatch(
             expr = {
@@ -79,7 +80,7 @@ BiocBook_init <- function(new_package = "BiocBook", skip.availability = TRUE, te
         body = list(owner = user, name = new_package), 
         encode = 'json'
     )
-    Sys.sleep(5)
+    Sys.sleep(1)
     if (!is.null(httr::content(repo)$errors)) {
         if (httr::content(repo)$errors[[1]] == "Could not clone: Name already exists on this account") {
             cli::cli_abort("A Github repo named `{new_package}` already exists for user `{user}`.")
@@ -139,9 +140,9 @@ BiocBook_init <- function(new_package = "BiocBook", skip.availability = TRUE, te
     ## Committing everything 
     cli::cli_alert_info("Several files need to be pushed to Github: ")
     cli::cli_ul(gert::git_status(repo = repo)$file)
-    msg <- glue::glue("Is it ok to commit and push them to Github?")
+    commit <- gert::git_commit_all(repo = repo, message = "Adapted from BiocBook.template", sig)
+    msg <- glue::glue("Is it ok to push these changes to Github?")
     if (usethis::ui_yeah(msg)) {
-        commit <- gert::git_commit_all(repo = repo, message = "Fillout placeholders", sig)
         gert::git_push(repo = repo)
         cli::cli_alert_success("Pushed changes to origin: `{gert::git_remote_list(repo = repo)$url[1]}`")
     }
