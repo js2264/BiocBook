@@ -128,7 +128,7 @@ methods::setClass("BiocBook",
 #' @rdname BiocBook
 #' @export
 
-BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js2264/BiocBook.template", commit = FALSE) {
+BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js2264/BiocBook.template", commit = NA) {
 
     ## Check that a folder named `new_package` can be created 
     cli::cli_progress_message("{cli::pb_spin} Checking that no folder named `{new_package}` already exists")
@@ -155,7 +155,7 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     cli::cli_alert_success("Successfully logged in Github")
     cli::cli_ul(c(
         "user: `{user}`", 
-        "token: `{PAT}`"
+        "token: `{stringr::str_trunc(PAT, width = 18, side = 'center')}`"
     ))
     Sys.sleep(1)
 
@@ -199,7 +199,7 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     }
     if (!is.null(httr::content(repo)$message)) {
         if (httr::content(repo)$message == "Bad credentials") {
-            cli::cli_abort("`{user}` [token: `{PAT}`] invalid.")
+            cli::cli_abort("`{user}` [token: `{stringr::str_trunc(PAT, width = 18, side = 'center')}`] invalid.")
         }
     }
     cli::cli_alert_success("New Github repository `{user}/{new_package}` successfully created")
@@ -268,9 +268,14 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     cli::cli_alert_success("These changes have been commited to the local repository.")
     Sys.sleep(1)
     msg <- glue::glue("Is it ok to push these changes to Github?")
-    if (commit) {
-        gert::git_push(repo = repo)
-        cli::cli_alert_success("Commits pushed to origin: `{gert::git_remote_list(repo = repo)$url[1]}`")
+    if (!is.na(commit)) {
+        if (commit) {
+            gert::git_push(repo = repo)
+            cli::cli_alert_success("Commits pushed to origin: `{gert::git_remote_list(repo = repo)$url[1]}`")
+        }
+        else {
+            invisible(BiocBook(repo))
+        }
     }
     else if (usethis::ui_yeah(msg)) {
         gert::git_push(repo = repo)

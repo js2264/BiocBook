@@ -146,6 +146,7 @@ your changes and push them to Github.
 Within R, this can be done as follows: 
 
 ```{r}
+#| eval: false
 gert::git_commit_all(message = "publishing", repo = path(biocbook))
 ```
 

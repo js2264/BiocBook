@@ -15,7 +15,7 @@ BiocBook_init(
   new_package,
   skip_availability = FALSE,
   template = "js2264/BiocBook.template",
-  commit = FALSE
+  commit = NA
 )
 
 BiocBook(path)
