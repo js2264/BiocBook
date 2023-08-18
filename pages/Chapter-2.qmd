@@ -2,53 +2,56 @@
 
 ## Register a Github account in R
 
-::: {.callout-info icon='true'}
+::: {.callout-tip icon='true'}
 
-Skip this section if your `git` credentials and Github account are already 
+Skip this section if your Github account is already 
 registered. You can check this by typing: 
 
 ```{r}
 #| eval: false
-usethis::git_sitrep()
+gh::gh_whoami()
 ```
 
 :::
 
-::: {.callout-warning icon='true'}
-
-### Both `git` and Github credentials must be set up!
-
-:::
-
-Don't forget to select whichever setting 
-is best-suited for you in the `Expiration` dropdown menu!
+### Creating a new Github token
 
 ```{r}
 #| eval: false
-## ------ Indicate git login details 
-gert::git_config_global_set("user.name", "Bobby")
-gert::git_config_global_set("user.email", "bobby@cat.com")
-
-## ------ Create a new Github token
 usethis::create_github_token(
     description = "BiocBook", 
-    scopes = c("repo", "user", "gist", "workflow", "write:packages")
+    scopes = c("public_repo", "user:email", "workflow")
 )
-## Select an Expiration date 
-## Click on "Generate token" at the bottom of the page
-## Copy your Github token displayed in the Github web page
-
-## ------ Register your new token in R
-gitcreds::gitcreds_set()
-## Paste your new Github token here and press "Enter"
-
-## ------ Double check you are logged in
-usethis::git_sitrep()
 ```
+
+This command will open up a new web browser. On the displayed Github page: 
+
+- Select an Expiration date;
+- Make sure that at least `repo > public_repo` and `user > user:email` scopes are selected;
+- Click on "Generate token" at the bottom of the page;
+- Copy your Github token displayed in the Github web page
+
+### Register your new token in R
+
+```{r}
+#| eval: false
+gitcreds::gitcreds_set()
+```
+
+Paste your new Github token here and press "Enter".
+
+### Double check you are logged in
+
+```{r}
+#| eval: false
+gh::gh_whoami()
+```
+
+### Saving your Github token for later use 
 
 You may also want to add your Github token to `~/.Renviron` to save it for 
 futur use. You can edit the `~/.Renviron` by typing `usethis::edit_r_environ()`, 
-and the following environment variable should be created: 
+and define the `GITHUB_PAT` environment variable: 
 
 ```{txt filename=".Renviron"}
 GITHUB_PAT="<YOUR-TOKEN>"
@@ -66,7 +69,7 @@ Creating a `BiocBook` in `R` is straightforward with the `BiocBook` package.
 #| eval: false
 if (!require(BiocBook)) remotes::install_github('js2264/BiocBook')
 library(BiocBook)
-BiocBook_init("BiocBook")
+biocbook <- BiocBook_init("myBook")
 ```
 
 The steps performed under the hood by `BiocBook_init()` are detailed in the 
@@ -78,6 +81,12 @@ console. Briefly, the following steps are followed:
 4. Committing and pushing the changes to Github
 
 ### VS Code
+
+::: {.callout-warning icon='true'}
+
+#### This approach is significantly more hazardous. It is highly recommended to stick to the `BiocBook_init()` helper function from the `BiocBook` package. 
+
+:::
 
 #### Use the `BiocBook.template` package template {-}
 
@@ -119,32 +128,36 @@ Four different files contain these placeholders:
 
 ![](images/github_commit.png)
 
-#### Clone the package to a local computer
+#### Clone the package to a local computer {-}
 
 :::
 
-## Add new `BiocBook` pages
+## Edit new `BiocBook` chapters
 
-- New chapters can be created with `add_chapter(biocbook, file, title)`; 
+- `add_chapter(biocbook, title)` is used to write new chapters; 
 - `add_preamble(biocbook)` is used to add an unnumbered extra page after the Welcome 
-page but before the chapters begin; 
+page but before the chapters begin.
 
-::: {.callout-tip icon='true'}
+## Publishing changes
 
 Once you are done writing pages of your new book, you should always commit 
 your changes and push them to Github. 
 
-:::
+Within R, this can be done as follows: 
 
-## Enable `Github Pages` to be deployed
+```{r}
+gert::git_commit_all(message = "publishing", repo = path(biocbook))
+```
+
+## Enabling `Github Pages` to be deployed
 
 Once you have pushed a first commit to Github, you will need to enable the 
 Github Pages service. 
 
-- Go to your new `Github` repository
-- Open the "Settings" tab
-- On the leftside bar, clik on the "Pages" tab
-- Select the `gh-pages` branch and the `/docs` folder to deploy your Github Pages
+- Go to your new `Github` repository;
+- Open the "Settings" tab;
+- On the leftside bar, clik on the "Pages" tab;
+- Select the `gh-pages` branch and the `/docs` folder to deploy your Github Pages.
 
 ![](images/gh_pages.png)
 
