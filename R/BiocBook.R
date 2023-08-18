@@ -9,11 +9,17 @@
 #' @importFrom httr content
 #' @importFrom glue glue
 #' @importFrom available available
+#' @importFrom cli cat_rule
 #' @importFrom cli cli_progress_message
 #' @importFrom cli cli_alert_success
 #' @importFrom cli cli_alert_info
 #' @importFrom cli cli_abort
 #' @importFrom cli cli_ul
+#' @importFrom cli col_cyan
+#' @importFrom cli cli_div
+#' @importFrom cli cli_end
+#' @importFrom cli cli_text
+#' @importFrom cli col_grey
 #' @importFrom cli pb_spin
 #' @importFrom gh gh
 #' @importFrom gh gh_whoami
@@ -131,14 +137,15 @@ methods::setClass("BiocBook",
 BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js2264/BiocBook.template", commit = NA) {
 
     ## Check that a folder named `new_package` can be created 
-    cli::cli_progress_message("{cli::pb_spin} Checking that no folder named `{new_package}` already exists")
+    cli::cat_rule("Running preflight checklist", col = "cyan", line = 2)
+    cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Checking that no folder named `{new_package}` already exists"))
     Sys.sleep(1)
     if (file.exists(new_package)) {
         cli::cli_abort("A folder named {new_package} already exists.")
     }
 
     ## Check that user is logged in Github
-    cli::cli_progress_message("{cli::pb_spin} Checking Github credentials")
+    cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Checking Github credentials"))
     Sys.sleep(1)
     GH_api <- "https://api.github.com"
     PAT <- gitcreds::gitcreds_get()$password
@@ -152,16 +159,16 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
         Authorization = glue::glue("Bearer {PAT}"), 
         "X-GitHub-Api-Version" = "2022-11-28"
     )
-    cli::cli_alert_success("Successfully logged in Github")
+    cli::cli_alert_success(cli::col_grey("Successfully logged in Github"))
     cli::cli_ul(c(
-        "user: `{user}`", 
-        "token: `{stringr::str_trunc(PAT, width = 18, side = 'center')}`"
+        cli::col_grey("user: `{user}`"),
+        cli::col_grey("token: `{stringr::str_trunc(PAT, width = 18, side = 'center')}`")
     ))
     Sys.sleep(1)
 
     ## Check that package name is valid
     if (!skip_availability) {
-        cli::cli_progress_message("{cli::pb_spin} Checking package name availability")
+        cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Checking package name availability"))
         Sys.sleep(1)
         tryCatch(
             expr = {
@@ -170,20 +177,22 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
                     print(x)
                     cli::cli_abort("Package name is not available. Please pick another name for this BiocBook.")
                 }
-                cli::cli_alert_success("Package name `{new_package}` is available")
+                cli::cli_alert_success(cli::col_grey("Package name `{new_package}` is available"))
             }, 
             warning = function(e) {
-                cli::cli_alert_warning("`available` server is currently unavailable. Skipping validation...")
+                cli::cli_alert_warning(cli::col_grey("`available` server is currently unavailable. Skipping validation..."))
             }, 
             error = function(e) {
-                cli::cli_alert_warning("`available` server is currently unavailable. Skipping validation...")
+                cli::cli_alert_warning(cli::col_grey("`available` server is currently unavailable. Skipping validation..."))
             }
         )
         Sys.sleep(1)
     }
 
     ## Create new repo from BiocBook.template 
-    cli::cli_progress_message("{cli::pb_spin} Creating new Github repository from `{template}`")
+    cli::cli_text("")
+    cli::cat_rule("Initiating a new `BiocBook`", col = "cyan", line = 2)
+    cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Creating new Github repository from `{template}`"))
     Sys.sleep(1)
     repo <- httr::POST(
         glue::glue("{GH_api}/repos/{template}/generate"), 
@@ -202,14 +211,14 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
             cli::cli_abort("`{user}` [token: `{stringr::str_trunc(PAT, width = 18, side = 'center')}`] invalid.")
         }
     }
-    cli::cli_alert_success("New Github repository `{user}/{new_package}` successfully created")
+    cli::cli_alert_success(cli::col_grey("New Github repository `{user}/{new_package}` successfully created"))
     Sys.sleep(1)
 
     ## Clone package
-    cli::cli_progress_message("{cli::pb_spin} Cloning `{user}/{new_package}`")
+    cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Cloning `{user}/{new_package}`"))
     Sys.sleep(1)
     repo <- gert::git_clone(glue::glue("https://github.com/{user}/{new_package}"))
-    cli::cli_alert_success("Remote Github repository `{user}/{new_package}` cloned: `{repo}`")
+    cli::cli_alert_success(cli::col_grey("Remote Github repository `{user}/{new_package}` cloned: `{repo}`"))
     Sys.sleep(1)
 
     ## Fix placeholders
@@ -221,7 +230,7 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     yml <- gsub("<package_name>", tolower(new_package), yml)
     yml <- gsub("<github_user>", user, yml)
     writeLines(yml, full.path)
-    cli::cli_alert_success("Filled out `{path}` fields")
+    cli::cli_alert_success(cli::col_grey("Filled out `{path}` fields"))
     Sys.sleep(1)
 
     # ---- in `DESCRIPTION`
@@ -231,10 +240,10 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     descr <- gsub("<Package_name>", new_package, descr)
     descr <- gsub("<github_user>", user, descr)
     writeLines(descr, full.path)
-    cli::cli_alert_success("Filled out `{path}` fields")
-    cli::cli_alert_info("Please finish editing the `{path}` fields, including:")
+    cli::cli_alert_success(cli::col_grey("Filled out `{path}` fields"))
+    cli::cli_alert_info(cli::col_grey("Please finish editing the `{path}` fields, including:"))
     cli::cli_ul(c(
-        "Title", "Description", "Authors@R"
+        "  Title", "  Description", "  Authors@R"
     ))
     Sys.sleep(1)
 
@@ -246,8 +255,8 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     idx <- gsub("<package_name>", tolower(new_package), idx)
     idx <- gsub("<github_user>", user, idx)
     writeLines(idx, full.path)
-    cli::cli_alert_success("Filled out `{path}` file")
-    cli::cli_alert_info("Please finish editing the `{path}` file, including the `Welcome` section")
+    cli::cli_alert_success(cli::col_grey("Filled out `{path}` file"))
+    cli::cli_alert_info(cli::col_grey("Please finish editing the `{path}` file, including the `Welcome` section"))
     Sys.sleep(1)
 
     # ---- in GHA workflow
@@ -257,21 +266,21 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     gha <- gsub("<package_name>", tolower(new_package), gha)
     gha <- gsub("<github_user>", tolower(user), gha)
     writeLines(gha, full.path)
-    cli::cli_alert_success("Filled out `{path}` file")
+    cli::cli_alert_success(cli::col_grey("Filled out `{path}` file"))
     Sys.sleep(1)
 
     ## Committing everything 
-    cli::cli_alert_info("Several files have been automatically edited: ")
+    cli::cli_alert_info(cli::col_grey("Several files have been automatically edited: "))
     cli::cli_ul(gert::git_status(repo = repo)$file)
     Sys.sleep(1)
     commit_sha <- gert::git_commit_all(repo = repo, message = "Adapted from BiocBook.template", sig)
-    cli::cli_alert_success("These changes have been commited to the local repository.")
+    cli::cli_alert_success(cli::col_grey("These changes have been commited to the local repository."))
     Sys.sleep(1)
     msg <- glue::glue("Is it ok to push these changes to Github?")
     if (!is.na(commit)) {
         if (commit) {
             gert::git_push(repo = repo)
-            cli::cli_alert_success("Commits pushed to origin: `{gert::git_remote_list(repo = repo)$url[1]}`")
+            cli::cli_alert_success(cli::col_grey("Commits pushed to origin: `{gert::git_remote_list(repo = repo)$url[1]}`"))
         }
         else {
             invisible(BiocBook(repo))
@@ -279,16 +288,30 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     }
     else if (usethis::ui_yeah(msg)) {
         gert::git_push(repo = repo)
-        cli::cli_alert_success("Commits pushed to origin: `{gert::git_remote_list(repo = repo)$url[1]}`")
+        cli::cli_alert_success(cli::col_grey("Commits pushed to origin: `{gert::git_remote_list(repo = repo)$url[1]}`"))
+    } 
+    else {
+        cli::cli_alert_info(cli::col_grey("Don't forget to push the latest commit to the remote `origin`."))
     }
 
     ## Remaining placeholders
-    cli::cli_alert_info("If you wish to change the cover picture, please replace the following file:")
+    cli::cli_text("")
+    cli::cat_rule("NOTES", col = "grey", line = 1)
+    cli::cli_alert_info(cli::col_grey("If you wish to change the cover picture, please replace the following file:"))
     cli::cli_ul(c(
-        file.path("inst", "assets", "bioc.png")
+        file.path("inst", "assets", "cover.png")
     ))
     Sys.sleep(1)
 
+    ## Wrapping up
+    cli::cli_text("")
+    cli::cat_rule("Results", col = "cyan", line = 2)
+    cli::cli_alert_success("Local `BiocBook` directory successfully created  : `{repo}`")
+    cli::cli_alert_success("Remote `BiocBook` repository successfully created: `{gert::git_remote_list(repo = repo)$url[1]}`")
+    cli::cli_text("")
+    cli::cli_text(cli::col_grey('# You can connect to the local directory as follows: \n') )
+    cli::cli_code(glue::glue("  biocbook <- BiocBook('{repo}')"))
+    cli::cli_text("")
     invisible(BiocBook(repo))
 
 }

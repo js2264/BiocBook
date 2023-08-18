@@ -1,3 +1,5 @@
+# What are `BiocBook`s? {-}
+
 ```{r "intro"}
 #| echo: false
 .gh_url <- file.path('https://github.com', rmarkdown::metadata[['github-repo']])
@@ -18,8 +20,6 @@ intro <- glue::glue(
 ```
 
 `r intro`
-
-# What are `BiocBook`s? {-}
 
 `BiocBook`s are **package-based, versioned online books** with a **supporting
 `Docker` image** for each book version. 
