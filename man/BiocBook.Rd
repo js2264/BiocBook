@@ -14,18 +14,19 @@
 BiocBook_init(
   new_package,
   skip_availability = FALSE,
-  template = "js2264/BiocBook.template"
+  template = "js2264/BiocBook.template",
+  commit = FALSE
 )
 
 BiocBook(path)
 
 BiocBook_versions(book)
 
-add_preamble(book)
+add_preamble(book, open = TRUE)
 
-add_chapter(book, title, file = NA, position = NULL)
+add_chapter(book, title, file = NA, position = NULL, open = TRUE)
 
-edit_page(book, file)
+edit_page(book, file, open = TRUE)
 }
 \arguments{
 \item{new_package}{Name to use when initiating a new \code{BiocBook}.
@@ -36,9 +37,13 @@ from R and Bioconductor (i.e. no \verb{_} or \code{-}, no name starting with a n
 
 \item{template}{Optional. Github repository used for \code{BiocBook} template (default: \code{js2264/BiocBook.template}).}
 
+\item{commit}{Optional. Logical, whether to automatically push commits to remote Github origin (default: FALSE).}
+
 \item{path}{Path of an existing \code{BiocBook}.}
 
 \item{book}{A \code{BiocBook} object, created by \code{BiocBook} or \code{BiocBook_init()}.}
+
+\item{open}{Optional. Whether to open the file for interactive editing (default: TRUE)}
 
 \item{title}{A character string for a title for the new chatper. If \code{file} is not explicitely provided, the
 title should only contain alphanumeric characters and spaces}

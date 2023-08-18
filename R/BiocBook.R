@@ -15,6 +15,7 @@
 #' @importFrom cli cli_abort
 #' @importFrom cli cli_ul
 #' @importFrom cli pb_spin
+#' @importFrom gh gh
 #' @importFrom gh gh_whoami
 #' @importFrom gitcreds gitcreds_get
 #' @importFrom gert git_push
@@ -140,19 +141,21 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     cli::cli_progress_message("{cli::pb_spin} Checking Github credentials")
     Sys.sleep(1)
     GH_api <- "https://api.github.com"
-    gh_creds <- gitcreds::gitcreds_get()
-    user <- gh::gh_whoami()$login
-    email <- gert::git_config_global()$value[gert::git_config_global()$name == 'user.email']
+    PAT <- gitcreds::gitcreds_get()$password
+    gh_creds <- gh::gh_whoami(.token = PAT)
+    user <- gh_creds$login
+    emails <- gh::gh("/user/emails", .token = PAT)
+    email <- emails[[which(purrr::map_lgl(emails, ~ .x[['primary']]))]]$email
     sig <- gert::git_signature(name = user, email)
     headers <- httr::add_headers(
         Accept = "application/vnd.github+json", 
-        Authorization = glue::glue("Bearer {gh_creds$password}"), 
+        Authorization = glue::glue("Bearer {PAT}"), 
         "X-GitHub-Api-Version" = "2022-11-28"
     )
     cli::cli_alert_success("Successfully logged in Github")
     cli::cli_ul(c(
         "user: `{user}`", 
-        "token: `{gh::gh_whoami()$token}`"
+        "token: `{PAT}`"
     ))
     Sys.sleep(1)
 
@@ -192,6 +195,11 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     if (!is.null(httr::content(repo)$errors)) {
         if (httr::content(repo)$errors[[1]] == "Could not clone: Name already exists on this account") {
             cli::cli_abort("A Github repo named `{new_package}` already exists for user `{user}`.")
+        }
+    }
+    if (!is.null(httr::content(repo)$message)) {
+        if (httr::content(repo)$message == "Bad credentials") {
+            cli::cli_abort("`{user}` [token: `{PAT}`] invalid.")
         }
     }
     cli::cli_alert_success("New Github repository `{user}/{new_package}` successfully created")
@@ -276,7 +284,7 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     ))
     Sys.sleep(1)
 
-    return(BiocBook(repo))
+    invisible(BiocBook(repo))
 
 }
 
@@ -362,13 +370,12 @@ BiocBook_versions <- function(book) {
     purrr::map_dfr(releases(book), function(release) {
 
         GH_api <- "https://api.github.com"
-        gh_creds <- gitcreds::gitcreds_get()
-        user <- gh::gh_whoami()$login
-        email <- gert::git_config_global()$value[gert::git_config_global()$name == 'user.email']
-        sig <- gert::git_signature(name = user, email)
+        PAT <- gitcreds::gitcreds_get()$password
+        gh_creds <- gh::gh_whoami(.token = PAT)
+        user <- gh_creds$login
         headers <- httr::add_headers(
             Accept = "application/vnd.github+json", 
-            Authorization = glue::glue("Bearer {gh_creds$password}"), 
+            Authorization = glue::glue("Bearer {PAT}"), 
             "X-GitHub-Api-Version" = "2022-11-28"
         )
         repo <- basename(book@remote_repository) |> tools::file_path_sans_ext()
