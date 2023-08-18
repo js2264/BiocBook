@@ -97,6 +97,7 @@ NULL
 #' from R and Bioconductor (i.e. no `_` or `-`, no name starting with a number).
 #' @param skip_availability Optional. Whether to skip package name availability (default: FALSE).
 #' @param template Optional. Github repository used for `BiocBook` template (default: `js2264/BiocBook.template`). 
+#' @param commit Optional. Logical, whether to automatically push commits to remote Github origin (default: FALSE). 
 #' @param path Path of an existing `BiocBook`. 
 #' @param book A `BiocBook` object, created by `BiocBook` or `BiocBook_init()`.
 #' @param title A character string for a title for the new chatper. If `file` is not explicitely provided, the 
@@ -107,6 +108,7 @@ NULL
 #' @param position Optional. A position to insert the chapter. For example, 
 #' if `position = 2`, the new chapter will be inserted after the first existing
 #' chapter (i.e. the `Welcome` page)
+#' @param open Optional. Whether to open the file for interactive editing (default: TRUE)
 NULL
 
 #' @rdname BiocBook
@@ -125,16 +127,18 @@ methods::setClass("BiocBook",
 #' @rdname BiocBook
 #' @export
 
-BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js2264/BiocBook.template") {
+BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js2264/BiocBook.template", commit = FALSE) {
 
     ## Check that a folder named `new_package` can be created 
     cli::cli_progress_message("{cli::pb_spin} Checking that no folder named `{new_package}` already exists")
+    Sys.sleep(1)
     if (file.exists(new_package)) {
         cli::cli_abort("A folder named {new_package} already exists.")
     }
 
     ## Check that user is logged in Github
     cli::cli_progress_message("{cli::pb_spin} Checking Github credentials")
+    Sys.sleep(1)
     GH_api <- "https://api.github.com"
     gh_creds <- gitcreds::gitcreds_get()
     user <- gh::gh_whoami()$login
@@ -145,16 +149,17 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
         Authorization = glue::glue("Bearer {gh_creds$password}"), 
         "X-GitHub-Api-Version" = "2022-11-28"
     )
-    Sys.sleep(1)
     cli::cli_alert_success("Successfully logged in Github")
     cli::cli_ul(c(
         "user: `{user}`", 
         "token: `{gh::gh_whoami()$token}`"
     ))
+    Sys.sleep(1)
 
     ## Check that package name is valid
     if (!skip_availability) {
         cli::cli_progress_message("{cli::pb_spin} Checking package name availability")
+        Sys.sleep(1)
         tryCatch(
             expr = {
                 x <- available::available(name = new_package, browse = FALSE)
@@ -171,10 +176,12 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
                 cli::cli_alert_warning("`available` server is currently unavailable. Skipping validation...")
             }
         )
+        Sys.sleep(1)
     }
 
     ## Create new repo from BiocBook.template 
     cli::cli_progress_message("{cli::pb_spin} Creating new Github repository from `{template}`")
+    Sys.sleep(1)
     repo <- httr::POST(
         glue::glue("{GH_api}/repos/{template}/generate"), 
         headers, 
@@ -188,11 +195,14 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
         }
     }
     cli::cli_alert_success("New Github repository `{user}/{new_package}` successfully created")
+    Sys.sleep(1)
 
     ## Clone package
     cli::cli_progress_message("{cli::pb_spin} Cloning `{user}/{new_package}`")
+    Sys.sleep(1)
     repo <- gert::git_clone(glue::glue("https://github.com/{user}/{new_package}"))
     cli::cli_alert_success("Remote Github repository `{user}/{new_package}` cloned: `{repo}`")
+    Sys.sleep(1)
 
     ## Fix placeholders
     # ---- in `_book.yml`
@@ -204,6 +214,7 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     yml <- gsub("<github_user>", user, yml)
     writeLines(yml, full.path)
     cli::cli_alert_success("Filled out `{path}` fields")
+    Sys.sleep(1)
 
     # ---- in `DESCRIPTION`
     path <- "DESCRIPTION"
@@ -217,6 +228,7 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     cli::cli_ul(c(
         "Title", "Description", "Authors@R"
     ))
+    Sys.sleep(1)
 
     # ---- in `index.qmd`
     path <- "index.qmd"
@@ -228,6 +240,7 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     writeLines(idx, full.path)
     cli::cli_alert_success("Filled out `{path}` file")
     cli::cli_alert_info("Please finish editing the `{path}` file, including the `Welcome` section")
+    Sys.sleep(1)
 
     # ---- in GHA workflow
     path <- file.path(".github", "workflows", "build-and-deploy.yaml")
@@ -237,14 +250,21 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     gha <- gsub("<github_user>", tolower(user), gha)
     writeLines(gha, full.path)
     cli::cli_alert_success("Filled out `{path}` file")
+    Sys.sleep(1)
 
     ## Committing everything 
     cli::cli_alert_info("Several files have been automatically edited: ")
     cli::cli_ul(gert::git_status(repo = repo)$file)
-    commit <- gert::git_commit_all(repo = repo, message = "Adapted from BiocBook.template", sig)
-    cli::cli_alert_info("These changes have been commited to the local repository.")
+    Sys.sleep(1)
+    commit_sha <- gert::git_commit_all(repo = repo, message = "Adapted from BiocBook.template", sig)
+    cli::cli_alert_success("These changes have been commited to the local repository.")
+    Sys.sleep(1)
     msg <- glue::glue("Is it ok to push these changes to Github?")
-    if (usethis::ui_yeah(msg)) {
+    if (commit) {
+        gert::git_push(repo = repo)
+        cli::cli_alert_success("Commits pushed to origin: `{gert::git_remote_list(repo = repo)$url[1]}`")
+    }
+    else if (usethis::ui_yeah(msg)) {
         gert::git_push(repo = repo)
         cli::cli_alert_success("Commits pushed to origin: `{gert::git_remote_list(repo = repo)$url[1]}`")
     }
@@ -254,6 +274,7 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     cli::cli_ul(c(
         file.path("inst", "assets", "bioc.png")
     ))
+    Sys.sleep(1)
 
     return(BiocBook(repo))
 

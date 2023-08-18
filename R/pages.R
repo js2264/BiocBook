@@ -1,6 +1,6 @@
 #' @importFrom usethis edit_file
 
-.add_page <- function(book, title, file = NA, position = NULL) {
+.add_page <- function(book, title, file = NA, position = NULL, open = TRUE) {
     if (is.na(file)) file <- .sanitize_filename(title)
     full_path <- .find_path(file.path('pages', file), book)
     path_from_book_root <- .find_path(file.path('pages', file), book, .from_book_root = TRUE)
@@ -13,10 +13,12 @@
 
     ## If file exists, offer to edit it instead
     if (file.exists(full_path)) {
-        cli::cli_alert_warning("File `{full_path}` already exists.")
-        msg <- glue::glue("Do you want to edit {full_path}?")
-        if (usethis::ui_yeah(msg)) {
-            usethis::edit_file(full_path)
+        cli::cli_warn("File `{full_path}` already exists.")
+        if (interactive() && open) {
+            msg <- glue::glue("Do you want to edit {full_path}?")
+            if (usethis::ui_yeah(msg)) {
+                usethis::edit_file(full_path)
+            } 
         }
         return(invisible(full_path))
     }
@@ -40,7 +42,7 @@
     cli::cli_alert_success("File created @ `{full_path}`")
 
     ## Open new page and edit
-    usethis::edit_file(full_path)
+    if (interactive() && open) usethis::edit_file(full_path)
 
     invisible(full_path)
 }
@@ -48,36 +50,28 @@
 #' @rdname BiocBook
 #' @export 
 
-add_preamble <- function(book) {
-    if (any(names(chapters(book)) == 'Preamble')) {
-        cli::cli_alert_warning("A preamble already exists.")
-        msg <- glue::glue("Do you want to edit the preamble?")
-        if (usethis::ui_yeah(msg)) {
-            usethis::edit_file(chapters(book)[['Preamble']])
-        }
-        return(invisible(chapters(book)[['Preamble']]))
-    }
-    .add_page(book, file = "preamble.qmd", title = "Preamble {-}", position = 2)
+add_preamble <- function(book, open = TRUE) {
+    .add_page(book, file = "preamble.qmd", title = "Preamble {-}", position = 2, open)
 }
 
 #' @rdname BiocBook
 #' @export 
 
-add_chapter <- function(book, title, file = NA, position = NULL) {
+add_chapter <- function(book, title, file = NA, position = NULL, open = TRUE) {
     if (is.na(file)) file <- .sanitize_filename(title)
-    .add_page(book, title, file, position)
+    .add_page(book, title, file, position, open)
 }
 
 #' @rdname BiocBook
 #' @export 
 
-edit_page <- function(book, file) {
+edit_page <- function(book, file, open = TRUE) {
 
     file <- gsub("^[/\\]", "", file)
     full_path <- .find_path(file, book)
     if (!file.exists(full_path)) {
         cli::cli_abort("File `{full_path}` does not exist. To create a new chapter, please use `add_chapter()` instead.", wrap = TRUE)
     }
-    usethis::edit_file(full_path)
+    if (interactive() && open) usethis::edit_file(full_path)
 
 }
