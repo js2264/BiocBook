@@ -40,6 +40,21 @@ gitcreds::gitcreds_set()
 
 Paste your new Github token here and press "Enter".
 
+::: {.callout-tip icon='true'}
+
+#### Saving your Github token for later use 
+
+On Linux, `gitcreds` is generally not able to permanently store the provided 
+Github token. For this reason, you may want to also add your Github token 
+to `~/.Renviron` to be able to reuse it. You can edit the `~/.Renviron` by 
+typing `usethis::edit_r_environ()`, and define the `GITHUB_PAT` environment variable: 
+
+```{txt filename=".Renviron"}
+GITHUB_PAT="<YOUR-TOKEN>"
+```
+
+:::
+
 ### Double check you are logged in
 
 ```{r}
@@ -47,17 +62,9 @@ Paste your new Github token here and press "Enter".
 gh::gh_whoami()
 ```
 
-### Saving your Github token for later use 
+## `BiocBook` workflow
 
-You may also want to add your Github token to `~/.Renviron` to save it for 
-futur use. You can edit the `~/.Renviron` by typing `usethis::edit_r_environ()`, 
-and define the `GITHUB_PAT` environment variable: 
-
-```{txt filename=".Renviron"}
-GITHUB_PAT="<YOUR-TOKEN>"
-```
-
-## Initiate a `BiocBook` package
+### Initiate a `BiocBook` package
 
 ::: {.panel-tabset group="tools-tabset"}
 
@@ -99,6 +106,17 @@ This template is available from
 
 ![](images/new_repo.png){width="70%"}
 
+#### Enable `Github Pages` to be deployed
+
+You will need to enable the Github Pages service for your newly created repository. 
+
+- Go to your new `Github` repository;
+- Open the "Settings" tab;
+- On the leftside bar, clik on the "Pages" tab;
+- Select the `gh-pages` branch and the `/docs` folder to deploy your Github Pages.
+
+![](images/gh_pages.png)
+
 #### Enter VS Code editor by pressing `.` {-}
 
 ![](images/github_vscode.png)
@@ -132,45 +150,42 @@ Four different files contain these placeholders:
 
 :::
 
-## Edit new `BiocBook` chapters
+### Edit new `BiocBook` chapters
 
 - `add_chapter(biocbook, title)` is used to write new chapters; 
 - `add_preamble(biocbook)` is used to add an unnumbered extra page after the Welcome 
 page but before the chapters begin.
 
-## Update dependencies
-
 ::: {.callout-warning icon='true'}
-### Don't forget to add any package used in the book pages to `Imports:` or `Suggests:` fields in `DESCRIPTION`. 
+
+#### Don't forget to add any package used in the book pages to `Imports:` or `Suggests:` fields in `DESCRIPTION`. 
 
 This ensures that these packages are installed in the Docker image prior to rendering. 
+
 :::
 
-## Publishing changes
+### Previewing and publishing changes
 
-Once you are done writing pages of your new book, you should always commit 
-your changes and push them to Github. 
+#### Previewing 
 
-Within R, this can be done as follows: 
+While writing, you can monitor the rendering of your book live as follows: 
 
 ```{r}
 #| eval: false
-gert::git_add(files = '.', repo = path(biocbook))
-gert::git_commit(message = "publishing", repo = path(biocbook))
-gert::git_push(repo = path(biocbook))
+Bioc_preview(biocbook)
 ```
 
-## Enabling `Github Pages` to be deployed
+This will serve a local live rendering of your book. 
 
-Once you have pushed a first commit to Github, you will need to enable the 
-Github Pages service. 
+#### Publishing 
 
-- Go to your new `Github` repository;
-- Open the "Settings" tab;
-- On the leftside bar, clik on the "Pages" tab;
-- Select the `gh-pages` branch and the `/docs` folder to deploy your Github Pages.
+Once you are done writing pages of your new book, you should always commit 
+your changes and push them to Github. This can be done as follows: 
 
-![](images/gh_pages.png)
+```{r}
+#| eval: false
+Bioc_publish(biocbook, message = "🚀 Publish")
+```
 
 ## Writing features 
 
