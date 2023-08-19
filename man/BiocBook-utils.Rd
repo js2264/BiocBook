@@ -8,6 +8,7 @@
 \alias{show,BiocBook-method}
 \alias{BiocBook_publish}
 \alias{BiocBook_preview}
+\alias{BiocBook_versions}
 \title{BiocBook utilities}
 \usage{
 \S4method{path}{BiocBook}(object)
@@ -21,6 +22,8 @@
 BiocBook_publish(book, message = "🚀 Publishing")
 
 BiocBook_preview(book, browse = FALSE, watch = FALSE)
+
+BiocBook_versions(book)
 }
 \arguments{
 \item{book, object}{A \code{BiocBook} object, created by \code{BiocBook} or \code{BiocBook_init()}.}

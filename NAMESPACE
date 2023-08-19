@@ -2,6 +2,8 @@
 
 export(BiocBook)
 export(BiocBook_init)
+export(BiocBook_preview)
+export(BiocBook_publish)
 export(BiocBook_versions)
 export(add_chapter)
 export(add_preamble)

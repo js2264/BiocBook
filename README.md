@@ -28,12 +28,18 @@ devtools::install_github("js2264/BiocBook")
 
 ```r
 library(BiocBook)
+## Create a new BiocBook
 BiocBook_init("myNewPackage")
+## Open the new BiocBook
 bb <- BiocBook("./myNewPackage")
+## Add pages
 add_preamble(bb)
 add_chapter(bb, title = "Chapter 1")
 add_chapter(bb, title = "Chapter 2")
-gert::git_commit_all("adding 2 chapters", repo = path(bb))
+## Preview
+BiocBook_preview(bb)
+## Publish to Github
+BiocBook_publish(bb)
 ```
 
 ## Working with `BiocBook`s
@@ -74,7 +80,9 @@ the writer simply has to commit changes and push them to the `origin` remote.
 
 In `R`, this can be done as follows: 
 
-`gert::git_commit_all(message, repo = path(biocbook))`
+```r
+BiocBook_publish(bb)
+```
 
 The different available versions published in the `origin` `gh-pages` branch 
 can be listed using `BiocBook_versions(biocbook)`. 

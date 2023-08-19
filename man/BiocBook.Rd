@@ -5,7 +5,6 @@
 \alias{BiocBook}
 \alias{BiocBook-class}
 \alias{BiocBook_init}
-\alias{BiocBook_versions}
 \alias{add_preamble}
 \alias{add_chapter}
 \alias{edit_page}
@@ -19,8 +18,6 @@ BiocBook_init(
 )
 
 BiocBook(path)
-
-BiocBook_versions(book)
 
 add_preamble(book, open = TRUE)
 
