@@ -2,6 +2,8 @@
 #' @importMethodsFrom methods show
 #' @importFrom stringr str_trunc
 #' @importFrom stringr str_pad
+#' @include imports.R
+#' @include doc.R
 #' @include BiocBook.R
 
 setMethod("path", signature("BiocBook"), function(object) object@local_path)

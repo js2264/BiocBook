@@ -50,6 +50,8 @@ biocViews:
     Software
 License: MIT + file LICENSE
 Collate: 
+    'doc.R'
+    'imports.R'
     'BiocBook.R'
     'BiocBook-methods.R'
     'check.R'
