@@ -138,6 +138,14 @@ Four different files contain these placeholders:
 - `add_preamble(biocbook)` is used to add an unnumbered extra page after the Welcome 
 page but before the chapters begin.
 
+## Update dependencies
+
+::: {.callout-warning icon='true'}
+### Don't forget to add any package used in the book pages to `Imports:` or `Suggests:` fields in `DESCRIPTION`. 
+
+This ensures that these packages are installed in the Docker image prior to rendering. 
+:::
+
 ## Publishing changes
 
 Once you are done writing pages of your new book, you should always commit 

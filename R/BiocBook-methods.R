@@ -2,6 +2,9 @@
 #' @importMethodsFrom methods show
 #' @importFrom stringr str_trunc
 #' @importFrom stringr str_pad
+#' @exportMethod path
+#' @exportMethod releases
+#' @exportMethod chapters
 #' @include imports.R
 #' @include doc.R
 #' @include BiocBook.R

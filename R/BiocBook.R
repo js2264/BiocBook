@@ -32,7 +32,12 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Checking Github credentials"))
     Sys.sleep(1)
     GH_api <- "https://api.github.com"
-    PAT <- gitcreds::gitcreds_get()$password
+    tryCatch(
+        {PAT <- gitcreds::gitcreds_get()$password}, 
+        error =  function(e) {
+            cli::cli_abort("Could not find any stored Github credentials. Consider adding a Github token (a.k.a. `PAT`) to your `.Renviron`.\nSee this gist for an example: https://gist.githubusercontent.com/ijlyttle/dee4a89c8528cd4a0a319bb7b8cdd51a/raw/36077a4c97fba636a96fbbd81ba7d295593bb8ea/.Renviron")
+        }
+    )
     gh_creds <- gh::gh_whoami(.token = PAT)
     user <- gh_creds$login
     emails <- gh::gh("/user/emails", .token = PAT)
