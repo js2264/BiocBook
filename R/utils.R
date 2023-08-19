@@ -22,6 +22,14 @@
     return(path)
 }
 
+.fix_placeholders <- function(file, pkg, usr) {
+    lines <- readLines(file)
+    lines <- gsub("<Package_name>", pkg, lines)
+    lines <- gsub("<package_name>", tolower(pkg), lines)
+    lines <- gsub("<github_user>", usr, lines)
+    writeLines(lines, file)
+}
+
 #' @rdname BiocBook-editing
 #' @export 
 

@@ -20,14 +20,14 @@ gh::gh_whoami()
 #| eval: false
 usethis::create_github_token(
     description = "BiocBook", 
-    scopes = c("public_repo", "user:email", "workflow")
+    scopes = c("repo", "user:email", "workflow")
 )
 ```
 
 This command will open up a new web browser. On the displayed Github page: 
 
 - Select an Expiration date;
-- Make sure that at least `repo > public_repo` and `user > user:email` scopes are selected;
+- Make sure that at least `repo`, `user > user:email` and `workflow` scopes are selected;
 - Click on "Generate token" at the bottom of the page;
 - Copy your Github token displayed in the Github web page
 
