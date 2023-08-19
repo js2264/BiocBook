@@ -1,7 +1,6 @@
 ^\.quarto$
 ^docs$
 ^\.github$
-^inst/BiocBook.GRanges$
 ^LICENSE\.md$
 ^NOTES\.md$
 ^README\.Rmd$

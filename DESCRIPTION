@@ -37,6 +37,9 @@ Imports:
     stringr, 
     yaml
 Suggests:
+    BiocManager, 
+    BiocVersion, 
+    BiocStyle, 
     sessioninfo,
     knitr,
     quarto,
@@ -48,6 +51,7 @@ biocViews:
     Infrastructure, 
     ReportWriting, 
     Software
+VignetteBuilder: knitr
 License: MIT + file LICENSE
 Collate: 
     'doc.R'
