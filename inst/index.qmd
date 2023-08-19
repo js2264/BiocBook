@@ -2,7 +2,7 @@
 
 ```{r "intro"}
 #| echo: false
-description <- packageDescription("<Package_name>")
+description <- packageDescription("BiocBook")
 pkg <- description$Package
 version <- description$Version
 authors <- eval(parse(text = description$Authors))
