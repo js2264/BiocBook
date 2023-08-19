@@ -122,6 +122,7 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     full.path <- file.path(repo, path)
     descr <- readLines(full.path)
     descr <- gsub("<Package_name>", new_package, descr)
+    descr <- gsub("<package_name>", tolower(new_package), descr)
     descr <- gsub("<github_user>", user, descr)
     writeLines(descr, full.path)
     cli::cli_alert_success(cli::col_grey("Filled out `{path}` fields"))
@@ -132,7 +133,7 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     Sys.sleep(1)
 
     # ---- in `index.qmd`
-    path <- "index.qmd"
+    path <- file.path("inst", "index.qmd")
     full.path <- file.path(repo, path)
     idx <- readLines(full.path)
     idx <- gsub("<Package_name>", new_package, idx)
@@ -147,6 +148,7 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     path <- file.path(".github", "workflows", "build-and-deploy.yaml")
     full.path <- file.path(repo, path)
     gha <- readLines(full.path)
+    gha <- gsub("<Package_name>", new_package, gha)
     gha <- gsub("<package_name>", tolower(new_package), gha)
     gha <- gsub("<github_user>", tolower(user), gha)
     writeLines(gha, full.path)
@@ -245,7 +247,7 @@ BiocBook <- function(path) {
     
     ## Check chapters
     chapters <- rprojroot::find_root_file(
-        yaml::read_yaml(book.yml)$book$chapters, criterion = is_biocbook, path = path
+        file.path('inst', yaml::read_yaml(book.yml)$book$chapters), criterion = is_biocbook, path = path
     )
     purrr::map(chapters, ~ {
         if (!file.exists(.x)) cli::cli_abort(

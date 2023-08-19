@@ -4,8 +4,8 @@ project:
   output-dir: docs
 
 metadata-files:
-  - inst/assets/_book.yml
-  - inst/assets/_website.yml
+  - assets/_book.yml
+  - assets/_website.yml
 
 ## --- Format options
 format: 
@@ -15,12 +15,12 @@ format:
       body-width: 1100px
     theme: 
       - cosmo
-      - inst/assets/book.scss
+      - assets/book.scss
     highlight-style: atom-one
     code-link: true
     editor: visual
     citation-location: margin
-    bibliography: inst/assets/bibliography.bib
+    bibliography: assets/bibliography.bib
     from: markdown+emoji
 
 ## --- knitr options
@@ -34,4 +34,4 @@ knitr:
 
 ## --- Additional lua filters 
 filters:
-  - inst/extensions/tools-tabset-ext/tools-tabset.lua
+  - extensions/tools-tabset-ext/tools-tabset.lua

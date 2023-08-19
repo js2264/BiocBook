@@ -13,9 +13,9 @@ setMethod("releases", signature("BiocBook"), function(object) object@releases)
 
 setGeneric("chapters", function(object) {standardGeneric("chapters")})
 setMethod("chapters", signature("BiocBook"), function(object) {
-    book.yml <- .find_path(file.path('inst', 'assets', '_book.yml'), object)
+    book.yml <- .find_path(file.path('assets', '_book.yml'), object)
     chapters <- rprojroot::find_root_file(
-        yaml::read_yaml(book.yml)$book$chapters, criterion = is_biocbook, path = path(object)
+        file.path('inst', yaml::read_yaml(book.yml)$book$chapters), criterion = is_biocbook, path = path(object)
     )
     names(chapters) <- lapply(chapters, function(chap) {
         has_yaml <- readLines(chap, n = 1) |> grepl("^---", x = _)

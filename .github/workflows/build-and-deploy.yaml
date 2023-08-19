@@ -84,16 +84,14 @@ jobs:
         run: |
           quarto install tinytex
           quarto check
-          
-      # - name: 🔧 Install python dependencies    
-      #   uses: py-actions/py-dependency-install@v4
-      #   with:
-      #     path: "inst/assets/requirements.txt"
-  
-      - name: 🖌 Render book from versioned container    
+            
+      - name: 🖌 Render book from already installed package directory
         run: |
-          quarto render
-
+          lib_path=$(Rscript -e "writeLines(.libPaths()[1])")
+          pkg=$(grep -m1 -E '^Package: +' DESCRIPTION | sed -E 's/.*: +//')
+          quarto render "${lib_path}/${pkg}"
+          echo local_folder="${lib_path}/${pkg}/docs" >> "${GITHUB_ENV}"
+  
       - name: 🏷 Get gh-branch directory to deploy to
         run: |
           echo folder=$(echo ${{ github.ref_name }} | sed 's,RELEASE_,,' | tr '_' '.') >> "${GITHUB_ENV}"
@@ -101,7 +99,7 @@ jobs:
       - name: 🚀 Deploy book to Github Pages on versioned branch
         uses: JamesIves/github-pages-deploy-action@v4.4.3
         with:
-          folder: docs/ 
+          folder: ${{ env.local_folder }}/ 
           target-folder: docs/${{ env.folder }}/ 
           branch: gh-pages
           clean: false 

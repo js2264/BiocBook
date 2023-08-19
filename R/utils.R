@@ -14,7 +14,7 @@
 
 .find_path <- function(file, book, .from_book_root = FALSE) {
     path <- rprojroot::find_root_file(
-        file, criterion = is_biocbook, path = path(book)
+        file.path('inst', file), criterion = is_biocbook, path = path(book)
     )
     if (.from_book_root) {
         path <- gsub(path(book), "", path)

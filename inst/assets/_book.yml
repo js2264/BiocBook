@@ -2,11 +2,12 @@ book:
   title: "Write, containerize and publish versioned Quarto books with Bioconductor"
   chapters:
     - index.qmd
+    - pages/preamble.qmd
     - pages/Chapter-1.qmd
     - pages/Chapter-2.qmd
     - pages/Chapter-3.qmd
-  cover-image: inst/assets/cover.png
-  favicon: inst/assets/favicon.png
+  cover-image: assets/cover.png
+  favicon: assets/favicon.png
   sidebar: 
     tools:
       - icon: git

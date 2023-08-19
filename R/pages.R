@@ -5,6 +5,7 @@
     full_path <- .find_path(file.path('pages', file), book)
     path_from_book_root <- .find_path(file.path('pages', file), book, .from_book_root = TRUE)
     path_from_book_root <- gsub("^[/\\]", "", path_from_book_root)
+    path_from_book_root <- gsub("^inst[/\\]", "", path_from_book_root)
 
     ## Check new file name
     if (tools::file_ext(file) != 'qmd') {
@@ -31,7 +32,7 @@
     )
     
     ## Add entry in `_book.yml`
-    book.yml <- .find_path(file.path('inst', 'assets', '_book.yml'), book)
+    book.yml <- .find_path(file.path('assets', '_book.yml'), book)
     book.yml.lines <- readLines(book.yml)
     if (is.null(position)) position <- length(chapters(book)) + 1
     temp <- tempfile()
@@ -68,6 +69,7 @@ add_chapter <- function(book, title, file = NA, position = NULL, open = TRUE) {
 edit_page <- function(book, file, open = TRUE) {
 
     file <- gsub("^[/\\]", "", file)
+    file <- gsub("^inst[/\\]", "", file)
     full_path <- .find_path(file, book)
     if (!file.exists(full_path)) {
         cli::cli_abort("File `{full_path}` does not exist. To create a new chapter, please use `add_chapter()` instead.", wrap = TRUE)

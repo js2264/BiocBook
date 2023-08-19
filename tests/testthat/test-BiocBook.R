@@ -7,14 +7,17 @@ test_that("Methods work", {
     expect_no_error(    bb <- BiocBook('BiocBook.GRanges/'))
     expect_no_error(    bb)
     expect_no_error(    path(bb))
-    expect_no_error(    releases(bb))
     expect_no_error(    chapters(bb))
+    expect_no_error(    releases(bb))
     expect_no_error(    BiocBook_versions(bb))
 
     unlink('BiocBook.GRanges', recursive = TRUE, force = TRUE)
 })
 
 test_that("Editing functions work", {
+
+    skip('No PAT set up yet')
+
     gert::git_clone('https://github.com/js2264/BiocBook.GRanges')
     
     expect_no_error(    bb <- BiocBook('BiocBook.GRanges/'))
