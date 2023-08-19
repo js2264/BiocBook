@@ -108,11 +108,11 @@ For example, for this package (`BiocBook`), the following **website** versions a
 
 ## Does this really work? 
 
-The `R_BIOC_VERSION` variable is set in all the Docker images from a `BiocBook`-based package. 
+The `BIOCONDUCTOR_DOCKER_VERSION` variable is set in all `Bioconductor` Docker images. 
 For instance, this version of the `BiocBook` package online book relies on: 
 
 ```{r}
-Sys.getenv("R_BIOC_VERSION")
+Sys.getenv("BIOCONDUCTOR_DOCKER_VERSION")
 ```
 
 ::: {.callout-tip icon='true'}
@@ -129,7 +129,7 @@ packageVersion("BiocVersion")
 ## So what packages can I use? 
 
 Any package that has been released in the Bioconductor version you are using
-(in this book version, this is `r Sys.getenv("R_BIOC_VERSION")`).
+(in this book version, this is `r packageVersion("BiocVersion")`).
 
 The `HiContacts` package is available in Bioconductor since `3.16`, 
 while the `HiCExperiment` package was only made available in `3.17`. 
@@ -137,7 +137,7 @@ while the `HiCExperiment` package was only made available in `3.17`.
 Let's check this!
 
 ```{r}
-Sys.getenv("R_BIOC_VERSION")
+packageVersion("BiocVersion")
 BiocManager::available("HiContacts")
 BiocManager::available("HiCExperiment")
 BiocManager::available("MICSQTL")
