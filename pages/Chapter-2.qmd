@@ -147,7 +147,8 @@ Within R, this can be done as follows:
 
 ```{r}
 #| eval: false
-gert::git_commit_all(message = "publishing", repo = path(biocbook))
+gert::git_add(files = '.', repo = path(biocbook))
+gert::git_commit(message = "publishing", repo = path(biocbook))
 gert::git_push(repo = path(biocbook))
 ```
 
