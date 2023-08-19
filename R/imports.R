@@ -39,4 +39,8 @@
 #' @importFrom tibble tibble
 #' @importFrom dplyr case_when
 #' @exportClass BiocBook
+#' @importMethodsFrom BiocGenerics path
+#' @importMethodsFrom methods show
+#' @importFrom stringr str_trunc
+#' @importFrom stringr str_pad
 NULL

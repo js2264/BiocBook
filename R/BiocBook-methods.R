@@ -1,20 +1,33 @@
-#' @importMethodsFrom BiocGenerics path
-#' @importMethodsFrom methods show
-#' @importFrom stringr str_trunc
-#' @importFrom stringr str_pad
-#' @exportMethod path
-#' @exportMethod releases
-#' @exportMethod chapters
 #' @include imports.R
 #' @include doc.R
 #' @include BiocBook.R
+NULL
+
+### New generics
+
+#' @rdname AllGenerics
+#' @export
+setGeneric("releases", function(object) {standardGeneric("releases")})
+
+#' @rdname AllGenerics
+#' @export
+setGeneric("chapters", function(object) {standardGeneric("chapters")})
+
+### Methods
+
+#' @rdname BiocBook-utils
+#' @export
 
 setMethod("path", signature("BiocBook"), function(object) object@local_path)
 
-setGeneric("releases", function(object) {standardGeneric("releases")})
+#' @rdname BiocBook-utils
+#' @export
+
 setMethod("releases", signature("BiocBook"), function(object) object@releases)
 
-setGeneric("chapters", function(object) {standardGeneric("chapters")})
+#' @rdname BiocBook-utils
+#' @export
+
 setMethod("chapters", signature("BiocBook"), function(object) {
     book.yml <- .find_path(file.path('assets', '_book.yml'), object)
     chapters <- rprojroot::find_root_file(
@@ -35,6 +48,9 @@ setMethod("chapters", signature("BiocBook"), function(object) {
     }) |> unlist()
     return(chapters)
 })
+
+#' @rdname BiocBook-utils
+#' @export
 
 setMethod("show", signature("BiocBook"), function(object) {
 

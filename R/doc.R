@@ -1,8 +1,23 @@
+#' @title BiocBook utilities
+#' @name BiocBook-utils
+#' @param book,object A `BiocBook` object, created by `BiocBook` or `BiocBook_init()`.
+#' @param message Optional. Message used when committing with `BiocBook_publish()`.
+#' @param browse Optional. Passed to `quarto_preview()` (default: FALSE).
+#' @param watch Optional. Passed to `quarto_preview()` (default: FALSE).
+NULL 
+
 #' @title Editing BiocBook accessory files
 #' @name BiocBook-editing
 #' @param book A `BiocBook` object, created by `BiocBook` or `BiocBook_init()`.
 #' @param open Optional. Whether to open the file for interactive editing (default: TRUE)
 NULL 
+
+#' @title BiocBook generics
+#' @name AllGenerics
+#' @aliases releases
+#' @aliases chapters
+#' @param object Passed to specific methods
+NULL
 
 #' @title Handling BiocBook directories
 #' @name BiocBook

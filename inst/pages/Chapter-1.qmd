@@ -131,15 +131,15 @@ packageVersion("BiocVersion")
 Any package that has been released in the Bioconductor version you are using
 (in this book version, this is `r packageVersion("BiocVersion")`).
 
-The `HiContacts` package is available in Bioconductor since `3.16`, 
+The `BiocBaseUtils` package is available in Bioconductor since `3.16`, 
 while the `HiCExperiment` package was only made available in `3.17`. 
-`MICSQTL` has recently been accepted in `3.18` (current `devel`, on `r date()`).
+`CuratedAtlasQueryR` has recently been accepted in `3.18` (current `devel`, on `r date()`).
 Let's check this!
 
 ```{r}
 packageVersion("BiocVersion")
-BiocManager::available("HiContacts")
-BiocManager::available("HiCExperiment")
-BiocManager::available("MICSQTL")
+BiocManager::available("BiocBaseUtils")
+BiocManager::available("BiocHail")
+BiocManager::available("CuratedAtlasQueryR")
 ```
 
