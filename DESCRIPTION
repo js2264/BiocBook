@@ -36,7 +36,8 @@ Imports:
     rprojroot, 
     stringr, 
     yaml, 
-    tools
+    tools, 
+    utils
 Suggests:
     BiocManager, 
     BiocVersion, 

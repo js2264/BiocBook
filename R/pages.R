@@ -48,22 +48,24 @@
     invisible(full_path)
 }
 
-#' @rdname BiocBook
+#' @rdname BiocBook-editing
 #' @export 
 
 add_preamble <- function(book, open = TRUE) {
     .add_page(book, file = "preamble.qmd", title = "Preamble {-}", position = 2, open)
+    invisible(book)
 }
 
-#' @rdname BiocBook
+#' @rdname BiocBook-editing
 #' @export 
 
 add_chapter <- function(book, title, file = NA, position = NULL, open = TRUE) {
     if (is.na(file)) file <- .sanitize_filename(title)
     .add_page(book, title, file, position, open)
+    invisible(book)
 }
 
-#' @rdname BiocBook
+#' @rdname BiocBook-editing
 #' @export 
 
 edit_page <- function(book, file, open = TRUE) {
@@ -76,4 +78,5 @@ edit_page <- function(book, file, open = TRUE) {
     }
     if (interactive() && open) usethis::edit_file(full_path)
 
+    invisible(book)
 }

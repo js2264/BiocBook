@@ -43,4 +43,6 @@
 #' @importMethodsFrom methods show
 #' @importFrom stringr str_trunc
 #' @importFrom stringr str_pad
+#' @importFrom utils download.file
+#' @importFrom utils unzip
 NULL

@@ -5,36 +5,41 @@ NULL
 
 ### New generics
 
-#' @rdname BiocBook-utils
+#' @rdname BiocBook
 #' @export
 setGeneric("releases", function(object) standardGeneric("releases"))
 
-#' @rdname BiocBook-utils
+#' @rdname BiocBook
 #' @export
 setGeneric("chapters", function(object) standardGeneric("chapters"))
 
 ### Methods
 
-#' @rdname BiocBook-utils
+#' @rdname BiocBook
 #' @export
 
 setMethod("path", signature("BiocBook"), function(object) object@local_path)
 
-#' @rdname BiocBook-utils
+#' @rdname BiocBook
 #' @export
 
 setMethod("releases", signature("BiocBook"), function(object) {
     local.path <- rprojroot::find_root_file(
         criterion = is_biocbook, path = path(object)
     )
-    releases <- gert::git_branch_list(repo = local.path) |> 
-        dplyr::filter(grepl('origin.*devel|origin.*RELEASE', name)) |> 
-        dplyr::pull(name) |> 
-        gsub("origin/", "", x = _)
+    releases <- tryCatch(
+        gert::git_branch_list(repo = local.path) |> 
+                dplyr::filter(grepl('origin.*devel|origin.*RELEASE', name)) |> 
+                dplyr::pull(name) |> 
+                gsub("origin/", "", x = _), 
+        error = function(e) {
+            return("<unset>")
+        }
+    )
     releases
 })
 
-#' @rdname BiocBook-utils
+#' @rdname BiocBook
 #' @export
 
 setMethod("chapters", signature("BiocBook"), function(object) {
@@ -67,7 +72,7 @@ setMethod("chapters", signature("BiocBook"), function(object) {
     chapters
 })
 
-#' @rdname BiocBook-utils
+#' @rdname BiocBook
 #' @export
 
 setMethod("show", signature("BiocBook"), function(object) {

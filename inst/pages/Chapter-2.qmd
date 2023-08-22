@@ -172,7 +172,7 @@ While writing, you can monitor the rendering of your book live as follows:
 
 ```{r}
 #| eval: false
-Bioc_preview(biocbook)
+BiocBook_preview(biocbook)
 ```
 
 This will serve a local live rendering of your book. 
@@ -184,7 +184,7 @@ your changes and push them to Github. This can be done as follows:
 
 ```{r}
 #| eval: false
-Bioc_publish(biocbook, message = "🚀 Publish")
+BiocBook_publish(biocbook, message = "🚀 Publish")
 ```
 
 ## Writing features 
