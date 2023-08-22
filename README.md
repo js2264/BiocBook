@@ -1,4 +1,4 @@
-# BiocBook
+# BiocBook <img src="inst/assets/cover.png" align="right" alt="" />
 
 📖 **[BiocBook](https://js2264.github.io/BiocBook/devel)**   
 👉 [Repo](https://github.com/js2264/BiocBook)  
@@ -24,26 +24,35 @@ install.packages("devtools")
 devtools::install_github("js2264/BiocBook")
 ```
 
-## tl;dr
+## How to create a `BiocBook`
 
 ```r
 library(BiocBook)
+
+## Make sure you have set up a Github token
+gh::gh_whoami()
+# check `usethis::gh_token_help()` for more information
+
 ## Create a new BiocBook
 BiocBook_init("myNewPackage")
+
 ## Open the new BiocBook
 bb <- BiocBook("./myNewPackage")
+
 ## Add pages
 add_preamble(bb)
 add_chapter(bb, title = "Chapter 1")
 add_chapter(bb, title = "Chapter 2")
+
 ## Preview
 BiocBook_preview(bb)
+
 ## Publish to Github
 BiocBook_publish(bb)
 ```
 
 ## Working with `BiocBook`s
-
+    
 ### 1. Creating a `BiocBook`
 
 A new `BiocBook` should be created using the `BiocBook_init(new_package = "...")` function.  
@@ -51,8 +60,9 @@ This function performs the following operations:
 
 1. It checks that the provided package name is available;
 2. It logs in the GitHub user accounts; 
-3. It creates a new **remote** Github repository using the `BiocBook` template from `js2264/BiocBook`; 
-4. It clones the **remote** Github repository to a local folder; 
+3. It creates a new **remote** Github repository using the `BiocBook.template` from `js2264/BiocBook`; 
+3. It sets up Github Pages to serve the future books from the `gh-pages` branch;
+4. It clones the **remote** Github repository to a **local folder**; 
 5. It edits several placeholders from the template and commits the changes. 
 
 ![BiocBook_init](inst/img/init.jpg)
