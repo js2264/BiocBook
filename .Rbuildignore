@@ -1,7 +1,6 @@
 ^\.png$
 ^\.quarto$
 ^inst/\.quarto$
-^docs$
 ^\.github$
 ^LICENSE\.md$
 ^NOTES\.md$

@@ -12,4 +12,5 @@ RUN Rscript -e 'write(paste0("R_BIOC_VERSION=", gsub(".[0-9]*$$", "", as.charact
 RUN Rscript -e 'write(paste0("BIOCBOOK_PACKAGE=", gsub(".*: ", "", grep("Package: ", readLines("/opt/BiocBook/DESCRIPTION"), value = TRUE))), paste0(Sys.getenv("R_HOME"), "/etc/Renviron.site"), append = TRUE)'
 RUN Rscript -e 'write(paste0("BIOCBOOK_IMAGE=", tolower(Sys.getenv("BIOCBOOK_PACKAGE"))), paste0(Sys.getenv("R_HOME"), "/etc/Renviron.site"), append = TRUE)'
 RUN Rscript -e 'pak::pkg_install("/opt/BiocBook/", ask = FALSE, dependencies = c("Depends", "Imports", "Suggests"))'
-RUN Rscript -e 'devtools::check("/opt/BiocBook/", build_args = "--no-build-vignettes", args = "--no-build-vignettes", error_on = "error")'
+RUN Rscript -e 'rcmdcheck::rcmdcheck("/opt/BiocBook/", args = c("--no-manual", "--no-vignettes", "--timings"), build_args = c("--no-manual", "--keep-empty-dirs", "--no-resave-data"), error_on = "warning", check_dir = "check")'
+RUN Rscript -e 'BiocCheck::BiocCheck(dir("check", "tar.gz$$", full.names = TRUE), `quit-with-status` = TRUE, `no-check-R-ver` = TRUE, `no-check-bioc-help` = TRUE)'
