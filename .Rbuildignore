@@ -2,7 +2,6 @@
 ^\.quarto$
 ^inst/\.quarto$
 ^docs$
-^inst/docs$
 ^\.github$
 ^LICENSE\.md$
 ^NOTES\.md$

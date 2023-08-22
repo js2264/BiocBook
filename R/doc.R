@@ -1,6 +1,11 @@
 #' @title BiocBook utilities
 #' @name BiocBook-utils
-#' @param book,object A `BiocBook` object, created by `BiocBook` or `BiocBook_init()`.
+#' @return 
+#' - BiocBook_publish: TRUE (invisible) if pushing to Github was successful;
+#' - BiocBook_preview: Local URL to browse dynamically rendered book;
+#' - BiocBook_versions: A tibble of the existing versions found on the Github
+#' repository (branch `gh-pages`) and of the existing Dockerfiles. 
+#' @param book,object A `BiocBook` object, opened with `BiocBook` or created by `BiocBook_init()`.
 #' @param message Optional. Message used when committing with `BiocBook_publish()`.
 #' @param browse Optional. Passed to `quarto_preview()` (default: FALSE).
 #' @param watch Optional. Passed to `quarto_preview()` (default: FALSE).
@@ -8,7 +13,8 @@ NULL
 
 #' @title Editing BiocBook accessory files
 #' @name BiocBook-editing
-#' @param book A `BiocBook` object, created by `BiocBook` or `BiocBook_init()`.
+#' @return A `BiocBook` object (invisible). 
+#' @param book A `BiocBook` object, opened with `BiocBook` or created by `BiocBook_init()`.
 #' @param open Optional. Whether to open the file for interactive editing (default: TRUE)
 NULL 
 
@@ -70,12 +76,16 @@ NULL
 #' The different available versions published in the `origin` `gh-pages` branch 
 #' can be listed using `BiocBook_versions(biocbook)`
 #' 
+#' @return A `BiocBook` object (invisible). 
+#' 
 #' @param new_package Name to use when initiating a new `BiocBook`. 
 #' This name should be compatible with package naming conventions 
 #' from R and Bioconductor (i.e. no `_` or `-`, no name starting with a number).
 #' @param skip_availability Optional. Whether to skip package name availability (default: FALSE).
 #' @param template Optional. Github repository used for `BiocBook` template (default: `js2264/BiocBook.template`). 
 #' @param commit Optional. Logical, whether to automatically push commits to remote Github origin (default: FALSE). 
+#' @param local Optional. Whether to create a matching Github repository or stay local (default: FALSE).
+#' @param github_user Optional. If `local = TRUE`, please do provide your Github username to edit BiocBook placeholders. If not provided, `<user>` placeholders will remain in several files until manually filled (default: NA).
 #' @param path Path of an existing `BiocBook`. 
 #' @param book A `BiocBook` object, created by `BiocBook` or `BiocBook_init()`.
 #' @param title A character string for a title for the new chatper. If `file` is not explicitely provided, the 

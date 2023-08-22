@@ -35,11 +35,14 @@ Imports:
     methods, 
     rprojroot, 
     stringr, 
-    yaml
+    yaml, 
+    tools
 Suggests:
     BiocManager, 
     BiocVersion, 
     BiocStyle, 
+    rcmdcheck, 
+    BiocCheck, 
     sessioninfo,
     knitr,
     quarto,
@@ -59,6 +62,7 @@ Collate:
     'BiocBook.R'
     'BiocBook-methods.R'
     'check.R'
+    'editing.R'
     'globals.R'
     'pages.R'
     'utils.R'

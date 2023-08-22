@@ -32,13 +32,21 @@ BiocBook_preview(book, browse = FALSE, watch = FALSE)
 BiocBook_versions(book)
 }
 \arguments{
-\item{book, object}{A \code{BiocBook} object, created by \code{BiocBook} or \code{BiocBook_init()}.}
+\item{book, object}{A \code{BiocBook} object, opened with \code{BiocBook} or created by \code{BiocBook_init()}.}
 
 \item{message}{Optional. Message used when committing with \code{BiocBook_publish()}.}
 
 \item{browse}{Optional. Passed to \code{quarto_preview()} (default: FALSE).}
 
 \item{watch}{Optional. Passed to \code{quarto_preview()} (default: FALSE).}
+}
+\value{
+\itemize{
+\item BiocBook_publish: TRUE (invisible) if pushing to Github was successful;
+\item BiocBook_preview: Local URL to browse dynamically rendered book;
+\item BiocBook_versions: A tibble of the existing versions found on the Github
+repository (branch \code{gh-pages}) and of the existing Dockerfiles.
+}
 }
 \description{
 BiocBook utilities

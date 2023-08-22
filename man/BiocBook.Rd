@@ -53,6 +53,9 @@ the file name is deduced from the \code{title} argument.}
 if \code{position = 2}, the new chapter will be inserted after the first existing
 chapter (i.e. the \code{Welcome} page)}
 }
+\value{
+A \code{BiocBook} object (invisible).
+}
 \description{
 \code{BiocBook}s are local R packages containing an extra \code{pages} folder to
 write up online book chapters.
