@@ -7,9 +7,7 @@ methods::setClass("BiocBook",
     slots = c(
         title = "character", 
         local_path = "character", 
-        remote_repository = "character", 
-        releases = "character", 
-        chapters = "character"
+        remote_repository = "character"
     )
 )
 
@@ -258,45 +256,14 @@ BiocBook <- function(path) {
     title <- yaml::read_yaml(book.yml)$book$title
     if (is.null(title)) cli::cli_abort("Missing `title` entry from `{book.yml}`.")
 
-    ## Check title
+    ## Check remote
     repo <- gert::git_remote_list(repo = local.path)$url
-
-    ## Check releases based on which branches exist on `origin` remote
-    releases <- gert::git_branch_list(repo = local.path) |> 
-        dplyr::filter(grepl('origin.*devel|origin.*RELEASE', name)) |> 
-        dplyr::pull(name) |> 
-        gsub("origin/", "", x = _)
-    
-    ## Check chapters
-    chapters <- rprojroot::find_root_file(
-        file.path('inst', yaml::read_yaml(book.yml)$book$chapters), criterion = is_biocbook, path = path
-    )
-    purrr::map(chapters, ~ {
-        if (!file.exists(.x)) cli::cli_abort(
-            "The chapter `{.x}` is listed in `{book.yml}` but the file is not found."
-        )
-    })
-    names(chapters) <- lapply(chapters, function(chap) {
-        has_yaml <- readLines(chap, n = 1) |> grepl("^---", x = _)
-        if (has_yaml) {
-            chaplines <- readLines(chap)
-            nlinesyaml <- which(grepl("^---", x = chaplines))[2] 
-            chaplines <- chaplines[seq(nlinesyaml + 2, length(chaplines))]
-        } 
-        else {
-            chaplines <- readLines(chap)
-        }
-        head <- gsub("^# ", "", chaplines[1])
-        head <- gsub(" \\{-\\}", "", head)
-    }) |> unlist()
 
     ## Initiate the new BiocBook object
     biocbook <- methods::new("BiocBook", 
         title = title,
         local_path = local.path, 
-        remote_repository = repo, 
-        releases = releases, 
-        chapters = chapters  
+        remote_repository = repo
     )
     return(biocbook)
 }

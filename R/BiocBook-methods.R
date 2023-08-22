@@ -23,16 +23,34 @@ setMethod("path", signature("BiocBook"), function(object) object@local_path)
 #' @rdname BiocBook-utils
 #' @export
 
-setMethod("releases", signature("BiocBook"), function(object) object@releases)
+setMethod("releases", signature("BiocBook"), function(object) {
+    local.path <- rprojroot::find_root_file(
+        criterion = is_biocbook, path = path(object)
+    )
+    releases <- gert::git_branch_list(repo = local.path) |> 
+        dplyr::filter(grepl('origin.*devel|origin.*RELEASE', name)) |> 
+        dplyr::pull(name) |> 
+        gsub("origin/", "", x = _)
+    releases
+})
 
 #' @rdname BiocBook-utils
 #' @export
 
 setMethod("chapters", signature("BiocBook"), function(object) {
-    book.yml <- .find_path(file.path('assets', '_book.yml'), object)
-    chapters <- rprojroot::find_root_file(
-        file.path('inst', yaml::read_yaml(book.yml)$book$chapters), criterion = is_biocbook, path = path(object)
+    book.yml <- rprojroot::find_root_file(
+        file.path('inst', 'assets', '_book.yml'), 
+        criterion = is_biocbook, path = path(object)
     )
+    chapters <- rprojroot::find_root_file(
+        file.path('inst', yaml::read_yaml(book.yml)$book$chapters), 
+        criterion = is_biocbook, path = path(object)
+    )
+    purrr::map(chapters, ~ {
+        if (!file.exists(.x)) cli::cli_abort(
+            "The chapter `{.x}` is listed in `{book.yml}` but the file is not found."
+        )
+    })
     names(chapters) <- lapply(chapters, function(chap) {
         has_yaml <- readLines(chap, n = 1) |> grepl("^---", x = _)
         if (has_yaml) {
@@ -46,7 +64,7 @@ setMethod("chapters", signature("BiocBook"), function(object) {
         head <- gsub("^# ", "", chaplines[1])
         head <- gsub(" \\{-\\}", "", head)
     }) |> unlist()
-    return(chapters)
+    chapters
 })
 
 #' @rdname BiocBook-utils
