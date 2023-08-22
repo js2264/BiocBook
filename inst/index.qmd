@@ -41,7 +41,7 @@ Both are built against the specific Bioconductor release `X.Y`.
 
 :::
 
-![](pages/images/workflow.png)
+![](pages/images/workflow.jpg)
 
 # What is this `BiocBook` package? {-}
 

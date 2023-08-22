@@ -100,11 +100,11 @@ console. Briefly, the following steps are followed:
 This template is available from 
 [`js2264/BiocBook.template`](https://github.com/js2264/BiocBook.template)
 
-![](images/use_template.png)
+![](images/use_template.jpg)
 
 #### Create a new repo {-}
 
-![](images/new_repo.png){width="70%"}
+![](images/new_repo.jpg){width="70%"}
 
 #### Enable `Github Pages` to be deployed
 
@@ -115,11 +115,11 @@ You will need to enable the Github Pages service for your newly created reposito
 - On the leftside bar, clik on the "Pages" tab;
 - Select the `gh-pages` branch and the `/docs` folder to deploy your Github Pages.
 
-![](images/gh_pages.png)
+![](images/gh_pages.jpg)
 
 #### Enter VS Code editor by pressing `.` {-}
 
-![](images/github_vscode.png)
+![](images/github_vscode.jpg)
 
 #### Fillout placeholders {-}
 
@@ -140,11 +140,11 @@ Four different files contain these placeholders:
 
 :::
 
-![](images/github_edit.png)
+![](images/github_edit.jpg)
 
 #### Commit changes {-}
 
-![](images/github_commit.png)
+![](images/github_commit.jpg)
 
 #### Clone the package to a local computer {-}
 

@@ -23,11 +23,11 @@ When pushing a `BiocBook`-based **package** from a local `devel` branch to Githu
 1. First, a **Docker image** will be created to build the `BiocBook` package against the Bioconductor `devel` branch and push the resulting image to `ghcr.io/<github_user>/<package_name>:devel`;
 2. Then, this image will be used to render the `BiocBook` **website** and deploy it to `https://<github_user>.github.io/<package_name>/devel/`
 
-![](images/local_to_gh.png)
+![](images/local_to_gh.jpg)
 
 Additional commits on the `devel` branch will trigger regeneration of the `devel` Docker image and the online book `devel` version. 
 
-![](images/commits.png)
+![](images/commits.jpg)
 
 ### Package submission to Bioconductor
 
@@ -36,12 +36,12 @@ Submission to Biconductor can follow the [same reviewing process](https://contri
 - Changes pushed to the author's Github repository will update the `devel` Docker image and the online book `devel` version. 
 - Package version bumps pushed to `upstream` (Bioconductor's `git`) will also trigger new checks by the *Bioconductor build system* (BBS). 
 
-![](images/submission.png)
+![](images/submission.jpg)
 
 After acceptance by the Bioconductor reviewers, the author's `devel` branch should be synchronized with the upstream `devel` branch from Bioconductor. Thus, any commit made to the `BiocBook`-based package will result 
 in regeneration of the `devel` Docker image and the online book `devel` version. 
 
-![](images/more_commits.png)
+![](images/more_commits.jpg)
 
 ### New Bioconductor releases
 
@@ -52,7 +52,7 @@ to `origin:<package_name>@RELEASE_X_Y`. This will automatically:
 1. Create a **Docker image** @ `ghcr.io/<github_user>/<package_name>:RELEASE_X_Y`, with the `BiocBook` **package** installed using Bioconductor `X.Y`;
 2. Publish the `BiocBook` **website** to `https://<github_user>.github.io/<package_name>/X.Y/`, using packages from Bioconductor `X.Y`.
 
-![](images/new_release.png)
+![](images/new_release.jpg)
 
 ::: {.callout-note icon='true'}
 
@@ -72,11 +72,11 @@ to Bioconductor, two points should be kept in mind:
 
 After new releases, updates and/or hot fixes can still made, both on the latest Bioconductor release and on the `devel` branch. New commits will automatically trigger the regeneration of the Docker image and the online book for the modified branch(es). 
 
-![](images/hot_fixes.png)
+![](images/hot_fixes.jpg)
 
 Additional Bioconductor releases will generate new versions of the Docker image and of the online book. 
 
-![](images/next_release.png)
+![](images/next_release.jpg)
 
 ## Access to versioned Docker and online book
 

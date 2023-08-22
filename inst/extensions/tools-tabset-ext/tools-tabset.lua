@@ -1,9 +1,9 @@
 
 
 local kTabsetIcons = {
-  ["VS Code"] = "vscode-logo.png",
-  ["R"] = "rstudio-logo.png",
-  ["Terminal"] = "text-editor-logo.png"
+  ["VS Code"] = "vscode-logo.jpg",
+  ["R"] = "rstudio-logo.jpg",
+  ["Terminal"] = "text-editor-logo.jpg"
 }
 
 local injected = false

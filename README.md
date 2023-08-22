@@ -55,7 +55,7 @@ This function performs the following operations:
 4. It clones the **remote** Github repository to a local folder; 
 5. It edits several placeholders from the template and commits the changes. 
 
-![BiocBook_init](inst/img/init.png)
+![BiocBook_init](inst/img/init.jpg)
 
 ### 2. The `BiocBook` class
 
@@ -65,7 +65,7 @@ book chapters contained in a `pages/` folder as `.qmd` files.
 This package directory requires a specific architecture, which is 
 best set up using the `BiocBook_init()` function. 
 
-![BiocBook](inst/img/biocbook.png)
+![BiocBook](inst/img/biocbook.jpg)
 
 ### 3. Editing an existing `BiocBook`
 
@@ -75,7 +75,7 @@ best set up using the `BiocBook_init()` function.
 - `add_chapter(biocbook, title = "...")` to start writing a new chapter;  
 - `edit_page(biocbook, page = "...")` to edit an existing chapter.
 
-![edit](inst/img/edit.png)
+![edit](inst/img/edit.jpg)
 
 ### 4. Publishing an existing `BiocBook`
 
@@ -87,7 +87,7 @@ In `R`, this can be done as follows:
 ```r
 BiocBook_publish(bb)
 ```
-![BiocBook_publish](inst/img/publish.png)
+![BiocBook_publish](inst/img/publish.jpg)
 
 The different available versions published in the `origin` `gh-pages` branch 
 can be listed using `BiocBook_versions(biocbook)`. 
