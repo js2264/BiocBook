@@ -2,6 +2,8 @@
 % Please edit documentation in R/doc.R, R/BiocBook-methods.R, R/utils.R
 \name{BiocBook-utils}
 \alias{BiocBook-utils}
+\alias{releases}
+\alias{chapters}
 \alias{path,BiocBook-method}
 \alias{releases,BiocBook-method}
 \alias{chapters,BiocBook-method}
@@ -11,6 +13,10 @@
 \alias{BiocBook_versions}
 \title{BiocBook utilities}
 \usage{
+releases(object)
+
+chapters(object)
+
 \S4method{path}{BiocBook}(object)
 
 \S4method{releases}{BiocBook}(object)

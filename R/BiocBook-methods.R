@@ -5,13 +5,13 @@ NULL
 
 ### New generics
 
-#' @rdname AllGenerics
+#' @rdname BiocBook-utils
 #' @export
-setGeneric("releases", function(object) {standardGeneric("releases")})
+setGeneric("releases", function(object) standardGeneric("releases"))
 
-#' @rdname AllGenerics
+#' @rdname BiocBook-utils
 #' @export
-setGeneric("chapters", function(object) {standardGeneric("chapters")})
+setGeneric("chapters", function(object) standardGeneric("chapters"))
 
 ### Methods
 

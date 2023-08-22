@@ -12,13 +12,6 @@ NULL
 #' @param open Optional. Whether to open the file for interactive editing (default: TRUE)
 NULL 
 
-#' @title BiocBook generics
-#' @name AllGenerics
-#' @aliases releases
-#' @aliases chapters
-#' @param object Passed to specific methods
-NULL
-
 #' @title Handling BiocBook directories
 #' @name BiocBook
 #' 
