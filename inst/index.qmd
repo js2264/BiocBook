@@ -1,5 +1,3 @@
-# What are `BiocBook`s? {-}
-
 ```{r "intro"}
 #| echo: false
 intro <- tryCatch(
@@ -24,6 +22,8 @@ intro <- tryCatch(
 ```
 
 `r intro`
+
+# What are `BiocBook`s? {-}
 
 `BiocBook`s are **package-based, versioned online books** with a **supporting
 `Docker` image** for each book version. 
