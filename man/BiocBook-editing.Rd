@@ -99,7 +99,7 @@ existing Dockerfiles
 
 \examples{
 ## In practice, you should not use `.local` and `.github_user` arguments. 
-BiocBook_init('localbook', .local = TRUE, .github_user = 'js2264')
+bb <- BiocBook_init('localbook', .local = TRUE, .github_user = 'js2264')
 add_preamble(bb, open = FALSE)
 add_chapter(bb, title = "Chapitre Un", open = FALSE)
 unlink('localbook', recursive = TRUE)
