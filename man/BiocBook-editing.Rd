@@ -5,8 +5,8 @@
 \alias{edit_book_yml}
 \alias{edit_bib}
 \alias{edit_requirements_yml}
-\alias{BiocBook_publish}
 \alias{BiocBook_preview}
+\alias{BiocBook_publish}
 \alias{BiocBook_versions}
 \alias{add_preamble}
 \alias{add_chapter}
@@ -19,9 +19,9 @@ edit_bib(book, open = TRUE)
 
 edit_requirements_yml(book, open = TRUE)
 
-BiocBook_publish(book, message = "🚀 Publishing")
-
 BiocBook_preview(book, browse = FALSE, watch = FALSE)
+
+BiocBook_publish(book, message = "🚀 Publishing")
 
 BiocBook_versions(book)
 
@@ -36,11 +36,11 @@ edit_page(book, file, open = TRUE)
 
 \item{open}{Optional. Whether to open the file for interactive editing (default: TRUE)}
 
-\item{message}{Optional. Message used when committing with \code{BiocBook_publish()}.}
-
 \item{browse}{Optional. Passed to \code{quarto_preview()} (default: FALSE).}
 
 \item{watch}{Optional. Passed to \code{quarto_preview()} (default: FALSE).}
+
+\item{message}{Optional. Message used when committing with \code{BiocBook_publish()}.}
 
 \item{title}{A character string for a title for the new chatper. If \code{file} is not explicitely provided, the
 title should only contain alphanumeric characters and spaces}
@@ -98,7 +98,8 @@ existing Dockerfiles
 }
 
 \examples{
-bb <- BiocBook_init('localbook', local = TRUE, github_user = 'js2264')
+## In practice, you should not use `.local` and `.github_user` arguments. 
+BiocBook_init('localbook', .local = TRUE, .github_user = 'js2264')
 add_preamble(bb, open = FALSE)
 add_chapter(bb, title = "Chapitre Un", open = FALSE)
 unlink('localbook', recursive = TRUE)

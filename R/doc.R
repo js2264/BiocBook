@@ -52,7 +52,8 @@
 #' @param watch Optional. Passed to `quarto_preview()` (default: FALSE).
 #' 
 #' @examples
-#' bb <- BiocBook_init('localbook', local = TRUE, github_user = 'js2264')
+#' ## In practice, you should not use `.local` and `.github_user` arguments. 
+#' BiocBook_init('localbook', .local = TRUE, .github_user = 'js2264')
 #' add_preamble(bb, open = FALSE)
 #' add_chapter(bb, title = "Chapitre Un", open = FALSE)
 #' unlink('localbook', recursive = TRUE)
@@ -132,13 +133,14 @@ NULL
 #' @param skip_availability Optional. Whether to skip package name availability (default: FALSE).
 #' @param template Optional. Github repository used for `BiocBook` template (default: `js2264/BiocBook.template`). 
 #' @param commit Optional. Logical, whether to automatically push commits to remote Github origin (default: FALSE). 
-#' @param local Optional. Whether to create a matching Github repository or stay local (default: FALSE).
-#' @param github_user Optional. If `local = TRUE`, please do provide your Github username to edit BiocBook placeholders. If not provided, `<user>` placeholders will remain in several files until manually filled (default: NA).
+#' @param .local Should only be used for examples/tests. Whether to create a matching Github repository or stay local (default: FALSE).
+#' @param .github_user Should only be used for examples/tests. If `.local = TRUE`, please do provide your Github username to edit BiocBook placeholders. If not provided, `<user>` placeholders will remain in several files until manually filled (default: NA).
 #' @param path Path of an existing `BiocBook`. 
 #' @param object A `BiocBook` object, created by `BiocBook` or `BiocBook_init()`.
 #' 
 #' @examples
-#' BiocBook_init('localbook', local = TRUE, github_user = 'js2264')
+#' ## In practice, you should not use `.local` and `.github_user` arguments. 
+#' BiocBook_init('localbook', .local = TRUE, .github_user = 'js2264')
 #' bb <- BiocBook('localbook')
 #' chapters(bb)
 #' releases(bb)

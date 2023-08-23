@@ -16,7 +16,7 @@ methods::setClass("BiocBook",
 #' @include doc.R
 #' @export
 
-BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js2264/BiocBook.template", commit = NA, local = FALSE, github_user = NA) {
+BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js2264/BiocBook.template", commit = NA, .local = FALSE, .github_user = NA) {
 
     ## Check that a folder named `new_package` can be created 
     cli::cat_rule("Running preflight checklist", col = "cyan", line = 2)
@@ -27,7 +27,7 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     }
 
     ## Check that user is logged in Github
-    if (!local) {
+    if (!.local) {
         
         cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Checking Github credentials"))
         Sys.sleep(1)
@@ -56,14 +56,14 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
         Sys.sleep(1)
     }
     else {
-        if (is.na(github_user)) {
-            cli::cli_alert_danger(c("`github_user` is not set. ", 
+        if (is.na(.github_user)) {
+            cli::cli_alert_danger(c("`.github_user` is not set. ", 
             "`<user>` placeholders in the template `BiocBook` won't be fixed."
             ))
             user <- '<user>'
         }
         else {
-            user <- github_user
+            user <- .github_user
         }
     }
 
@@ -91,7 +91,7 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     }
 
     ## Create new repo from BiocBook.template
-    if (!local) {
+    if (!.local) {
 
         cli::cli_text("")
         cli::cat_rule("Initiating a new `BiocBook`", col = "cyan", line = 2)
@@ -213,9 +213,7 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     cli::cli_alert_success(cli::col_grey("Filled out `{cli::col_cyan(path)}` fields"))
     cli::cli_alert_info(cli::col_grey("Please finish editing the `{cli::col_cyan(path)}` fields, including:"))
     d <- cli::cli_div(theme = list(ul = list(`margin-left` = 2, before = "")))
-    cli::cli_ul(c(
-        "  Title", "  Description", "  Authors@R"
-    ))
+    cli::cli_ul(c("  Title", "  Description", "  Authors@R"))
     cli::cli_end(d)
     Sys.sleep(1)
 
@@ -233,7 +231,7 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     Sys.sleep(1)
 
     ## Committing everything 
-    if (!local) {
+    if (!.local) {
 
         cli::cli_alert_info(cli::col_grey("Several files have been automatically edited: "))
         d <- cli::cli_div(theme = list(ul = list(`margin-left` = 2, before = "")))
@@ -276,8 +274,8 @@ BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js
     cli::cli_text("")
     cli::cat_rule("Results", col = "cyan", line = 2)
     cli::cli_alert_success("Local `BiocBook` directory successfully created  : {cli::col_cyan(repo)}")
-    if (!local) cli::cli_alert_success("Remote `BiocBook` repository successfully created: {cli::col_cyan(gert::git_remote_list(repo = repo)$url[1])}")
-    if (local) cli::cli_alert_warning(cli::col_white(cli::style_bold(
+    if (!.local) cli::cli_alert_success("Remote `BiocBook` repository successfully created: {cli::col_cyan(gert::git_remote_list(repo = repo)$url[1])}")
+    if (.local) cli::cli_alert_warning(cli::col_white(cli::style_bold(
         "This book will be only available in local until a Github remote is set."
     )))
     cli::cli_text("")

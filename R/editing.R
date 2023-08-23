@@ -37,6 +37,15 @@ edit_requirements_yml <- function(book, open = TRUE) {
 #' @rdname BiocBook-editing
 #' @export 
 
+BiocBook_preview <- function(book, browse = FALSE, watch = FALSE) {
+
+    quarto::quarto_preview(file.path(path(book), 'inst'), browse = browse, watch = watch)
+
+}
+
+#' @rdname BiocBook-editing
+#' @export 
+
 BiocBook_publish <- function(book, message = "\U1F680 Publishing") {
 
     f <- gert::git_status(repo = path(book), pathspec = 'inst/')
@@ -62,15 +71,6 @@ BiocBook_publish <- function(book, message = "\U1F680 Publishing") {
     ))
 
     invisible(TRUE)
-}
-
-#' @rdname BiocBook-editing
-#' @export 
-
-BiocBook_preview <- function(book, browse = FALSE, watch = FALSE) {
-
-    quarto::quarto_preview(file.path(path(book), 'inst'), browse = browse, watch = watch)
-
 }
 
 #' @rdname BiocBook-editing

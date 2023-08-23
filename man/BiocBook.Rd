@@ -18,8 +18,8 @@ BiocBook_init(
   skip_availability = FALSE,
   template = "js2264/BiocBook.template",
   commit = NA,
-  local = FALSE,
-  github_user = NA
+  .local = FALSE,
+  .github_user = NA
 )
 
 BiocBook(path)
@@ -47,9 +47,9 @@ from R and Bioconductor (i.e. no \verb{_} or \code{-}, no name starting with a n
 
 \item{commit}{Optional. Logical, whether to automatically push commits to remote Github origin (default: FALSE).}
 
-\item{local}{Optional. Whether to create a matching Github repository or stay local (default: FALSE).}
+\item{.local}{Should only be used for examples/tests. Whether to create a matching Github repository or stay local (default: FALSE).}
 
-\item{github_user}{Optional. If \code{local = TRUE}, please do provide your Github username to edit BiocBook placeholders. If not provided, \verb{<user>} placeholders will remain in several files until manually filled (default: NA).}
+\item{.github_user}{Should only be used for examples/tests. If \code{.local = TRUE}, please do provide your Github username to edit BiocBook placeholders. If not provided, \verb{<user>} placeholders will remain in several files until manually filled (default: NA).}
 
 \item{path}{Path of an existing \code{BiocBook}.}
 
@@ -134,7 +134,8 @@ can be listed using \code{BiocBook_versions(biocbook)}
 }
 
 \examples{
-BiocBook_init('localbook', local = TRUE, github_user = 'js2264')
+## In practice, you should not use `.local` and `.github_user` arguments. 
+BiocBook_init('localbook', .local = TRUE, .github_user = 'js2264')
 bb <- BiocBook('localbook')
 chapters(bb)
 releases(bb)
