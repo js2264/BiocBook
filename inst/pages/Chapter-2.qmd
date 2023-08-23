@@ -66,9 +66,7 @@ gh::gh_whoami()
 
 ### Initiate a `BiocBook` package
 
-::: {.panel-tabset group="tools-tabset"}
-
-### R
+#### R
 
 Creating a `BiocBook` in `R` is straightforward with the `BiocBook` package. 
 
@@ -87,26 +85,26 @@ console. Briefly, the following steps are followed:
 3. Fillout placeholders from the template
 4. Committing and pushing the changes to Github
 
-### VS Code
+#### VS Code
 
 ::: {.callout-warning icon='true'}
 
-#### This approach is significantly more hazardous. It is highly recommended to stick to the `BiocBook_init()` helper function from the `BiocBook` package. 
+##### This approach is significantly more hazardous. It is highly recommended to stick to the `BiocBook_init()` helper function from the `BiocBook` package. 
 
 :::
 
-#### Use the `BiocBook.template` package template {-}
+##### Use the `BiocBook.template` package template {-}
 
 This template is available from 
 [`js2264/BiocBook.template`](https://github.com/js2264/BiocBook.template)
 
 ![](images/use_template.jpg)
 
-#### Create a new repo {-}
+##### Create a new repo {-}
 
 ![](images/new_repo.jpg){width="70%"}
 
-#### Enable `Github Pages` to be deployed
+##### Enable `Github Pages` to be deployed
 
 You will need to enable the Github Pages service for your newly created repository. 
 
@@ -117,11 +115,11 @@ You will need to enable the Github Pages service for your newly created reposito
 
 ![](images/gh_pages.jpg)
 
-#### Enter VS Code editor by pressing `.` {-}
+##### Enter VS Code editor by pressing `.` {-}
 
 ![](images/github_vscode.jpg)
 
-#### Fillout placeholders {-}
+##### Fillout placeholders {-}
 
 ::: {.callout-warning icon='true'}
 
@@ -142,13 +140,11 @@ Four different files contain these placeholders:
 
 ![](images/github_edit.jpg)
 
-#### Commit changes {-}
+##### Commit changes {-}
 
 ![](images/github_commit.jpg)
 
-#### Clone the package to a local computer {-}
-
-:::
+##### Clone the package to a local computer {-}
 
 ### Edit new `BiocBook` chapters
 
