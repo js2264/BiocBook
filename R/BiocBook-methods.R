@@ -57,15 +57,16 @@ setMethod("chapters", signature("BiocBook"), function(object) {
         )
     })
     names(chapters) <- lapply(chapters, function(chap) {
-        has_yaml <- readLines(chap, n = 1) |> grepl("^---", x = _)
+        has_yaml <- readLines(chap, n = 1) |> grepl("^---|^`", x = _)
         if (has_yaml) {
             chaplines <- readLines(chap)
-            nlinesyaml <- which(grepl("^---", x = chaplines))[2] 
+            nlinesyaml <- which(grepl("^---|^`", x = chaplines))[2] 
             chaplines <- chaplines[seq(nlinesyaml + 2, length(chaplines))]
         } 
         else {
             chaplines <- readLines(chap)
         }
+        chaplines <- chaplines[grepl("^# ", chaplines)]
         head <- gsub("^# ", "", chaplines[1])
         head <- gsub(" \\{-\\}", "", head)
     }) |> unlist()
@@ -90,7 +91,7 @@ setMethod("show", signature("BiocBook"), function(object) {
     cli::cli_ul(paste0(
         cli::col_grey(stringr::str_trunc(names(chapters(object)), 30) |> stringr::str_pad(31, "right")),
         ' [', 
-        cli::col_cyan(stringr::str_trunc(gsub(path(object), "", chapters(object)), 30)),
+        cli::col_cyan(gsub(path(object), "", chapters(object))),
         ']')
     )
     cli::cli_end(d)
