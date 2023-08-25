@@ -87,6 +87,9 @@ best set up using the `init()` function.
 
 ![edit](inst/img/edit.jpg)
 
+- `preview(biocbook)` will compile (and cache) the book locally. Use it 
+to verify that your book renders correctly. 
+
 ### 4. Publishing an existing `BiocBook`
 
 As long as the local `BiocBook` has been initiated with `init()`, 
@@ -101,3 +104,19 @@ publish(bb)
 
 The different available versions published in the `origin` `gh-pages` branch 
 can be listed using `status(biocbook)`. 
+
+## Acknowledgments
+
+This works was inspired by and closely follows the strategy used in coordination 
+by the Bioconductor core team and Aaron Lun to submit book-containing 
+packages (from the `OSCA` series as well as `SingleR` and `csaw` books). 
+
+- @OSCA
+- @SingleR
+- @csaw
+
+This package was also inspired by the `*down` package series, including: 
+
+- @knitr
+- @pkgdown
+- @bookdown

@@ -1,3 +1,9 @@
+---
+format: 
+  html:
+    citation-location: document
+---
+
 ```{r "intro"}
 #| echo: false
 intro <- tryCatch(
@@ -125,6 +131,22 @@ The initiated RStudio Server instance will be available at
 Further instructions regarding Bioconductor-based Docker images are 
 available [here](https://bioconductor.org/help/docker/). 
 
+# Acknowledgments
+
+This works was inspired by and closely follows the strategy used in coordination 
+by the Bioconductor core team and Aaron Lun to submit book-containing 
+packages (from the `OSCA` series as well as `SingleR` and `csaw` books). 
+
+- @OSCA
+- @SingleR
+- @csaw
+
+This package was also inspired by the `*down` package series, including: 
+
+- @knitr
+- @bookdown
+- @pkgdown
+
 # Session info {-}
 
 ::: {.callout-note collapse="true"}
@@ -140,3 +162,5 @@ sessioninfo::session_info(
 ```
 
 :::
+
+# References {-}
