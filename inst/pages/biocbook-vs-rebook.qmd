@@ -56,11 +56,18 @@ which also provides functions to create/edit books.
 
 ## `rebook` features missing from `BiocBook`
 
-- Re-using objects generated in one chapter/book in another chapter/book;
+- Smart reuse of objects generated in one book in another book;
 
 ::: {.callout-tip icon='true'}
-This can be achieved by saving a data object as an `.rds` file and loading 
-it in a subsequent chapter. 
+This can still be achieved **within** a book by saving a data object a
+s an `.rds` file and loading it in a subsequent chapter. 
+
+```{r}
+#| cache: false
+isthisworking <- readRDS('isthisworking.rds')
+isthisworking
+```
+
 :::
 
 - Native support of cross-references across books.

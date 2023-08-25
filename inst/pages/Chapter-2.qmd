@@ -254,6 +254,16 @@ pandas >= 2.0.0
 ```
  -->
 
+### Creating data object
+
+While writing chapters, you can save objects as `.rds` files to reuse them 
+in subsequent chapters (e.g. [here](biocbook-vs-rebook.html#rebook-features-missing-from-biocbook)).
+
+```{r}
+isthisworking <- "yes"
+saveRDS(isthisworking, 'isthisworking.rds')
+```
+
 ### Adding references
 
 References can be listed as `.bib` entries in the bibliography file located in 
