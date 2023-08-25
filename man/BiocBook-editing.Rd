@@ -6,9 +6,9 @@
 \alias{edit_bib}
 \alias{edit_requirements_yml}
 \alias{edit_css}
-\alias{BiocBook_preview}
-\alias{BiocBook_publish}
-\alias{BiocBook_versions}
+\alias{preview}
+\alias{publish}
+\alias{status}
 \alias{add_preamble}
 \alias{add_chapter}
 \alias{edit_page}
@@ -22,11 +22,11 @@ edit_requirements_yml(book, open = TRUE)
 
 edit_css(book, open = TRUE)
 
-BiocBook_preview(book, browse = FALSE, watch = FALSE)
+preview(book, browse = FALSE, watch = FALSE)
 
-BiocBook_publish(book, message = "🚀 Publishing")
+publish(book, message = "🚀 Publishing")
 
-BiocBook_versions(book)
+status(book)
 
 add_preamble(book, open = TRUE)
 
@@ -35,7 +35,7 @@ add_chapter(book, title, file = NA, position = NULL, open = TRUE)
 edit_page(book, file, open = TRUE)
 }
 \arguments{
-\item{book}{A \code{BiocBook} object, opened with \code{BiocBook} or created by \code{BiocBook_init()}.}
+\item{book}{A \code{BiocBook} object, opened with \code{BiocBook} or created by \code{init()}.}
 
 \item{yml}{Which .yml should be opened?}
 
@@ -45,7 +45,7 @@ edit_page(book, file, open = TRUE)
 
 \item{watch}{Optional. Passed to \code{quarto_preview()} (default: FALSE).}
 
-\item{message}{Optional. Message used when committing with \code{BiocBook_publish()}.}
+\item{message}{Optional. Message used when committing with \code{publish()}.}
 
 \item{title}{A character string for a title for the new chatper. If \code{file} is not explicitely provided, the
 title should only contain alphanumeric characters and spaces}
@@ -61,9 +61,9 @@ chapter (i.e. the \code{Welcome} page)}
 \value{
 \itemize{
 \item \verb{add_*}, \verb{edit_*}: A \code{BiocBook} object (invisible).
-\item \code{BiocBook_publish}: TRUE (invisible) if pushing to Github was successful;
-\item \code{BiocBook_preview}: Local URL to browse dynamically rendered book;
-\item \code{BiocBook_versions}: A tibble of the existing versions found on the Github
+\item \code{publish}: TRUE (invisible) if pushing to Github was successful;
+\item \code{preview}: Local URL to browse dynamically rendered book;
+\item \code{status}: A tibble of the existing versions found on the Github
 repository (branch \code{gh-pages}) and of the existing Dockerfiles.
 }
 }
@@ -94,9 +94,9 @@ Several accessory files can be manually edited:
 
 Extra functions are provided to faciliate the maintenance of \code{BiocBook}s.
 \itemize{
-\item \code{BiocBook_preview()}: is used to dynamically render the book locally
-\item \code{BiocBook_publish()}: is used to commit and push to remote Github branch
-\item \code{BiocBook_versions()}: is used to list the book versions already
+\item \code{preview()}: is used to dynamically render the book locally
+\item \code{publish()}: is used to commit and push to remote Github branch
+\item \code{status()}: is used to list the book versions already
 deployed on the Github repository (branch \code{gh-pages}) and of the
 existing Dockerfiles
 }
@@ -104,7 +104,7 @@ existing Dockerfiles
 
 \examples{
 ## In practice, you should not use `.local` and `.github_user` arguments. 
-bb <- BiocBook_init('localbook', .local = TRUE, .github_user = 'js2264')
+bb <- init('localbook', .local = TRUE, .github_user = 'js2264')
 add_preamble(bb, open = FALSE)
 add_chapter(bb, title = "Chapitre Un", open = FALSE)
 unlink('localbook', recursive = TRUE)

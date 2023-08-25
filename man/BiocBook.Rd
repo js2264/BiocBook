@@ -4,7 +4,7 @@
 \name{BiocBook}
 \alias{BiocBook}
 \alias{BiocBook-class}
-\alias{BiocBook_init}
+\alias{init}
 \alias{releases}
 \alias{chapters}
 \alias{path,BiocBook-method}
@@ -13,7 +13,7 @@
 \alias{show,BiocBook-method}
 \title{Handling BiocBook directories}
 \usage{
-BiocBook_init(
+init(
   new_package,
   skip_availability = FALSE,
   template = "js2264/BiocBook.template",
@@ -53,7 +53,7 @@ from R and Bioconductor (i.e. no \verb{_} or \code{-}, no name starting with a n
 
 \item{path}{Path of an existing \code{BiocBook}.}
 
-\item{object}{A \code{BiocBook} object, created by \code{BiocBook} or \code{BiocBook_init()}.}
+\item{object}{A \code{BiocBook} object, created by \code{BiocBook} or \code{init()}.}
 }
 \value{
 A \code{BiocBook} object (invisible).
@@ -62,7 +62,7 @@ A \code{BiocBook} object (invisible).
 \code{BiocBook}s are local R packages containing an extra \code{pages} folder to
 write up online book chapters.
 \enumerate{
-\item A new \code{BiocBook} should be created using \code{BiocBook_init(new_package = "...")}.
+\item A new \code{BiocBook} should be created using \code{init(new_package = "...")}.
 \item A newly created \code{BiocBook} can be accessed to in R using \code{biocbook <- BiocBook(path = "...")}.
 \item To edit an existing \code{BiocBook} object, several helper functions exist:
 }
@@ -81,7 +81,7 @@ A \code{BiocBook} object acts as a pointer to a local package directory, with
 book chapters contained in a \verb{pages/} folder as \code{.qmd} files.
 
 This package directory requires a specific architecture, which is
-best set up using the \code{BiocBook_init()} function.
+best set up using the \code{init()} function.
 
 When created, 3 slots are defined:
 \itemize{
@@ -95,7 +95,7 @@ the remote
 \section{Creating a \code{BiocBook}}{
 
 
-A new \code{BiocBook} should be created using the \code{BiocBook_init(new_package = "...")} function.
+A new \code{BiocBook} should be created using the \code{init(new_package = "...")} function.
 This function performs the following operations:
 \enumerate{
 \item It checks that the provided package name is available;
@@ -105,7 +105,7 @@ This function performs the following operations:
 \item It edits several placeholders from the template and commits the changes.
 }
 
-The \code{BiocBook_init(new_package = "...")} function returns a \code{BiocBook} object.
+The \code{init(new_package = "...")} function returns a \code{BiocBook} object.
 }
 
 \section{Editing an existing \code{BiocBook}}{
@@ -122,7 +122,7 @@ The \code{BiocBook_init(new_package = "...")} function returns a \code{BiocBook}
 \section{Publishing an existing \code{BiocBook}}{
 
 
-As long as the local \code{BiocBook} has been initiated with \code{BiocBook_init()},
+As long as the local \code{BiocBook} has been initiated with \code{init()},
 the writer simply has to commit changes and push them to the \code{origin} remote.
 
 In \code{R}, this can be done as follows:
@@ -130,12 +130,12 @@ In \code{R}, this can be done as follows:
 \code{gert::git_commit_all(message, repo = path(biocbook))}
 
 The different available versions published in the \code{origin} \code{gh-pages} branch
-can be listed using \code{BiocBook_versions(biocbook)}
+can be listed using \code{status(biocbook)}
 }
 
 \examples{
 ## In practice, you should not use `.local` and `.github_user` arguments. 
-BiocBook_init('localbook', .local = TRUE, .github_user = 'js2264')
+init('localbook', .local = TRUE, .github_user = 'js2264')
 bb <- BiocBook('localbook')
 chapters(bb)
 releases(bb)

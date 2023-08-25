@@ -16,7 +16,7 @@ methods::setClass("BiocBook",
 #' @include doc.R
 #' @export
 
-BiocBook_init <- function(new_package, skip_availability = FALSE, template = "js2264/BiocBook.template", commit = NA, .local = FALSE, .github_user = NA) {
+init <- function(new_package, skip_availability = FALSE, template = "js2264/BiocBook.template", commit = NA, .local = FALSE, .github_user = NA) {
 
     ## Check that a folder named `new_package` can be created 
     cli::cat_rule("Running preflight checklist", col = "cyan", line = 2)

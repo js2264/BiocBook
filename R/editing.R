@@ -37,7 +37,7 @@ edit_css <- function(book, open = TRUE) {
 #' @rdname BiocBook-editing
 #' @export 
 
-BiocBook_preview <- function(book, browse = FALSE, watch = FALSE) {
+preview <- function(book, browse = FALSE, watch = FALSE) {
 
     quarto::quarto_preview(file.path(path(book), 'inst'), browse = browse, watch = watch)
 
@@ -46,7 +46,7 @@ BiocBook_preview <- function(book, browse = FALSE, watch = FALSE) {
 #' @rdname BiocBook-editing
 #' @export 
 
-BiocBook_publish <- function(book, message = "\U1F680 Publishing") {
+publish <- function(book, message = "\U1F680 Publishing") {
 
     f <- gert::git_status(repo = path(book), pathspec = 'inst/')
     f <- f[!f$staged, ]
@@ -76,7 +76,7 @@ BiocBook_publish <- function(book, message = "\U1F680 Publishing") {
 #' @rdname BiocBook-editing
 #' @export
 
-BiocBook_versions <- function(book) {
+status <- function(book) {
     purrr::map_dfr(releases(book), function(release) {
 
         GH_api <- "https://api.github.com"

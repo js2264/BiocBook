@@ -1,19 +1,19 @@
-test_that("BiocBook_init work", {
+test_that("init work", {
     
-    ## -- Test `BiocBook_init` without user 
+    ## -- Test `init` without user 
     
     tmpdir <- paste0('.', paste0(
         sample(c(seq(0, 9), LETTERS), 8, replace = TRUE), collapse = ""
     ))
     unlink(tmpdir, recursive = TRUE, force = TRUE)
 
-    expect_no_error(    bb <- BiocBook_init(tmpdir, .local = TRUE))
+    expect_no_error(    bb <- init(tmpdir, .local = TRUE))
     expect_no_error(    bb)
     expect_no_error(    path(bb))
     expect_no_error(    chapters(bb))
     expect_no_error(    releases(bb))
-    expect_no_error(    BiocBook_preview(bb))
-    expect_error(       BiocBook_versions(bb))
+    expect_no_error(    preview(bb))
+    expect_error(       status(bb))
 
     expect_invisible(   add_preamble(bb, open = FALSE))
     expect_warning(     add_preamble(bb, open = FALSE))
@@ -25,7 +25,7 @@ test_that("BiocBook_init work", {
     unlink(tmpdir, recursive = TRUE, force = TRUE)
     quarto::quarto_preview_stop()
 
-    ## -- Test `BiocBook_init` with user 
+    ## -- Test `init` with user 
 
     tmpdir <- paste0('.', paste0(
         sample(c(seq(0, 9), LETTERS), 8, replace = TRUE), collapse = ""
@@ -33,15 +33,15 @@ test_that("BiocBook_init work", {
     
     ## Utilities
     expect_no_error(    
-        BiocBook_init(tmpdir, .local = TRUE, .github_user = 'js2264')
+        init(tmpdir, .local = TRUE, .github_user = 'js2264')
     )
     expect_no_error(    bb <- BiocBook(tmpdir))
     expect_no_error(    show(bb))
     expect_no_error(    path(bb))
     expect_no_error(    chapters(bb))
     expect_no_error(    releases(bb))
-    expect_no_error(    BiocBook_preview(bb))
-    expect_error(       BiocBook_versions(bb))
+    expect_no_error(    preview(bb))
+    expect_error(       status(bb))
 
     ## add_* functions
     expect_invisible(   add_preamble(bb, open = FALSE))

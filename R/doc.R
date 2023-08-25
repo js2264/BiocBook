@@ -23,17 +23,17 @@
 #' 
 #' Extra functions are provided to faciliate the maintenance of `BiocBook`s.  
 #' 
-#' - `BiocBook_preview()`: is used to dynamically render the book locally
-#' - `BiocBook_publish()`: is used to commit and push to remote Github branch
-#' - `BiocBook_versions()`: is used to list the book versions already 
+#' - `preview()`: is used to dynamically render the book locally
+#' - `publish()`: is used to commit and push to remote Github branch
+#' - `status()`: is used to list the book versions already 
 #' deployed on the Github repository (branch `gh-pages`) and of the 
 #' existing Dockerfiles
 #' 
 #' @return 
 #' - `add_*`, `edit_*`: A `BiocBook` object (invisible). 
-#' - `BiocBook_publish`: TRUE (invisible) if pushing to Github was successful;
-#' - `BiocBook_preview`: Local URL to browse dynamically rendered book;
-#' - `BiocBook_versions`: A tibble of the existing versions found on the Github
+#' - `publish`: TRUE (invisible) if pushing to Github was successful;
+#' - `preview`: Local URL to browse dynamically rendered book;
+#' - `status`: A tibble of the existing versions found on the Github
 #' repository (branch `gh-pages`) and of the existing Dockerfiles. 
 #' 
 #' @param title A character string for a title for the new chatper. If `file` is not explicitely provided, the 
@@ -46,15 +46,15 @@
 #' chapter (i.e. the `Welcome` page)
 #' @param open Optional. Whether to open the file for interactive editing (default: TRUE)
 #' @param yml Which .yml should be opened? 
-#' @param book A `BiocBook` object, opened with `BiocBook` or created by `BiocBook_init()`.
+#' @param book A `BiocBook` object, opened with `BiocBook` or created by `init()`.
 #' @param open Optional. Whether to open the file for interactive editing (default: TRUE)
-#' @param message Optional. Message used when committing with `BiocBook_publish()`.
+#' @param message Optional. Message used when committing with `publish()`.
 #' @param browse Optional. Passed to `quarto_preview()` (default: FALSE).
 #' @param watch Optional. Passed to `quarto_preview()` (default: FALSE).
 #' 
 #' @examples
 #' ## In practice, you should not use `.local` and `.github_user` arguments. 
-#' bb <- BiocBook_init('localbook', .local = TRUE, .github_user = 'js2264')
+#' bb <- init('localbook', .local = TRUE, .github_user = 'js2264')
 #' add_preamble(bb, open = FALSE)
 #' add_chapter(bb, title = "Chapitre Un", open = FALSE)
 #' unlink('localbook', recursive = TRUE)
@@ -69,7 +69,7 @@ NULL
 #' `BiocBook`s are local R packages containing an extra `pages` folder to 
 #' write up online book chapters.
 #' 
-#' 1. A new `BiocBook` should be created using `BiocBook_init(new_package = "...")`.  
+#' 1. A new `BiocBook` should be created using `init(new_package = "...")`.  
 #' 2. A newly created `BiocBook` can be accessed to in R using `biocbook <- BiocBook(path = "...")`. 
 #' 3. To edit an existing `BiocBook` object, several helper functions exist: 
 #'   - `add_preamble(biocbook)` 
@@ -84,7 +84,7 @@ NULL
 #' book chapters contained in a `pages/` folder as `.qmd` files.  
 #' 
 #' This package directory requires a specific architecture, which is 
-#' best set up using the `BiocBook_init()` function. 
+#' best set up using the `init()` function. 
 #' 
 #' When created, 3 slots are defined: 
 #' 
@@ -95,7 +95,7 @@ NULL
 #' 
 #' @section Creating a `BiocBook`:
 #' 
-#' A new `BiocBook` should be created using the `BiocBook_init(new_package = "...")` function.  
+#' A new `BiocBook` should be created using the `init(new_package = "...")` function.  
 #' This function performs the following operations: 
 #' 
 #' 1. It checks that the provided package name is available;
@@ -104,7 +104,7 @@ NULL
 #' 4. It clones the **remote** Github repository to a local folder; 
 #' 5. It edits several placeholders from the template and commits the changes. 
 #' 
-#' The `BiocBook_init(new_package = "...")` function returns a `BiocBook` object. 
+#' The `init(new_package = "...")` function returns a `BiocBook` object. 
 #' 
 #' @section Editing an existing `BiocBook`:
 #' 
@@ -116,7 +116,7 @@ NULL
 #' 
 #' @section Publishing an existing `BiocBook`:
 #' 
-#' As long as the local `BiocBook` has been initiated with `BiocBook_init()`, 
+#' As long as the local `BiocBook` has been initiated with `init()`, 
 #' the writer simply has to commit changes and push them to the `origin` remote.  
 #' 
 #' In `R`, this can be done as follows: 
@@ -124,7 +124,7 @@ NULL
 #' `gert::git_commit_all(message, repo = path(biocbook))`
 #' 
 #' The different available versions published in the `origin` `gh-pages` branch 
-#' can be listed using `BiocBook_versions(biocbook)`
+#' can be listed using `status(biocbook)`
 #' 
 #' @return A `BiocBook` object (invisible). 
 #' 
@@ -137,11 +137,11 @@ NULL
 #' @param .local Should only be used for examples/tests. Whether to create a matching Github repository or stay local (default: FALSE).
 #' @param .github_user Should only be used for examples/tests. If `.local = TRUE`, please do provide your Github username to edit BiocBook placeholders. If not provided, `<user>` placeholders will remain in several files until manually filled (default: NA).
 #' @param path Path of an existing `BiocBook`. 
-#' @param object A `BiocBook` object, created by `BiocBook` or `BiocBook_init()`.
+#' @param object A `BiocBook` object, created by `BiocBook` or `init()`.
 #' 
 #' @examples
 #' ## In practice, you should not use `.local` and `.github_user` arguments. 
-#' BiocBook_init('localbook', .local = TRUE, .github_user = 'js2264')
+#' init('localbook', .local = TRUE, .github_user = 'js2264')
 #' bb <- BiocBook('localbook')
 #' chapters(bb)
 #' releases(bb)

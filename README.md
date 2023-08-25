@@ -34,7 +34,7 @@ gh::gh_whoami()
 # check `usethis::gh_token_help()` for more information
 
 ## Create a new BiocBook
-BiocBook_init("myNewPackage")
+init("myNewPackage")
 
 ## Open the new BiocBook
 bb <- BiocBook("./myNewPackage")
@@ -45,17 +45,17 @@ add_chapter(bb, title = "Chapter 1")
 add_chapter(bb, title = "Chapter 2")
 
 ## Preview
-BiocBook_preview(bb)
+preview(bb)
 
 ## Publish to Github
-BiocBook_publish(bb)
+publish(bb)
 ```
 
 ## Working with `BiocBook`s
     
 ### 1. Creating a `BiocBook`
 
-A new `BiocBook` should be created using the `BiocBook_init(new_package = "...")` function.  
+A new `BiocBook` should be created using the `init(new_package = "...")` function.  
 This function performs the following operations: 
 
 1. It checks that the provided package name is available;
@@ -65,7 +65,7 @@ This function performs the following operations:
 4. It clones the **remote** Github repository to a **local folder**; 
 5. It edits several placeholders from the template and commits the changes. 
 
-![BiocBook_init](inst/img/init.jpg)
+![init](inst/img/init.jpg)
 
 ### 2. The `BiocBook` class
 
@@ -73,7 +73,7 @@ A `BiocBook` object acts as a pointer to a local package directory, with
 book chapters contained in a `pages/` folder as `.qmd` files.  
 
 This package directory requires a specific architecture, which is 
-best set up using the `BiocBook_init()` function. 
+best set up using the `init()` function. 
 
 ![BiocBook](inst/img/biocbook.jpg)
 
@@ -89,15 +89,15 @@ best set up using the `BiocBook_init()` function.
 
 ### 4. Publishing an existing `BiocBook`
 
-As long as the local `BiocBook` has been initiated with `BiocBook_init()`, 
+As long as the local `BiocBook` has been initiated with `init()`, 
 the writer simply has to commit changes and push them to the `origin` remote.  
 
 In `R`, this can be done as follows: 
 
 ```r
-BiocBook_publish(bb)
+publish(bb)
 ```
-![BiocBook_publish](inst/img/publish.jpg)
+![publish](inst/img/publish.jpg)
 
 The different available versions published in the `origin` `gh-pages` branch 
-can be listed using `BiocBook_versions(biocbook)`. 
+can be listed using `status(biocbook)`. 
