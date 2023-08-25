@@ -74,10 +74,10 @@ Creating a `BiocBook` in `R` is straightforward with the `BiocBook` package.
 #| eval: false
 if (!require(BiocBook)) remotes::install_github('js2264/BiocBook')
 library(BiocBook)
-biocbook <- BiocBook_init("myBook")
+biocbook <- init("myBook")
 ```
 
-The steps performed under the hood by `BiocBook_init()` are detailed in the 
+The steps performed under the hood by `init()` are detailed in the 
 console. Briefly, the following steps are followed: 
 
 1. Creating a Github repository in your account, using the `js2264/BiocBook.template` repository as a template
@@ -89,7 +89,7 @@ console. Briefly, the following steps are followed:
 
 ::: {.callout-warning icon='true'}
 
-##### This approach is significantly more hazardous. It is highly recommended to stick to the `BiocBook_init()` helper function from the `BiocBook` package. 
+##### This approach is significantly more hazardous. It is highly recommended to stick to the `init()` helper function from the `BiocBook` package. 
 
 :::
 
@@ -160,6 +160,23 @@ This ensures that these packages are installed in the Docker image prior to rend
 
 :::
 
+### Edit assets
+
+A BiocBook relies on several assets, located in `/inst/assets`.: 
+
+- `_book.yml`, `_format.yml`, `_knitr.yml`, `_website.yml`
+- `bibliography.bib`
+- `book.scss`
+
+To quickly edit these assets, use the corresponding `edit_*` functions: 
+
+```{r}
+#| eval: false
+edit_yml(biocbook)
+edit_bib(biocbook)
+edit_css(biocbook)
+```
+
 ### Previewing and publishing changes
 
 #### Previewing 
@@ -168,7 +185,7 @@ While writing, you can monitor the rendering of your book live as follows:
 
 ```{r}
 #| eval: false
-BiocBook_preview(biocbook)
+preview(biocbook)
 ```
 
 This will serve a local live rendering of your book. 
@@ -180,7 +197,17 @@ your changes and push them to Github. This can be done as follows:
 
 ```{r}
 #| eval: false
-BiocBook_publish(biocbook, message = "🚀 Publish")
+publish(biocbook, message = "🚀 Publish")
+```
+
+#### Check your published book and Dockerfiles 
+
+This connects to the Github repository associated with a local book and 
+checks the existing branches and Dockerfiles. 
+
+```{r}
+#| eval: false
+status(biocbook)
 ```
 
 ## Writing features 

@@ -40,7 +40,7 @@ The resulting book, fully compiled by native `quarto`, is also located in `/inst
 
 ## `BiocBook` features missing from `rebook`
 
-- A `BiocBook` can be readily initiated using `BiocBook::BiocBook_init()`;
+- A `BiocBook` can be readily initiated using `BiocBook::init()`;
 - It relies on modern `.qmd` files supported by `Quarto`;
 - It can work as a standalone Github-hosted package, without necessarily having to be submitted to/built by Bioconductor. The book should be rendered exactly the same way through Github or by the BBS;
 - It supports versioning of the online book served by `gh-pages` **through the author Github account**;
@@ -57,5 +57,11 @@ which also provides functions to create/edit books.
 ## `rebook` features missing from `BiocBook`
 
 - Re-using objects generated in one chapter/book in another chapter/book;
+
+::: {.callout-tip icon='true'}
+This can be achieved by saving a data object as an `.rds` file and loading 
+it in a subsequent chapter. 
+:::
+
 - Native support of cross-references across books.
 
