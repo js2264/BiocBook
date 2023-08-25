@@ -71,10 +71,21 @@ The containerization and publishing of the new `BiocBook`-based package is autom
 
 # Main features of `BiocBook`s {-}
 
+## Fully compatible with the *Bioconductor Build System*
+
+When a `BiocBook`-based package is accepted into Bioconductor, it is 
+automatically integrated into the *Bionconductor Build System* (BBS). 
+
+This means that it is getting built using 
+`R CMD build --keep-empty-dirs --no-resave-data .`. This triggers 
+the rendering of the book contained in `/inst/`. Book packages 
+built by the BBS are then automatically deployed and are eventually available 
+at `https://bioconductor.org/books/<bioc_version>/<pkg>/`.
+
 ## Automated versioning of Docker images {-}
 
 A separate Docker image is built for each branch (named `devel` or `RELEASE_X_Y`) 
-of a `BiocBook`-based Github repository.  
+of a `BiocBook`-based **Github repository**.  
 
 Each Docker image provides pre-installed `R` packages: 
 
@@ -105,7 +116,9 @@ docker run -it ghcr.io/js2264/biocbook:devel R
 
 ## Automated versioning of the online book {-}
 
-A separate online book version is published for each branch (named `devel` or `RELEASE_X_Y`) of a `BiocBook`-based Github repository.  
+Regardless of whether the book package is submitted to Bioconductor, a Github Actions 
+workflow publishes individual online books for each branch 
+(named `devel` or `RELEASE_X_Y`) of a `BiocBook`-based **Github repository**.  
 
 For example, the online book version matching the `devel` version of this `BiocBook` package is available from: 
 

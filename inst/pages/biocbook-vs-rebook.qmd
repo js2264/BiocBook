@@ -5,7 +5,7 @@ to build book packages such as `OSCA.*` and `SingleRBook`.
 
 ## Differences with `rebook`-based books
 
-`OSCA` books provided by Bioconductor are rendered upon building by the Bioconductor build system (BBS). 
+`OSCA` books provided by Bioconductor are rendered upon building by the *Bioconductor Build System* (BBS). 
 They rely on `rebook` to orchestrate the rendering. Briefly, `OSCA` books have their book pages in 
 `/inst/book/`, while the `vignettes/` folder contains (1) a `Makefile` and (2) 
 a dummy `stub.Rmd` vignette (required to trigger vignette rendering and thus `make`). 
@@ -25,10 +25,10 @@ rebook::postCompileBook(work.dir=work.dir, final.dir='../inst/doc/book', handle=
 
 The resulting book, pre-compiled by `rebook` and assembled by `bookdown`, is eventually served by Bioconductor from the `/inst/doc/book/` folder. 
 
-`BiocBook`-based packages follow a similar strategy than `OSCA` books: they 
-provide a `Makefile` in the `vignettes/` folder to trigger book rendering upon package building. 
+`BiocBook`-based packages follow a strategy similar to that of `OSCA` books: they 
+provide a `Makefile` in the `vignettes/` folder to trigger book rendering when building the package. 
 However, the executed command does not rely on `rebook` and `blogdown`, but on 
-a simpler `quarto` command. 
+a `render` command from the `quarto` software. 
 
 ```{sh filename = 'shell'}
 #| eval: false 
@@ -37,6 +37,11 @@ mv ../inst/docs ../inst/doc/book
 ```
 
 The resulting book, fully compiled by native `quarto`, is also located in `/inst/doc/book/` once the package is built (and in `doc/book` in the library directory once installed).
+
+::: {.callout-warning icon='true'}
+### This implies that `quarto` (>= 1.3) has to be installed in the system 
+building the package!
+:::
 
 ## `BiocBook` features missing from `rebook`
 
