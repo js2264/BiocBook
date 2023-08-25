@@ -37,7 +37,8 @@ Imports:
     stringr, 
     yaml, 
     tools, 
-    utils
+    utils, 
+    rlang
 Suggests:
     BiocManager, 
     BiocVersion, 

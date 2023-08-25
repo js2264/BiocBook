@@ -15,7 +15,7 @@
     ## If file exists, offer to edit it instead
     if (file.exists(full_path)) {
         cli::cli_warn("File `{full_path}` already exists.")
-        if (interactive() && open) {
+        if (rlang::is_interactive() && open) {
             msg <- glue::glue("Do you want to edit {full_path}?")
             if (usethis::ui_yeah(msg)) {
                 usethis::edit_file(full_path)
@@ -43,7 +43,7 @@
     cli::cli_alert_success("File created @ `{full_path}`")
 
     ## Open new page and edit
-    if (interactive() && open) usethis::edit_file(full_path)
+    if (rlang::is_interactive() && open) usethis::edit_file(full_path)
 
     invisible(full_path)
 }
@@ -76,7 +76,7 @@ edit_page <- function(book, file, open = TRUE) {
     if (!file.exists(full_path)) {
         cli::cli_abort("File `{full_path}` does not exist. To create a new chapter, please use `add_chapter()` instead.", wrap = TRUE)
     }
-    if (interactive() && open) usethis::edit_file(full_path)
+    if (rlang::is_interactive() && open) usethis::edit_file(full_path)
 
     invisible(book)
 }

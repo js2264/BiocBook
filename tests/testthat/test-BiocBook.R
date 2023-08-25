@@ -52,10 +52,11 @@ test_that("BiocBook_init work", {
     expect_error(       add_chapter(bb, title = 'Chapter 1', file = "chapter1", open = FALSE))
 
     ## edit_* functions
-    expect_no_error(            edit_book_yml(bb))
-    expect_no_error(            edit_bib(bb))
-    expect_no_error(            edit_requirements_yml(bb))
-    expect_no_error(            edit_page(bb, file = '/inst/index.qmd', open = FALSE))
+    expect_no_error(    edit_yml(bb))
+    expect_no_error(    edit_css(bb))
+    expect_no_error(    edit_bib(bb))
+    expect_no_error(    edit_requirements_yml(bb))
+    expect_no_error(    edit_page(bb, file = '/inst/index.qmd', open = FALSE))
 
     unlink(tmpdir, recursive = TRUE, force = TRUE)
     quarto::quarto_preview_stop()

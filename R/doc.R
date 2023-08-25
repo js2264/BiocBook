@@ -16,7 +16,7 @@
 #' 
 #' - `edit_page()`: manually edit any page listed in `chapters(book)`
 #' - `edit_bib()`: manually edit `/inst/assets/bibliography.bib`
-#' - `edit_book_yml()`: manually edit `/inst/assets/_book.yml`
+#' - `edit_yml()`: manually edit the different `yml` in `/inst/assets/`
 #' - `edit_requirements_yml()`: manually edit `/inst/requirements.yml`
 #' 
 #' @section Maintenance functions:
@@ -45,6 +45,7 @@
 #' if `position = 2`, the new chapter will be inserted after the first existing
 #' chapter (i.e. the `Welcome` page)
 #' @param open Optional. Whether to open the file for interactive editing (default: TRUE)
+#' @param yml Which .yml should be opened? 
 #' @param book A `BiocBook` object, opened with `BiocBook` or created by `BiocBook_init()`.
 #' @param open Optional. Whether to open the file for interactive editing (default: TRUE)
 #' @param message Optional. Message used when committing with `BiocBook_publish()`.

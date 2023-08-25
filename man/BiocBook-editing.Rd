@@ -2,9 +2,10 @@
 % Please edit documentation in R/doc.R, R/editing.R, R/pages.R
 \name{BiocBook-editing}
 \alias{BiocBook-editing}
-\alias{edit_book_yml}
+\alias{edit_yml}
 \alias{edit_bib}
 \alias{edit_requirements_yml}
+\alias{edit_css}
 \alias{BiocBook_preview}
 \alias{BiocBook_publish}
 \alias{BiocBook_versions}
@@ -13,11 +14,13 @@
 \alias{edit_page}
 \title{Editing BiocBook accessory files}
 \usage{
-edit_book_yml(book, open = TRUE)
+edit_yml(book, yml = c("_book", "_website", "_knitr", "_format"), open = TRUE)
 
 edit_bib(book, open = TRUE)
 
 edit_requirements_yml(book, open = TRUE)
+
+edit_css(book, open = TRUE)
 
 BiocBook_preview(book, browse = FALSE, watch = FALSE)
 
@@ -33,6 +36,8 @@ edit_page(book, file, open = TRUE)
 }
 \arguments{
 \item{book}{A \code{BiocBook} object, opened with \code{BiocBook} or created by \code{BiocBook_init()}.}
+
+\item{yml}{Which .yml should be opened?}
 
 \item{open}{Optional. Whether to open the file for interactive editing (default: TRUE)}
 
@@ -79,7 +84,7 @@ Several accessory files can be manually edited:
 \itemize{
 \item \code{edit_page()}: manually edit any page listed in \code{chapters(book)}
 \item \code{edit_bib()}: manually edit \verb{/inst/assets/bibliography.bib}
-\item \code{edit_book_yml()}: manually edit \verb{/inst/assets/_book.yml}
+\item \code{edit_yml()}: manually edit the different \code{yml} in \verb{/inst/assets/}
 \item \code{edit_requirements_yml()}: manually edit \verb{/inst/requirements.yml}
 }
 }

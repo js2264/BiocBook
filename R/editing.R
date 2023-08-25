@@ -1,37 +1,37 @@
+.edit <- function(book, path, open) {
+    f <- file.path(path(book), path)
+    if (rlang::is_interactive() && open) usethis::edit_file(f)
+    else usethis::ui_todo("Edit {usethis::ui_path(f)}")
+    invisible(book)
+}
+
 #' @rdname BiocBook-editing
 #' @export 
 
-edit_book_yml <- function(book, open = TRUE) {
-
-    path <- file.path("inst", "assets", "_book.yml")
-    file <- file.path(path(book), path)
-    if (interactive() && open) usethis::edit_file(file)
-    invisible(book)
-    
+edit_yml <- function(book, yml = c('_book', '_website', '_knitr', '_format'), open = TRUE) {
+    yml <- match.arg(yml)
+    .edit(book, file.path("inst", "assets", paste0(yml, ".yml")), open = open)
 }
 
 #' @rdname BiocBook-editing
 #' @export 
 
 edit_bib <- function(book, open = TRUE) {
-
-    path <- file.path("inst", "assets", "bibliography.bib")
-    file <- file.path(path(book), path)
-    if (interactive() && open) usethis::edit_file(file)
-    invisible(book)
-    
+    .edit(book, file.path("inst", "assets", "bibliography.bib"), open = open)
 }
 
 #' @rdname BiocBook-editing
 #' @export 
 
 edit_requirements_yml <- function(book, open = TRUE) {
+    .edit(book, file.path("inst", "requirements"), open = open)
+}
 
-    path <- file.path("inst", "requirements")
-    file <- file.path(path(book), path)
-    if (interactive() && open) usethis::edit_file(file)
-    invisible(book)
-    
+#' @rdname BiocBook-editing
+#' @export 
+
+edit_css <- function(book, open = TRUE) {
+    .edit(book, file.path("inst", "assets", "book.scss"), open = open)
 }
 
 #' @rdname BiocBook-editing
