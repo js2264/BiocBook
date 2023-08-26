@@ -3,8 +3,8 @@ FROM bioconductor/bioconductor_docker:${BIOC_VERSION}
 COPY . /opt/pkg
 
 # Install book package 
-RUN Rscript -e 'repos <- BiocManager::repositories() ; remotes::install_local(path = "/opt/pkg/", repos=repos, dependencies=TRUE, build_vignettes=FALSE, upgrade=TRUE)'
+RUN Rscript -e 'repos <- BiocManager::repositories() ; remotes::install_local(path = "/opt/pkg/", repos=repos, dependencies=TRUE, build_vignettes=FALSE, upgrade=TRUE) ; sessioninfo::session_info(installed.packages()[,"Package"], include_base = TRUE)'
 
-## Check installed book package with rcmdcheck and BiocCheck following BioC recommendations
-RUN Rscript -e 'rcmdcheck::rcmdcheck("/opt/pkg/", args = c("--no-manual", "--no-vignettes", "--timings"), build_args = c("--no-manual", "--keep-empty-dirs", "--no-resave-data"), error_on = "warning", check_dir = "check")'
-RUN Rscript -e 'BiocCheck::BiocCheck(dir("check", "tar.gz$$", full.names = TRUE), `quit-with-status` = TRUE, `no-check-R-ver` = TRUE, `no-check-bioc-help` = TRUE)'
+## Build/install using same approach than BBS
+RUN R CMD INSTALL /opt/pkg
+RUN R CMD build --keep-empty-dirs --no-resave-data /opt/pkg

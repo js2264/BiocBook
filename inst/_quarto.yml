@@ -22,6 +22,18 @@ format:
     citation-location: margin
     bibliography: assets/bibliography.bib
     from: markdown+emoji
+  # pdf: 
+  #   toc: true
+  #   number-sections: true
+  #   papersize: A4
+  #   geometry:
+  #     - top=20mm
+  #     - bottom=30mm
+  #     - left=20mm
+  #     - right=20mm
+  #     - heightrounded
+  #   highlight-style: atom-one-dark
+  #   bibliography: assets/bibliography.bib
 
 ## --- knitr options
 knitr:

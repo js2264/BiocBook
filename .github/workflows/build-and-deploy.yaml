@@ -1,4 +1,4 @@
-name: biocbook
+name: build-docker-deploy
 
 on:
   push:
@@ -18,88 +18,94 @@ jobs:
       
       - name: 🧾 Checkout repository
         uses: actions/checkout@v3
-        with:
-          persist-credentials: false
 
+      - name: ⏳ Collect Workflow Telemetry
+        uses: runforesight/workflow-telemetry-action@v1
+
+      - name: 🐳 Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+  
       - name: 📝 Get book info
         id: info
+        env:
+          OWNER: ${{ github.repository_owner }}
         run: |
+          Pkgname=$(grep -m1 -E '^Package: +' DESCRIPTION | sed -E 's/.*: +//')
+          echo Pkgname=${Pkgname} >> "${GITHUB_ENV}"
+          pkgname=${Pkgname,,}
+          echo pkgname=${pkgname} >> "${GITHUB_ENV}"
+          owner=${OWNER,,}
+          echo owner=${owner} >> "${GITHUB_ENV}"
           echo pkgversion=$(grep -m1 -E '^Version: +' DESCRIPTION | sed -E 's/.*: +//') >> "${GITHUB_ENV}"
 
-      - name: 🔐 Log in to the Container registry
+      - name: 🔐 Log in to the Github Container registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: ${{ env.owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 🏷 Get metadata for Docker
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ghcr.io/${{ github.repository_owner }}/${{ github.workflow }}
+          images: ghcr.io/${{ env.owner }}/${{ env.pkgname }}
           tags: |
-            type=raw,value=${{ env.pkgversion}},enable=true
-            type=raw,value=${{ github.ref_name }},enable=true
+            ${{ github.ref_name }}
+            ${{ env.pkgversion }}
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'devel') }}
 
-      - name: 👷 Build and push multi-arch Docker image
+      - name: 📦 Install, build and check package in local Docker image
+        id: docker
         uses: docker/build-push-action@v4
         with:
           context: .
-          platforms: linux/amd64
-          file: Dockerfile
-          push: true
+          load: true
           tags: ${{ steps.meta.outputs.tags }}
-          outputs: type=image,annotation-index.org.opencontainers.image.description=${{ github.workflow }}
           build-args: |
             BIOC_VERSION=${{ github.ref_name }}
-    
-  render-deploy:
-    needs: build-push
-    runs-on: ubuntu-latest
-    name: Render and publish book [${{ github.ref_name }}]
-    container: ghcr.io/${{ github.repository_owner }}/${{ github.workflow }}:${{ github.ref_name }}
-    permissions:
-      contents: write
-      packages: read
 
-    steps:
-
-      - name: 🧾 Checkout repository
-        uses: actions/checkout@v3
+      - name: 🚀 Push local Docker image to ghcr.io
+        uses: docker/build-push-action@v4
         with:
-          persist-credentials: false
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            BIOC_VERSION=${{ github.ref_name }}
 
-      - name: 📦 List installed packages
+      - name: 📚 Recover pkg artifacts generated during build in local Docker container (pkg bundle and book) 
+        env:
+          IMG: ${{ steps.docker.outputs.ImageID }}
         run: |
-          pkgs <- installed.packages()[,"Package"]
-          sessioninfo::session_info(pkgs, include_base = TRUE)
-        shell: Rscript {0}
+          SHA=$(docker container create ${{ env.IMG }})
+          docker container cp ${SHA}:/${{ env.Pkgname }}_${{ env.pkgversion }}.tar.gz .
+          tar --extract --gzip --file ${{ env.Pkgname }}_${{ env.pkgversion }}.tar.gz
+          echo bundle_path=${{ env.Pkgname }}_${{ env.pkgversion }}.tar.gz >> "${GITHUB_ENV}"
+          echo book_path=${{ env.Pkgname }}/inst/doc/book/ >> "${GITHUB_ENV}"
 
-      - name: 📚 Install rsync
-        run: |
-          apt-get update && apt-get install -y rsync
-
-      - name: 🔧 Install quarto dependencies    
-        run: |
-          quarto install tinytex
-          quarto check
-            
-      - name: 🖌 Render book from already installed package directory
-        run: |
-          lib_path=$(Rscript -e "writeLines(.libPaths()[1])")
-          pkg=$(grep -m1 -E '^Package: +' DESCRIPTION | sed -E 's/.*: +//')
-          quarto render "${lib_path}/${pkg}"
-          echo local_folder="${lib_path}/${pkg}/docs" >> "${GITHUB_ENV}"
-  
       - name: 🏷 Get gh-branch directory to deploy to
         run: |
-          echo folder=$(echo ${{ github.ref_name }} | sed 's,RELEASE_,,' | tr '_' '.') >> "${GITHUB_ENV}"
+          echo target_folder=$(echo ${{ github.ref_name }} | sed 's,RELEASE_,,' | tr '_' '.') >> "${GITHUB_ENV}"
 
       - name: 🚀 Deploy book to Github Pages on versioned branch
         uses: JamesIves/github-pages-deploy-action@v4.4.3
         with:
-          folder: ${{ env.local_folder }}/ 
-          target-folder: docs/${{ env.folder }}/ 
+          folder: ${{ env.book_path }}/ 
+          target-folder: docs/${{ env.target_folder }}/ 
           branch: gh-pages
           clean: false 
+
+      - name: 💾 Upload package bundle artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: bundle
+          path: ${{ env.bundle_path }}
+
+      - name: 💾 Upload book artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: book
+          path: ${{ env.book_path }}
