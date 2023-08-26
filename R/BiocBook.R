@@ -16,15 +16,43 @@ methods::setClass("BiocBook",
 #' @include doc.R
 #' @export
 
-init <- function(new_package, skip_availability = FALSE, template = "js2264/BiocBook.template", commit = NA, .local = FALSE, .github_user = NA) {
+init <- function(
+    new_package, 
+    skip_availability = FALSE, 
+    template = "js2264/BiocBook.template", 
+    version = 'v1.0.0', 
+    commit = NA, 
+    .local = FALSE
+) {
 
-    ## Check that a folder named `new_package` can be created 
     cli::cat_rule("Running preflight checklist", col = "cyan", line = 2)
     cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Checking that no folder named `{new_package}` already exists"))
     Sys.sleep(1)
+
+    ## Check that a folder named `new_package` can be created 
     if (file.exists(new_package)) {
         cli::cli_abort("A folder named {new_package} already exists.")
     }
+
+    ## Check that git is configured 
+    cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Checking git configuration"))
+    Sys.sleep(1)
+    gitconf <- gert::git_config_global()
+    if (!"user.name" %in% gitconf$name)
+        cli::cli_abort("Missing `user.name` in the git global configuration.\
+        Set it with `gert::git_config_global_set('user.name', value = '...')`.")
+    if (!"user.email" %in% gitconf$name)
+        cli::cli_abort("Missing `user.email` in the git global configuration.\
+        Set it with `gert::git_config_global_set('user.email', value = '...')`.")
+    gituser <- gitconf$value[gitconf$name == "user.name"]
+    gitmail <- gitconf$value[gitconf$name == "user.email"]
+    gitsig <- gert::git_signature(name = gituser, email = gitmail)
+    cli::cli_alert_success(cli::col_grey("Git successfully configured"))
+    cli::cli_ul(c(
+        cli::col_grey("git user: `{gituser}`"),
+        cli::col_grey("git email: `{gitmail}`")
+    ))
+    Sys.sleep(1)
 
     ## Check that user is logged in Github
     if (!.local) {
@@ -38,33 +66,31 @@ init <- function(new_package, skip_availability = FALSE, template = "js2264/Bioc
                 cli::cli_abort("Could not find any stored Github credentials. Consider adding a Github token (a.k.a. `PAT`) to your `.Renviron`.\n")
             }
         )
-        gh_creds <- gh::gh_whoami(.token = PAT)
-        user <- gh_creds$login
-        emails <- gh::gh("/user/emails", .token = PAT)
-        email <- emails[[which(purrr::map_lgl(emails, ~ .x[['primary']]))]]$email
-        sig <- gert::git_signature(name = user, email)
-        headers <- httr::add_headers(
-            Accept = "application/vnd.github+json", 
-            Authorization = glue::glue("Bearer {PAT}"), 
-            "X-GitHub-Api-Version" = "2022-11-28"
-        )
+        user <- gh::gh_whoami(.token = PAT)$login
         cli::cli_alert_success(cli::col_grey("Successfully logged in Github"))
         cli::cli_ul(c(
             cli::col_grey("user: `{user}`"),
             cli::col_grey("token: `{stringr::str_trunc(PAT, width = 18, side = 'center')}`")
         ))
         Sys.sleep(1)
+
+        ## Get all repos for one user
+        req <- gh::gh("/users/{user}/repos", user = user, per_page = 30)
+        gh_repos <- purrr::map_chr(req, 'name')
+        while({length(gh_repos) %% 30} == 0) {
+            req <- gh::gh_next(req)
+            gh_repos <- c(gh_repos, purrr::map_chr(req, 'name'))
+        }
+
+        ## Check that new_package does not already exist
+        if (new_package %in% gh_repos) {
+            cli::cli_abort("A Github repo named `{new_package}` already exists for user `{user}`.")
+        }
+
     }
     else {
-        if (is.na(.github_user)) {
-            cli::cli_alert_danger(c("`.github_user` is not set. ", 
-            "`<user>` placeholders in the template `BiocBook` won't be fixed."
-            ))
-            user <- '<user>'
-        }
-        else {
-            user <- .github_user
-        }
+        PAT <- NULL
+        user <- gituser
     }
 
     ## Check that package name is valid
@@ -90,39 +116,116 @@ init <- function(new_package, skip_availability = FALSE, template = "js2264/Bioc
         Sys.sleep(1)
     }
 
-    ## Create new repo from BiocBook.template
-    if (!.local) {
+    cli::cli_text("")
+    cli::cat_rule("Initiating a new `BiocBook`", col = "cyan", line = 2)
+    Sys.sleep(1)
+    cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Creating new repository from `{template}@{version}`"))
 
-        cli::cli_text("")
-        cli::cat_rule("Initiating a new `BiocBook`", col = "cyan", line = 2)
-        cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Creating new Github repository from `{template}`"))
-        Sys.sleep(1)
-        repo <- httr::POST(
-            glue::glue("{GH_api}/repos/{template}/generate"), 
-            headers, 
-            body = list(owner = user, name = new_package), 
-            encode = 'json'
-        )
-        Sys.sleep(1)
-        if (!is.null(httr::content(repo)$errors)) {
-            if (httr::content(repo)$errors[[1]] == "Could not clone: Name already exists on this account") {
-                cli::cli_abort("A Github repo named `{new_package}` already exists for user `{user}`.")
-            }
-        }
-        if (!is.null(httr::content(repo)$message)) {
-            if (httr::content(repo)$message == "Bad credentials") {
-                cli::cli_abort("`{user}` [token: `{stringr::str_trunc(PAT, width = 18, side = 'center')}`] invalid.")
-            }
-        }
+    ## Create new local repo copied from BiocBook.template
+    repo <- new_package
+    dir.create(repo)
+    tmpdir <- paste0('.', paste0(
+        sample(c(seq(0, 9), LETTERS), 8, replace = TRUE), collapse = ""
+    ))
+    dir.create(tmpdir)
+    tmpfile <- file.path(tmpdir, 'archive')
+    utils::download.file(
+        # paste0("https://github.com/", template, "/archive/refs/heads/devel.zip"), 
+        paste0("https://github.com/", template, "/archive/refs/tags/", version, ".tar.gz"), 
+        paste0(tmpfile, '.tar.gz')
+    )
+    utils::untar(paste0(tmpfile, '.tar.gz'), exdir = tmpdir)
+    d <- list.dirs(tmpdir, full.names = TRUE, recursive = TRUE)
+    d <- d[dirname(d) != '.']
+    pattern <- file.path(tmpdir, basename(d)[dirname(dirname(d)) == '.'])
+    d <- d[dirname(dirname(d)) != '.']
+    f <- list.files(
+        tmpdir, 
+        all.files = TRUE, full.names = TRUE, recursive = TRUE
+    )
+    f <- f[!grepl("archive.zip$", f)]
+    for (.d in d) dir.create(gsub(pattern, repo, .d))
+    for (.f in f) file.copy(from = .f, to = gsub(pattern, repo, .f))
+    unlink(tmpdir, recursive = TRUE)
+    cli::cli_alert_success(cli::col_grey(
+        "New local book `{new_package}` successfully created"
+    ))
+    Sys.sleep(1)
+
+    ## Fix placeholders
+    # ---- in `_book.yml`
+    path <- file.path("inst", "assets", "_book.yml")
+    .fix_placeholders(file.path(repo, path), pkg = new_package, usr = user)
+    cli::cli_alert_success(cli::col_grey("Filled out `{cli::col_cyan(path)}` fields"))
+    Sys.sleep(1)
+
+    # ---- in `DESCRIPTION`
+    path <- "DESCRIPTION"
+    .fix_placeholders(file.path(repo, path), pkg = new_package, usr = user)
+    cli::cli_alert_success(cli::col_grey("Filled out `{cli::col_cyan(path)}` fields"))
+    cli::cli_alert_info(cli::col_grey("Please finish editing the `{cli::col_cyan(path)}` fields, including:"))
+    d <- cli::cli_div(theme = list(ul = list(`margin-left` = 2, before = "")))
+    cli::cli_ul(c("  Title", "  Description", "  Authors@R"))
+    cli::cli_end(d)
+    Sys.sleep(1)
+
+    # ---- in `index.qmd`
+    path <- file.path("inst", "index.qmd")
+    .fix_placeholders(file.path(repo, path), pkg = new_package, usr = user)
+    cli::cli_alert_success(cli::col_grey("Filled out `{cli::col_cyan(path)}` fields"))
+    cli::cli_alert_info(cli::col_grey("Please finish editing the `{cli::col_cyan(path)}` fields, including the `Welcome` section"))
+    Sys.sleep(1)
+
+    ## Init local git 
+    gert::git_init(path = repo) 
+    cli::cli_alert_info(cli::col_grey("The following files need to be committed: "))
+    d <- cli::cli_div(theme = list(ul = list(`margin-left` = 2, before = "")))
+    f <- gert::git_status(repo = repo)
+    cli::cli_ul(f$file)
+    cli::cli_end(d)
+    Sys.sleep(1)
+    staged <- gert::git_add(files = f$file, repo = repo)
+    commit_sha <- gert::git_commit(
+        repo = repo, message = "\U1F680 init BiocBook", author = gitsig
+    )
+    b <- gert::git_branch_list(repo = repo)
+    if (b$name != 'devel') {
+        gert::git_branch_move(repo = repo, b$name, 'devel')
+    }
+    cli::cli_alert_success(cli::col_grey("The new files have been commited to the `devel` branch."))
+    Sys.sleep(1)
+
+    ## Syncing Github: create new repo, configure Pgaes, add remote, push
+    if (!is.null(PAT)) {
+
+        ## Create a new Github repo
+        remote <- gh::gh("POST /user/repos", name = repo, description = "BiocBook")
         cli::cli_alert_success(cli::col_grey("New Github repository `{user}/{new_package}` successfully created"))
         Sys.sleep(1)
 
-        ## Clone package
-        cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Cloning `{user}/{new_package}`"))
+        ## Connect local git to remote 
+        cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Adding remote Github branch to local repo"))
         Sys.sleep(1)
-        repo <- gert::git_clone(glue::glue("https://github.com/{user}/{new_package}"))
-        cli::cli_alert_success(cli::col_grey("Remote Github repository `{user}/{new_package}` cloned [{cli::col_cyan(repo)}]"))
-        Sys.sleep(1)
+        gert::git_remote_add(url = remote$html_url, name = 'origin', repo = repo)
+
+        ## Pushing first commit to Github
+        msg <- glue::glue("Is it ok to push the first commit to Github?")
+        if (!is.na(commit)) {
+            if (commit) {
+                gert::git_push(repo = repo)
+                cli::cli_alert_success(cli::col_grey("Commits pushed to origin {cli::col_cyan(gert::git_remote_list(repo = repo)$url[1])}"))
+            }
+            else {
+                invisible(BiocBook(repo))
+            }
+        }
+        else if (usethis::ui_yeah(msg)) {
+            gert::git_push(repo = repo)
+            cli::cli_alert_success(cli::col_grey("Commits pushed to origin {cli::col_cyan(gert::git_remote_list(repo = repo)$url[1])}"))
+        } 
+        else {
+            cli::cli_alert_info(cli::col_grey("Don't forget to push the latest commit to the remote `origin`."))
+        }
 
         ## Create `gh-pages` branch on origin
         cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Checking existing branches"))
@@ -160,104 +263,6 @@ init <- function(new_package, skip_availability = FALSE, template = "js2264/Bioc
             "Book versions will be deployed to {cli::col_cyan(res$html_url)}."
         ))
         Sys.sleep(1)
-
-    }
-    else {
-        cli::cli_text("")
-        cli::cat_rule("Initiating a new `BiocBook`", col = "cyan", line = 2)
-        cli::cli_progress_message(cli::col_grey(
-            "{cli::pb_spin} Creating new Github repository from `{template}`"
-        ))
-        Sys.sleep(1)
-        
-        repo <- new_package
-        dir.create(repo)
-        tmpdir <- paste0('.', paste0(
-            sample(c(seq(0, 9), LETTERS), 8, replace = TRUE), collapse = ""
-        ))
-        dir.create(tmpdir)
-        tmpfile <- file.path(tmpdir, 'BiocBook.template-devel')
-        utils::download.file(
-            paste0("https://github.com/", template, "/archive/refs/heads/devel.zip"), 
-            paste0(tmpfile, '.zip')
-        )
-        utils::unzip(paste0(tmpfile, '.zip'), exdir = tmpdir)
-        d <- list.dirs(tmpdir, full.names = TRUE, recursive = TRUE)
-        d <- d[!grepl(paste0(tmpdir, "$"), d)]
-        d <- d[!grepl(file.path(tmpdir, "BiocBook.template-devel$"), d)]
-        f <- list.files(
-            tmpdir, 
-            all.files = TRUE, full.names = TRUE, recursive = TRUE
-        )
-        f <- f[!grepl("BiocBook.template-devel.zip$", f)]
-        for (.d in d) dir.create(gsub(tmpfile, repo, .d))
-        for (.f in f) file.copy(from = .f, to = gsub(tmpfile, repo, .f))
-
-        unlink(tmpdir, recursive = TRUE)
-        cli::cli_alert_success(cli::col_grey(
-            "New local book `{new_package}` successfully created"
-        ))
-        Sys.sleep(1)
-    }
-
-    ## Fix placeholders
-    # ---- in `_book.yml`
-    path <- file.path("inst", "assets", "_book.yml")
-    .fix_placeholders(file.path(repo, path), pkg = new_package, usr = user)
-    cli::cli_alert_success(cli::col_grey("Filled out `{cli::col_cyan(path)}` fields"))
-    Sys.sleep(1)
-
-    # ---- in `DESCRIPTION`
-    path <- "DESCRIPTION"
-    .fix_placeholders(file.path(repo, path), pkg = new_package, usr = user)
-    cli::cli_alert_success(cli::col_grey("Filled out `{cli::col_cyan(path)}` fields"))
-    cli::cli_alert_info(cli::col_grey("Please finish editing the `{cli::col_cyan(path)}` fields, including:"))
-    d <- cli::cli_div(theme = list(ul = list(`margin-left` = 2, before = "")))
-    cli::cli_ul(c("  Title", "  Description", "  Authors@R"))
-    cli::cli_end(d)
-    Sys.sleep(1)
-
-    # ---- in `index.qmd`
-    path <- file.path("inst", "index.qmd")
-    .fix_placeholders(file.path(repo, path), pkg = new_package, usr = user)
-    cli::cli_alert_success(cli::col_grey("Filled out `{cli::col_cyan(path)}` fields"))
-    cli::cli_alert_info(cli::col_grey("Please finish editing the `{cli::col_cyan(path)}` fields, including the `Welcome` section"))
-    Sys.sleep(1)
-
-    # ---- in GHA workflow
-    path <- file.path(".github", "workflows", "build-and-deploy.yaml")
-    .fix_placeholders(file.path(repo, path), pkg = new_package, usr = tolower(user))
-    cli::cli_alert_success(cli::col_grey("Filled out `{cli::col_cyan(path)}` fields"))
-    Sys.sleep(1)
-
-    ## Committing everything 
-    if (!.local) {
-
-        cli::cli_alert_info(cli::col_grey("Several files have been automatically edited: "))
-        d <- cli::cli_div(theme = list(ul = list(`margin-left` = 2, before = "")))
-        cli::cli_ul(gert::git_status(repo = repo)$file)
-        cli::cli_end(d)
-        Sys.sleep(1)
-        commit_sha <- gert::git_commit_all(repo = repo, message = "Adapted from BiocBook.template", sig)
-        cli::cli_alert_success(cli::col_grey("These changes have been commited to the local repository."))
-        Sys.sleep(1)
-        msg <- glue::glue("Is it ok to push these changes to Github?")
-        if (!is.na(commit)) {
-            if (commit) {
-                gert::git_push(repo = repo)
-                cli::cli_alert_success(cli::col_grey("Commits pushed to origin {cli::col_cyan(gert::git_remote_list(repo = repo)$url[1])}"))
-            }
-            else {
-                invisible(BiocBook(repo))
-            }
-        }
-        else if (usethis::ui_yeah(msg)) {
-            gert::git_push(repo = repo)
-            cli::cli_alert_success(cli::col_grey("Commits pushed to origin {cli::col_cyan(gert::git_remote_list(repo = repo)$url[1])}"))
-        } 
-        else {
-            cli::cli_alert_info(cli::col_grey("Don't forget to push the latest commit to the remote `origin`."))
-        }
 
     }
 

@@ -53,8 +53,10 @@
 #' @param watch Optional. Passed to `quarto_preview()` (default: FALSE).
 #' 
 #' @examples
-#' ## In practice, you should not use `.local` and `.github_user` arguments. 
-#' bb <- init('localbook', .local = TRUE, .github_user = 'js2264')
+#' ## In practice, you should not use `.local` argument. 
+#' gert::git_config_global_set('user.name', value = 'js2264')
+#' gert::git_config_global_set('user.email', value = 'jacquesserizay@gmail.com')
+#' bb <- init('localbook', .local = TRUE)
 #' add_preamble(bb, open = FALSE)
 #' add_chapter(bb, title = "Chapitre Un", open = FALSE)
 #' unlink('localbook', recursive = TRUE)
@@ -133,15 +135,17 @@ NULL
 #' from R and Bioconductor (i.e. no `_` or `-`, no name starting with a number).
 #' @param skip_availability Optional. Whether to skip package name availability (default: FALSE).
 #' @param template Optional. Github repository used for `BiocBook` template (default: `js2264/BiocBook.template`). 
+#' @param version Optional. Version of the template to use.
 #' @param commit Optional. Logical, whether to automatically push commits to remote Github origin (default: FALSE). 
 #' @param .local Should only be used for examples/tests. Whether to create a matching Github repository or stay local (default: FALSE).
-#' @param .github_user Should only be used for examples/tests. If `.local = TRUE`, please do provide your Github username to edit BiocBook placeholders. If not provided, `<user>` placeholders will remain in several files until manually filled (default: NA).
 #' @param path Path of an existing `BiocBook`. 
 #' @param object A `BiocBook` object, created by `BiocBook` or `init()`.
 #' 
 #' @examples
-#' ## In practice, you should not use `.local` and `.github_user` arguments. 
-#' init('localbook', .local = TRUE, .github_user = 'js2264')
+#' ## In practice, you should not use `.local` argument. 
+#' gert::git_config_global_set('user.name', value = 'js2264')
+#' gert::git_config_global_set('user.email', value = 'jacquesserizay@gmail.com')
+#' init('localbook', .local = TRUE)
 #' bb <- BiocBook('localbook')
 #' chapters(bb)
 #' releases(bb)

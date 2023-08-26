@@ -17,9 +17,9 @@ init(
   new_package,
   skip_availability = FALSE,
   template = "js2264/BiocBook.template",
+  version = "v1.0.0",
   commit = NA,
-  .local = FALSE,
-  .github_user = NA
+  .local = FALSE
 )
 
 BiocBook(path)
@@ -45,11 +45,11 @@ from R and Bioconductor (i.e. no \verb{_} or \code{-}, no name starting with a n
 
 \item{template}{Optional. Github repository used for \code{BiocBook} template (default: \code{js2264/BiocBook.template}).}
 
+\item{version}{Optional. Version of the template to use.}
+
 \item{commit}{Optional. Logical, whether to automatically push commits to remote Github origin (default: FALSE).}
 
 \item{.local}{Should only be used for examples/tests. Whether to create a matching Github repository or stay local (default: FALSE).}
-
-\item{.github_user}{Should only be used for examples/tests. If \code{.local = TRUE}, please do provide your Github username to edit BiocBook placeholders. If not provided, \verb{<user>} placeholders will remain in several files until manually filled (default: NA).}
 
 \item{path}{Path of an existing \code{BiocBook}.}
 
@@ -134,8 +134,10 @@ can be listed using \code{status(biocbook)}
 }
 
 \examples{
-## In practice, you should not use `.local` and `.github_user` arguments. 
-init('localbook', .local = TRUE, .github_user = 'js2264')
+## In practice, you should not use `.local` argument. 
+gert::git_config_global_set('user.name', value = 'js2264')
+gert::git_config_global_set('user.email', value = 'jacquesserizay@gmail.com')
+init('localbook', .local = TRUE)
 bb <- BiocBook('localbook')
 chapters(bb)
 releases(bb)

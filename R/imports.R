@@ -38,6 +38,7 @@
 #' @importFrom rlang is_interactive
 #' @importFrom tools file_path_sans_ext
 #' @importFrom purrr pluck
+#' @importFrom purrr map_chr
 #' @importFrom purrr map_dfr
 #' @importFrom tibble tibble
 #' @importFrom dplyr case_when

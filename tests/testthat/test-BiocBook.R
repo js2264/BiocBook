@@ -1,39 +1,15 @@
 test_that("init work", {
     
-    ## -- Test `init` without user 
-    
-    tmpdir <- paste0('.', paste0(
-        sample(c(seq(0, 9), LETTERS), 8, replace = TRUE), collapse = ""
-    ))
-    unlink(tmpdir, recursive = TRUE, force = TRUE)
+    gert::git_config_global_set('user.name', value = 'js2264')
+    gert::git_config_global_set('user.email', value = 'jacquesserizay@gmail.com')
 
-    expect_no_error(    bb <- init(tmpdir, .local = TRUE))
-    expect_no_error(    bb)
-    expect_no_error(    path(bb))
-    expect_no_error(    chapters(bb))
-    expect_no_error(    releases(bb))
-    expect_no_error(    preview(bb))
-    expect_error(       status(bb))
-
-    expect_invisible(   add_preamble(bb, open = FALSE))
-    expect_warning(     add_preamble(bb, open = FALSE))
-    expect_invisible(   add_chapter(bb, title = 'Chapter 1', open = FALSE))
-    expect_invisible(   add_chapter(bb, title = 'Chapter 1', file = "chapter1.qmd", open = FALSE))
-    expect_warning(     add_chapter(bb, title = 'Chapter 1', file = "chapter1.qmd", open = FALSE))
-    expect_error(       add_chapter(bb, title = 'Chapter 1', file = "chapter1", open = FALSE))
-
-    unlink(tmpdir, recursive = TRUE, force = TRUE)
-    quarto::quarto_preview_stop()
-
-    ## -- Test `init` with user 
-
-    tmpdir <- paste0('.', paste0(
+    tmpdir <- paste0(paste0(
         sample(c(seq(0, 9), LETTERS), 8, replace = TRUE), collapse = ""
     ))
     
     ## Utilities
     expect_no_error(    
-        init(tmpdir, .local = TRUE, .github_user = 'js2264')
+        init(tmpdir, .local = TRUE)
     )
     expect_no_error(    bb <- BiocBook(tmpdir))
     expect_no_error(    show(bb))
@@ -41,7 +17,6 @@ test_that("init work", {
     expect_no_error(    chapters(bb))
     expect_no_error(    releases(bb))
     expect_no_error(    preview(bb))
-    expect_error(       status(bb))
 
     ## add_* functions
     expect_invisible(   add_preamble(bb, open = FALSE))
