@@ -241,7 +241,7 @@ init <- function(
         )
         commit <- gh(
             "POST /repos/{user}/{repo}/git/commits",
-            message = "🚀 Init orphan branch",
+            message = "\U1F680 Init orphan branch",
             tree = tree$sha, 
             user = user, repo = repo
         )

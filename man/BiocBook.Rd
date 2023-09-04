@@ -17,7 +17,7 @@ init(
   new_package,
   skip_availability = FALSE,
   template = "js2264/BiocBook.template",
-  version = "v1.0.0",
+  version = "v1.0.1",
   commit = NA,
   .local = FALSE
 )
