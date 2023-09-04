@@ -20,9 +20,9 @@ init <- function(
     new_package, 
     skip_availability = FALSE, 
     template = "js2264/BiocBook.template", 
-    version = 'v1.0.0', 
+    version = 'v1.0.1', 
     commit = NA, 
-    .local = FALSE
+    .local = FALSE  
 ) {
 
     cli::cat_rule("Running preflight checklist", col = "cyan", line = 2)
@@ -148,20 +148,20 @@ init <- function(
     for (.f in f) file.copy(from = .f, to = gsub(pattern, repo, .f))
     unlink(tmpdir, recursive = TRUE)
     cli::cli_alert_success(cli::col_grey(
-        "New local book `{new_package}` successfully created"
+        "New local book `{repo}` successfully created"
     ))
     Sys.sleep(1)
 
     ## Fix placeholders
     # ---- in `_book.yml`
     path <- file.path("inst", "assets", "_book.yml")
-    .fix_placeholders(file.path(repo, path), pkg = new_package, usr = user)
+    .fix_placeholders(file.path(repo, path), pkg = repo, usr = user)
     cli::cli_alert_success(cli::col_grey("Filled out `{cli::col_cyan(path)}` fields"))
     Sys.sleep(1)
 
     # ---- in `DESCRIPTION`
     path <- "DESCRIPTION"
-    .fix_placeholders(file.path(repo, path), pkg = new_package, usr = user)
+    .fix_placeholders(file.path(repo, path), pkg = repo, usr = user)
     cli::cli_alert_success(cli::col_grey("Filled out `{cli::col_cyan(path)}` fields"))
     cli::cli_alert_info(cli::col_grey("Please finish editing the `{cli::col_cyan(path)}` fields, including:"))
     d <- cli::cli_div(theme = list(ul = list(`margin-left` = 2, before = "")))
@@ -171,7 +171,7 @@ init <- function(
 
     # ---- in `index.qmd`
     path <- file.path("inst", "index.qmd")
-    .fix_placeholders(file.path(repo, path), pkg = new_package, usr = user)
+    .fix_placeholders(file.path(repo, path), pkg = repo, usr = user)
     cli::cli_alert_success(cli::col_grey("Filled out `{cli::col_cyan(path)}` fields"))
     cli::cli_alert_info(cli::col_grey("Please finish editing the `{cli::col_cyan(path)}` fields, including the `Welcome` section"))
     Sys.sleep(1)
@@ -200,7 +200,7 @@ init <- function(
 
         ## Create a new Github repo
         remote <- gh::gh("POST /user/repos", name = repo, description = "BiocBook")
-        cli::cli_alert_success(cli::col_grey("New Github repository `{user}/{new_package}` successfully created"))
+        cli::cli_alert_success(cli::col_grey("New Github repository `{user}/{repo}` successfully created"))
         Sys.sleep(1)
 
         ## Connect local git to remote 
@@ -227,33 +227,51 @@ init <- function(
             cli::cli_alert_info(cli::col_grey("Don't forget to push the latest commit to the remote `origin`."))
         }
 
-        ## Create `gh-pages` branch on origin
-        cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Checking existing branches"))
-        Sys.sleep(1)
-        refs <- gh::gh("/repos/{user}/{new_package}/git/refs", user = user, new_package = new_package)
-        sha <- refs[[which(purrr::map(refs, ~ .x$ref == 'refs/heads/devel') |> unlist())]]$object$sha
-        gh::gh(
-            "POST /repos/{user}/{new_package}/git/refs", 
-            user = user, new_package = new_package, 
-            ref = "refs/heads/gh-pages", 
-            sha = sha,
-            .token = PAT
+        ## Create remote empty `gh-pages` branch [ripped from usethis]
+        cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Creating an empty local `gh-pages` branch"))
+        tree <- gh(
+            "POST /repos/{user}/{repo}/git/trees",
+            tree = list(list(
+                path = "_temp",
+                mode = "100644",
+                type = "blob",
+                content = ""
+            )), 
+            user = user, repo = repo
         )
-        cli::cli_alert_success(cli::col_grey("New `gh-pages` branch created."))
+        commit <- gh(
+            "POST /repos/{user}/{repo}/git/commits",
+            message = "🚀 Init orphan branch",
+            tree = tree$sha, 
+            user = user, repo = repo
+        )
+        ref <- gh(
+            "POST /repos/{user}/{repo}/git/refs",
+            ref = glue("refs/heads/gh-pages"),
+            sha = commit$sha, 
+            user = user, repo = repo
+        )
+        del <- gh(
+            "DELETE /repos/{user}/{repo}/contents/_temp",
+            message = "\U1F9F9 Purging `gh-pages` branch",
+            sha = purrr::pluck(tree, "tree", 1, "sha"),
+            branch = 'gh-pages', user = user, repo = repo
+        )
+        cli::cli_alert_success(cli::col_grey("New empty `gh-pages` branch created on remote."))
         Sys.sleep(1)
 
         ## Enable Pages service
         cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Configuring Pages service"))
         Sys.sleep(1)
         gh::gh(
-            "PUT /repos/{user}/{new_package}/pages", 
-            user = user, new_package = new_package, 
+            "PUT /repos/{user}/{repo}/pages", 
+            user = user, repo = repo, 
             charToRaw('{ "source": { "branch": "gh-pages", "path": "/docs" } }'), 
             .token = PAT
         )
         res <- gh::gh(
-            "/repos/{user}/{new_package}/pages", 
-            user = user, new_package = new_package, 
+            "/repos/{user}/{repo}/pages", 
+            user = user, repo = repo, 
             .token = PAT
         )
         cli::cli_alert_success(cli::col_grey(
