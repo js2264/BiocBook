@@ -129,12 +129,11 @@ Three types of placeholders need to be replaced:
 2. `<package_name>`
 3. `<github_user>`
 
-Four different files contain these placeholders: 
+Three different files contain these placeholders: 
 
 1. `/inst/assets/_book.yml`
 2. `/DESCRIPTION`
 3. `/index.qmd`
-4. `/.github/workflows/build-and-deploy.yaml`
 
 :::
 

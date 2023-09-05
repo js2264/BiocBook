@@ -159,6 +159,12 @@ init <- function(
     cli::cli_alert_success(cli::col_grey("Filled out `{cli::col_cyan(path)}` fields"))
     Sys.sleep(1)
 
+    # ---- in `README.md`
+    path <- "README.md"
+    .fix_placeholders(file.path(repo, path), pkg = repo, usr = user)
+    cli::cli_alert_success(cli::col_grey("Filled out `{cli::col_cyan(path)}` fields"))
+    Sys.sleep(1)
+
     # ---- in `DESCRIPTION`
     path <- "DESCRIPTION"
     .fix_placeholders(file.path(repo, path), pkg = repo, usr = user)

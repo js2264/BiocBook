@@ -1,8 +1,8 @@
 # BiocBook <img src="inst/assets/cover.png" align="right" alt="" />
 
-📦 [Repo](https://github.com/js2264/BiocBook)  
-📖 [Book](https://js2264.github.io/BiocBook/devel) [![pages-build-deployment](https://github.com/js2264/BiocBook/actions/workflows/pages/pages-build-deployment/badge.svg?branch=gh-pages)](https://github.com/js2264/BiocBook/actions/workflows/pages/pages-build-deployment)  
-🐳 [Docker](https://github.com/js2264/BiocBook/pkgs/container/BiocBook) [![BiocBook](https://github.com/js2264/BiocBook/actions/workflows/build-and-deploy.yaml/badge.svg)](https://github.com/js2264/BiocBook/actions/workflows/build-and-deploy.yaml)  
+📦 [Repo](https://github.com/js2264/BiocBook) [![rworkflows](https://img.shields.io/github/actions/workflow/status/js2264/BiocBook/rworkflows.yml?label=Package%20check)](https://github.com/js2264/BiocBook/actions/workflows/rworkflows.yml)   
+📖 [Book](https://js2264.github.io/BiocBook/devel) [![deployment](https://img.shields.io/github/actions/workflow/status/js2264/BiocBook/pages/pages-build-deployment?label=Book%20deployment)](https://github.com/js2264/BiocBook/actions/workflows/pages/pages-build-deployment)  
+🐳 [Docker](https://github.com/js2264/BiocBook/pkgs/container/BiocBook) [![biocbook](https://img.shields.io/github/actions/workflow/status/js2264/BiocBook/biocbook.yml?label=Docker%20image)](https://github.com/js2264/BiocBook/actions/workflows/biocbook.yml)  
 🔎 [Poster](poster.pdf)
 
 
