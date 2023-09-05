@@ -186,7 +186,7 @@ init <- function(
     Sys.sleep(1)
     staged <- gert::git_add(files = f$file, repo = repo)
     commit_sha <- gert::git_commit(
-        repo = repo, message = "\U1F680 init BiocBook", author = gitsig
+        repo = repo, message = paste0("\U1F680 init BiocBook from template version ", version), author = gitsig
     )
     b <- gert::git_branch_list(repo = repo)
     if (b$name != 'devel') {
