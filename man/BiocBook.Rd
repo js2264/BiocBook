@@ -17,7 +17,7 @@ init(
   new_package,
   skip_availability = FALSE,
   template = "js2264/BiocBook.template",
-  version = "v1.0.1",
+  version = "latest",
   commit = NA,
   .local = FALSE
 )
@@ -45,7 +45,7 @@ from R and Bioconductor (i.e. no \verb{_} or \code{-}, no name starting with a n
 
 \item{template}{Optional. Github repository used for \code{BiocBook} template (default: \code{js2264/BiocBook.template}).}
 
-\item{version}{Optional. Version of the template to use.}
+\item{version}{Optional. Version of the template to use (default: "latest").}
 
 \item{commit}{Optional. Logical, whether to automatically push commits to remote Github origin (default: FALSE).}
 

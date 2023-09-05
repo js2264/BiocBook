@@ -20,7 +20,7 @@ init <- function(
     new_package, 
     skip_availability = FALSE, 
     template = "js2264/BiocBook.template", 
-    version = 'v1.0.1', 
+    version = 'latest', 
     commit = NA, 
     .local = FALSE  
 ) {
@@ -115,6 +115,15 @@ init <- function(
         )
         Sys.sleep(1)
     }
+
+    ## Check latest template version 
+    if (version == "latest") {
+        latest <- paste0("https://api.github.com/repos/", template, "/releases/latest") |> 
+            httr::GET() |> 
+            httr::content()
+        version <- latest$name
+    }
+    cli::cli_alert_success(cli::col_grey("Using template: {template}@{version}"))
 
     cli::cli_text("")
     cli::cat_rule("Initiating a new `BiocBook`", col = "cyan", line = 2)

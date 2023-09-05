@@ -154,7 +154,7 @@ NULL
 #' from R and Bioconductor (i.e. no `_` or `-`, no name starting with a number).
 #' @param skip_availability Optional. Whether to skip package name availability (default: FALSE).
 #' @param template Optional. Github repository used for `BiocBook` template (default: `js2264/BiocBook.template`). 
-#' @param version Optional. Version of the template to use.
+#' @param version Optional. Version of the template to use (default: "latest").
 #' @param commit Optional. Logical, whether to automatically push commits to remote Github origin (default: FALSE). 
 #' @param .local Should only be used for examples/tests. Whether to create a matching Github repository or stay local (default: FALSE).
 #' @param path Path of an existing `BiocBook`. 
