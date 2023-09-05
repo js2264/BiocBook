@@ -38,7 +38,8 @@ Imports:
     yaml, 
     tools, 
     utils, 
-    rlang
+    rlang, 
+    renv
 Suggests:
     BiocManager, 
     BiocVersion, 

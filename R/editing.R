@@ -39,6 +39,7 @@ edit_css <- function(book, open = TRUE) {
 
 preview <- function(book, browse = FALSE, watch = FALSE) {
 
+    check_deps(book)
     quarto::quarto_preview(file.path(path(book), 'inst'), browse = browse, watch = watch)
 
 }

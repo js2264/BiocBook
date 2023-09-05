@@ -100,8 +100,9 @@ This function performs the following operations:
 \enumerate{
 \item It checks that the provided package name is available;
 \item It logs in the GitHub user accounts;
-\item It creates a new \strong{remote} Github repository using the \code{BiocBook} template from \code{js2264/BiocBook};
-\item It clones the \strong{remote} Github repository to a local folder;
+\item It creates a new \strong{local} repository using the \code{BiocBook} template from \code{js2264/BiocBook};
+\item It pushes the local repository to a \strong{remote} Github repository;
+\item It creates an empty \code{gh-pages} and sets it up to serve rendered books;
 \item It edits several placeholders from the template and commits the changes.
 }
 
@@ -122,15 +123,29 @@ The \code{init(new_package = "...")} function returns a \code{BiocBook} object.
 \section{Publishing an existing \code{BiocBook}}{
 
 
-As long as the local \code{BiocBook} has been initiated with \code{init()},
-the writer simply has to commit changes and push them to the \code{origin} remote.
+\strong{Important:} remember to add any dependency used in your chapters
+to the DESCRIPTION before publishing your book.
+Dependencies across chapters can be found with:
 
-In \code{R}, this can be done as follows:
+\code{check_deps(biocbook)}
 
-\code{gert::git_commit_all(message, repo = path(biocbook))}
+Note that this will not always work 100\%, always use good coding practices
+and add your dependencies to DESCRIPTION while writing new chapters.
+
+To locally preview the book, one can use the following command:
+
+\code{preview(biocbook)}
+
+To publish changes, as long as the local \code{BiocBook} has been
+initiated with \code{init()}, the writer simply has to commit changes and
+push them to the \code{origin} remote. In \code{R}, this can be done as follows:
+
+\code{publish(biocbook)}
 
 The different available versions published in the \code{origin} \code{gh-pages} branch
-can be listed using \code{status(biocbook)}
+can be listed with
+
+\code{status(biocbook)}
 }
 
 \examples{

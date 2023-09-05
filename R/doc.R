@@ -3,7 +3,8 @@
 #' 
 #' @description 
 #' 
-#' Editing functions for `BiocBook`s
+#' Editing functions for `BiocBook`s. See \code{\link{BiocBook}} help 
+#' sections for extended description. 
 #' 
 #' @section `add_*` functions:
 #' 
@@ -23,6 +24,8 @@
 #' 
 #' Extra functions are provided to faciliate the maintenance of `BiocBook`s.  
 #' 
+#' - `check_deps()`: is used to find dependencies from chapter pages 
+#' that are not listed in DESCRIPTION
 #' - `preview()`: is used to dynamically render the book locally
 #' - `publish()`: is used to commit and push to remote Github branch
 #' - `status()`: is used to list the book versions already 
@@ -52,6 +55,8 @@
 #' @param browse Optional. Passed to `quarto_preview()` (default: FALSE).
 #' @param watch Optional. Passed to `quarto_preview()` (default: FALSE).
 #' 
+#' @seealso \code{\link{BiocBook}}
+#' 
 #' @examples
 #' ## In practice, you should not use `.local` argument. 
 #' gert::git_config_global_set('user.name', value = 'js2264')
@@ -60,7 +65,6 @@
 #' add_preamble(bb, open = FALSE)
 #' add_chapter(bb, title = "Chapitre Un", open = FALSE)
 #' unlink('localbook', recursive = TRUE)
-
 NULL 
 
 #' @title Handling BiocBook directories
@@ -102,9 +106,10 @@ NULL
 #' 
 #' 1. It checks that the provided package name is available;
 #' 2. It logs in the GitHub user accounts; 
-#' 3. It creates a new **remote** Github repository using the `BiocBook` template from `js2264/BiocBook`; 
-#' 4. It clones the **remote** Github repository to a local folder; 
-#' 5. It edits several placeholders from the template and commits the changes. 
+#' 3. It creates a new **local** repository using the `BiocBook` template from `js2264/BiocBook`; 
+#' 4. It pushes the local repository to a **remote** Github repository; 
+#' 5. It creates an empty `gh-pages` and sets it up to serve rendered books; 
+#' 6. It edits several placeholders from the template and commits the changes. 
 #' 
 #' The `init(new_package = "...")` function returns a `BiocBook` object. 
 #' 
@@ -118,15 +123,29 @@ NULL
 #' 
 #' @section Publishing an existing `BiocBook`:
 #' 
-#' As long as the local `BiocBook` has been initiated with `init()`, 
-#' the writer simply has to commit changes and push them to the `origin` remote.  
+#' **Important:** remember to add any dependency used in your chapters 
+#' to the DESCRIPTION before publishing your book.  
+#' Dependencies across chapters can be found with: 
 #' 
-#' In `R`, this can be done as follows: 
+#' `check_deps(biocbook)`
 #' 
-#' `gert::git_commit_all(message, repo = path(biocbook))`
+#' Note that this will not always work 100%, always use good coding practices 
+#' and add your dependencies to DESCRIPTION while writing new chapters. 
+#' 
+#' To locally preview the book, one can use the following command: 
+#' 
+#' `preview(biocbook)`
+#' 
+#' To publish changes, as long as the local `BiocBook` has been 
+#' initiated with `init()`, the writer simply has to commit changes and 
+#' push them to the `origin` remote. In `R`, this can be done as follows: 
+#' 
+#' `publish(biocbook)`
 #' 
 #' The different available versions published in the `origin` `gh-pages` branch 
-#' can be listed using `status(biocbook)`
+#' can be listed with
+#' 
+#' `status(biocbook)`
 #' 
 #' @return A `BiocBook` object (invisible). 
 #' 
