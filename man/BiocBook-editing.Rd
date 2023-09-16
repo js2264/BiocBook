@@ -27,7 +27,7 @@ edit_css(book, open = TRUE)
 
 preview(book, browse = FALSE, watch = FALSE)
 
-publish(book, message = "🚀 Publishing")
+publish(book, message = "Publishing")
 
 status(book)
 
