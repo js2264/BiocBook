@@ -201,7 +201,7 @@ init <- function(
     Sys.sleep(1)
     staged <- gert::git_add(files = f$file, repo = repo)
     commit_sha <- gert::git_commit(
-        repo = repo, message = paste0("\U1F680 init BiocBook from template version ", version), author = gitsig
+        repo = repo, message = paste0("Init BiocBook from template version ", version), author = gitsig
     )
     b <- gert::git_branch_list(repo = repo)
     if (b$name != 'devel') {
@@ -256,7 +256,7 @@ init <- function(
         )
         commit <- gh(
             "POST /repos/{user}/{repo}/git/commits",
-            message = "\U1F680 Init orphan branch",
+            message = "Init orphan branch",
             tree = tree$sha, 
             user = user, repo = repo
         )

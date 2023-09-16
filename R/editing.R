@@ -47,7 +47,7 @@ preview <- function(book, browse = FALSE, watch = FALSE) {
 #' @rdname BiocBook-editing
 #' @export 
 
-publish <- function(book, message = "\U1F680 Publishing") {
+publish <- function(book, message = "Publishing") {
 
     f <- gert::git_status(repo = path(book), pathspec = 'inst/')
     f <- f[!f$staged, ]
