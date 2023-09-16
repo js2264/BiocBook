@@ -15,6 +15,11 @@ link <- BiocStyle::Biocbook(
 URL <- sub(".*\\((.+))", "\\1", link)
 ```
 
+```{r}
+quarto::quarto_path()
+quarto::quarto_version()
+```
+
 <meta charset="utf-8">
 <meta http-equiv="refresh" content="`r sprintf("0; URL=%s", URL)`">
 <link rel="canonical" href="`r URL`">
