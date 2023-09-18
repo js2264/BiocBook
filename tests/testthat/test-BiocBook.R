@@ -1,8 +1,5 @@
 test_that("init work", {
     
-    gert::git_config_global_set('user.name', value = 'js2264')
-    gert::git_config_global_set('user.email', value = 'jacquesserizay@gmail.com')
-
     tmpdir <- paste0(paste0(
         sample(c(seq(0, 9), LETTERS), 8, replace = TRUE), collapse = ""
     ))

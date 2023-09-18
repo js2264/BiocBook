@@ -34,29 +34,29 @@ init <- function(
         cli::cli_abort("A folder named {new_package} already exists.")
     }
 
-    ## Check that git is configured 
-    cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Checking git configuration"))
-    Sys.sleep(1)
-    gitconf <- gert::git_config_global()
-    if (!"user.name" %in% gitconf$name)
-        cli::cli_abort("Missing `user.name` in the git global configuration.\
-        Set it with `gert::git_config_global_set('user.name', value = '...')`.")
-    if (!"user.email" %in% gitconf$name)
-        cli::cli_abort("Missing `user.email` in the git global configuration.\
-        Set it with `gert::git_config_global_set('user.email', value = '...')`.")
-    gituser <- gitconf$value[gitconf$name == "user.name"]
-    gitmail <- gitconf$value[gitconf$name == "user.email"]
-    gitsig <- gert::git_signature(name = gituser, email = gitmail)
-    cli::cli_alert_success(cli::col_grey("Git successfully configured"))
-    cli::cli_ul(c(
-        cli::col_grey("git user: `{gituser}`"),
-        cli::col_grey("git email: `{gitmail}`")
-    ))
-    Sys.sleep(1)
-
-    ## Check that user is logged in Github
     if (!.local) {
         
+        ## Check that git is configured 
+        cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Checking git configuration"))
+        Sys.sleep(1)
+        gitconf <- gert::git_config_global()
+        if (!"user.name" %in% gitconf$name)
+            cli::cli_abort("Missing `user.name` in the git global configuration.\
+            Set it with `gert::git_config_global_set('user.name', value = '...')`.")
+        if (!"user.email" %in% gitconf$name)
+            cli::cli_abort("Missing `user.email` in the git global configuration.\
+            Set it with `gert::git_config_global_set('user.email', value = '...')`.")
+        gituser <- gitconf$value[gitconf$name == "user.name"]
+        gitmail <- gitconf$value[gitconf$name == "user.email"]
+        gitsig <- gert::git_signature(name = gituser, email = gitmail)
+        cli::cli_alert_success(cli::col_grey("Git successfully configured"))
+        cli::cli_ul(c(
+            cli::col_grey("git user: `{gituser}`"),
+            cli::col_grey("git email: `{gitmail}`")
+        ))
+        Sys.sleep(1)
+
+        ## Check that user is logged in Github
         cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Checking Github credentials"))
         Sys.sleep(1)
         GH_api <- "https://api.github.com"
@@ -89,8 +89,18 @@ init <- function(
 
     }
     else {
-        PAT <- NULL
+        gituser <- "dummy"
+        gitmail <- "dummy@dummy.com"
+        gitsig <- gert::git_signature(name = gituser, email = gitmail)
+        cli::cli_alert_warning(cli::col_grey("Dummy git configured"))
+        cli::cli_ul(c(
+            cli::col_grey("git user: `{gituser}`"),
+            cli::col_grey("git email: `{gitmail}`")
+        ))
+        cli::cli_alert_warning(cli::col_grey("No GitHub configured"))
         user <- gituser
+        PAT <- NULL
+        Sys.sleep(1)
     }
 
     ## Check that package name is valid
