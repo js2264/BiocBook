@@ -140,7 +140,7 @@ init <- function(
     Sys.sleep(1)
     cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Creating new repository from `{template}@{version}`"))
 
-    ## Create new local repo copied from BiocBook.template
+    ## Create new local repo copied from BiocBook.template, in a temp folder
     repo <- new_package
     dir.create(repo)
     tmpdir <- paste0('.', paste0(
@@ -154,6 +154,8 @@ init <- function(
         paste0(tmpfile, '.tar.gz')
     )
     utils::untar(paste0(tmpfile, '.tar.gz'), exdir = tmpdir)
+
+    ## Move files from temp folder to `new_package` folder
     d <- list.dirs(tmpdir, full.names = TRUE, recursive = TRUE)
     d <- d[dirname(d) != '.']
     pattern <- file.path(tmpdir, basename(d)[dirname(dirname(d)) == '.'])
@@ -201,7 +203,7 @@ init <- function(
     cli::cli_alert_info(cli::col_grey("Please finish editing the `{cli::col_cyan(path)}` fields, including the `Welcome` section"))
     Sys.sleep(1)
 
-    ## Init local git 
+    ## Init local git repo in the `new_package` folder
     gert::git_init(path = repo) 
     cli::cli_alert_info(cli::col_grey("The following files need to be committed: "))
     d <- cli::cli_div(theme = list(ul = list(`margin-left` = 2, before = "")))
@@ -209,10 +211,16 @@ init <- function(
     cli::cli_ul(f$file)
     cli::cli_end(d)
     Sys.sleep(1)
+
+    ## Commit all changes to local git repo
     staged <- gert::git_add(files = f$file, repo = repo)
     commit_sha <- gert::git_commit(
-        repo = repo, message = paste0("Init BiocBook from template version ", version), author = gitsig
+        repo = repo, 
+        message = paste0("Init BiocBook from template version ", version), 
+        author = gitsig
     )
+
+    ## Make sure default `git` branch is named `devel`
     b <- gert::git_branch_list(repo = repo)
     if (b$name != 'devel') {
         gert::git_branch_move(repo = repo, b$name, 'devel')
@@ -220,7 +228,7 @@ init <- function(
     cli::cli_alert_success(cli::col_grey("The new files have been commited to the `devel` branch."))
     Sys.sleep(1)
 
-    ## Syncing Github: create new repo, configure Pgaes, add remote, push
+    ## Syncing Github: create new repo, configure Pages, add remote, push
     if (!is.null(PAT)) {
 
         ## Create a new Github repo

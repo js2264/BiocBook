@@ -110,8 +110,6 @@ existing Dockerfiles
 
 \examples{
 ## In practice, you should not use `.local` argument. 
-gert::git_config_global_set('user.name', value = 'js2264')
-gert::git_config_global_set('user.email', value = 'jacquesserizay@gmail.com')
 bb <- init('localbook', .local = TRUE)
 add_preamble(bb, open = FALSE)
 add_chapter(bb, title = "Chapitre Un", open = FALSE)

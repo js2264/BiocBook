@@ -150,8 +150,6 @@ can be listed with
 
 \examples{
 ## In practice, you should not use `.local` argument. 
-gert::git_config_global_set('user.name', value = 'js2264')
-gert::git_config_global_set('user.email', value = 'jacquesserizay@gmail.com')
 init('localbook', .local = TRUE)
 bb <- BiocBook('localbook')
 chapters(bb)
