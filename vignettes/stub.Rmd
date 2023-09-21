@@ -20,6 +20,11 @@ quarto::quarto_path()
 quarto::quarto_version()
 ```
 
+```{r}
+gert::git_config_global()
+gh::gh_whoami()
+```
+
 <meta charset="utf-8">
 <meta http-equiv="refresh" content="`r sprintf("0; URL=%s", URL)`">
 <link rel="canonical" href="`r URL`">
