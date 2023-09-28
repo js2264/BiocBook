@@ -1,10 +1,10 @@
 # BiocBook <img src="inst/assets/cover.png" align="right" alt="" />
 
-📦 [Repo](https://github.com/js2264/BiocBook) [![rworkflows](https://img.shields.io/github/actions/workflow/status/js2264/BiocBook/rworkflows.yml?label=Package%20check)](https://github.com/js2264/BiocBook/actions/workflows/rworkflows.yml)   
-📖 [Book](https://js2264.github.io/BiocBook/devel) [![deployment](https://img.shields.io/github/actions/workflow/status/js2264/BiocBook/pages/pages-build-deployment?label=Book%20deployment)](https://github.com/js2264/BiocBook/actions/workflows/pages/pages-build-deployment)  
-🐳 [Docker](https://github.com/js2264/BiocBook/pkgs/container/BiocBook) [![biocbook](https://img.shields.io/github/actions/workflow/status/js2264/BiocBook/biocbook.yml?label=Docker%20image)](https://github.com/js2264/BiocBook/actions/workflows/biocbook.yml)  
-🔎 [Poster](poster.pdf)
+Checkout the [`{BiocBookDemo}` **package**](https://github.com/js2264/BiocBookDemo) 
+and associated [**online book**](https://js2264.github.io/BiocBookDemo/devel/) 
+for an example of a `BiocBook`. 
 
+---
 
 `BiocBook`s are **package-based, versioned online books** with a **supporting
 `Docker` image** for each book version. 
@@ -51,60 +51,6 @@ preview(bb)
 ## Publish to Github
 publish(bb)
 ```
-
-## Working with `BiocBook`s
-    
-### 1. Creating a `BiocBook`
-
-A new `BiocBook` should be created using the `init(new_package = "...")` function.  
-This function performs the following operations: 
-
-1. It checks that the provided package name is available;
-2. It logs in the GitHub user accounts; 
-3. It creates a new **remote** Github repository using the `BiocBook.template` from `js2264/BiocBook`; 
-3. It sets up Github Pages to serve the future books from the `gh-pages` branch;
-4. It clones the **remote** Github repository to a **local folder**; 
-5. It edits several placeholders from the template and commits the changes. 
-
-![init](inst/img/init.jpg)
-
-### 2. The `BiocBook` class
-
-A `BiocBook` object acts as a pointer to a local package directory, with 
-book chapters contained in a `pages/` folder as `.qmd` files.  
-
-This package directory requires a specific architecture, which is 
-best set up using the `init()` function. 
-
-![BiocBook](inst/img/biocbook.jpg)
-
-### 3. Editing an existing `BiocBook`
-
-`BiocBook` objects can be modified using the following helper functions: 
-
-- `add_preamble(biocbook)` to start writing a preamble; 
-- `add_chapter(biocbook, title = "...")` to start writing a new chapter;  
-- `edit_page(biocbook, page = "...")` to edit an existing chapter.
-
-![edit](inst/img/edit.jpg)
-
-- `preview(biocbook)` will compile (and cache) the book locally. Use it 
-to verify that your book renders correctly. 
-
-### 4. Publishing an existing `BiocBook`
-
-As long as the local `BiocBook` has been initiated with `init()`, 
-the writer simply has to commit changes and push them to the `origin` remote.  
-
-In `R`, this can be done as follows: 
-
-```r
-publish(bb)
-```
-![publish](inst/img/publish.jpg)
-
-The different available versions published in the `origin` `gh-pages` branch 
-can be listed using `status(biocbook)`. 
 
 ## Acknowledgments
 
