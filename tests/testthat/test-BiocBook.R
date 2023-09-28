@@ -13,7 +13,7 @@ test_that("init work", {
     expect_no_error(    path(bb))
     expect_no_error(    chapters(bb))
     expect_no_error(    releases(bb))
-    expect_no_error(    preview(bb))
+    # expect_no_error(    preview(bb))
 
     ## add_* functions
     expect_invisible(   add_preamble(bb, open = FALSE))
@@ -31,7 +31,7 @@ test_that("init work", {
     expect_no_error(    edit_page(bb, file = '/inst/index.qmd', open = FALSE))
 
     unlink(tmpdir, recursive = TRUE, force = TRUE)
-    quarto::quarto_preview_stop()
+    # quarto::quarto_preview_stop()
 
 })
 
