@@ -1,5 +1,5 @@
 ---
-title: "BiocBook"
+title: "BiocBook: write Quarto books with Bioconductor"
 output: 
   BiocStyle::html_document:
     self_contained: yes
@@ -23,7 +23,31 @@ knitr::opts_chunk$set(
 )
 ```
 
-## 1. Creating a `BiocBook`
+`BiocBook` is a package to facilitate the creation of 
+**package-based, versioned online books**. Such books can be used in a variety 
+of contexts, including **extended technical documentation** (e.g. of an ecosystem 
+based on multiple packages) or **online workshops**. 
+
+`BiocBook` assists authors in: 
+
+1. *Writing*: compile a **body of biological and/or bioinformatics knowledge**;
+2. *Containerizing*: provide **Docker images** (through GitHub) to reproduce the examples illustrated in the compendium;
+3. *Publishing*: let Bioconductor or Github deploy an **online book** to disseminate the compendium; 
+4. *Versioning*: **automatically** generate specific online book versions and Docker images for specific [Bioconductor releases](https://contributions.bioconductor.org/use-devel.html). 
+
+# Main features of `BiocBook`s
+
+`BiocBook`s created with the {`BiocBook`} package and **hosted on GitHub** 
+are deployed and served on the `gh-pages` branch and a Docker image is available
+on [ghcr.io](https://ghcr.io/). 
+
+`BiocBook`s created with the {`BiocBook`} package and **submitted to Bioconductor**
+are directly available for reading from the Bioconductor website. 
+
+Read the [`BiocBookDemo`](http://jserizay.com/BiocBookDemo/devel/#main-features-of-biocbooks)
+example book to know more about `BiocBook`s features. 
+
+# Creating a `BiocBook`
 
 A new `BiocBook` should be created using the `init(new_package = "...")` function.  
 
@@ -36,24 +60,24 @@ This function performs the following operations:
 5. It clones the **remote** Github repository to a **local folder**; 
 6. It edits several placeholders from the template and commits the changes. 
 
-![](../man/figures/init.jpg)
+```{r}
+library(BiocBook)
 
-## 2. The `BiocBook` class
+## Note that `.local = TRUE` is only set here for demonstration. 
+init("myNewBook", .local = TRUE)
+```
+
+# The `BiocBook` class
 
 A `BiocBook` object acts as a pointer to a local package directory, with 
 book chapters contained in a `pages/` folder as `.qmd` files.  
 
 ```{r}
-library(BiocBook)
-showClass("BiocBook")
+bb <- BiocBook("myNewBook")
+bb
 ```
 
-This package directory requires a specific architecture, which is 
-best set up using the `init()` function. 
-
-![](../man/figures/biocbook.jpg)
-
-## 3. Editing an existing `BiocBook`
+# Editing an existing `BiocBook`
 
 `BiocBook` objects can be modified using the following helper functions: 
 
@@ -61,31 +85,35 @@ best set up using the `init()` function.
 - `add_chapter(biocbook, title = "...")` to start writing a new chapter;  
 - `edit_page(biocbook, page = "...")` to edit an existing chapter.
 
-![](../man/figures/edit.jpg)
+```{r}
+add_preamble(bb, open = FALSE)
+add_chapter(bb, title = 'Chapter 1', open = FALSE)
+bb
+```
 
 - `preview(biocbook)` will compile (and cache) the book locally. Use it 
 to verify that your book renders correctly. 
 
-## 4. Publishing an existing `BiocBook`
+# Publishing an existing `BiocBook`
 
 As long as the local `BiocBook` has been initiated with `init()`, 
 the writer simply has to commit changes and push them to the `origin` remote.  
 
 In `R`, this can be done as follows: 
 
-```r
+```{r eval = FALSE}
 publish(bb)
 ```
-![](../man/figures/publish.jpg)
 
 The different available versions published in the `origin` `gh-pages` branch 
 can be listed using `status(biocbook)`. 
 
-## 5. Session info 
+# Session info 
 
 ```{r}
-sessioninfo::session_info(
-    installed.packages()[,"Package"], 
-    include_base = TRUE
-)
+sessionInfo()
+```
+
+```{r, include = FALSE}
+unlink("myNewBook", recursive = TRUE)
 ```
