@@ -14,11 +14,18 @@ A `BiocBook` can be created by authors (e.g. `R` developers, but also scientists
 1. *Write*: compile a **body of biological and/or bioinformatics knowledge**;
 2. *Containerize*: provide **Docker images** to reproduce the examples illustrated in the compendium;
 3. *Publish*: deploy an **online book** to disseminate the compendium; 
-4. *Versionize*: **automatically** generate specific online book versions and Docker images for specific [Bioconductor releases](https://contributions.bioconductor.org/use-devel.html). 
+4. *Version*: **automatically** generate specific online book versions and Docker images for specific [Bioconductor releases](https://contributions.bioconductor.org/use-devel.html). 
 
 ## Installation
 
-To install the most recent version of `BiocBook`, you can use:
+To install `BiocBook` from Bioconductor, proceed as follows:
+
+```r
+if (!require("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+BiocManager::install("BiocBook")
+```
+
+To install `BiocBook` development version, you can use:
 
 ```r
 install.packages("devtools")
@@ -51,6 +58,10 @@ preview(bb)
 ## Publish to Github
 publish(bb)
 ```
+
+Please read `BiocBook` vignette: `vignette("BiocBook")`. 
+
+You can also check out the [`BiocBookDemo` book](https://js2264.github.io/BiocBookDemo/devel/) to know more about `BiocBook`. 
 
 ## Acknowledgments
 
