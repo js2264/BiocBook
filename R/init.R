@@ -114,7 +114,7 @@ init <- function(
     ## Extract template archive in a temp folder
     tmpdir <- tempfile()
     dir.create(tmpdir)
-    template <- system.file("template", "archive.tar.gz", package = "BiocBook")
+    template <- system.file("template", "BiocBook.template.tar.gz", package = "BiocBook")
     utils::untar(template, exdir = tmpdir)
 
     ## Move files from temp folder to `new_package` folder
