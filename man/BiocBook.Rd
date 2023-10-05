@@ -34,15 +34,15 @@ chapters(object)
 This name should be compatible with package naming conventions
 from R and Bioconductor (i.e. no \verb{_} or \code{-}, no name starting with a number).}
 
-\item{skip_availability}{Optional. Whether to skip package name availability (default: FALSE).}
+\item{push}{Optional. Logical, whether to automatically push commits to
+remote Github origin. If NA, a prompt will ask whether to push commits or
+not (default: NA).}
 
-\item{template}{Optional. Github repository used for \code{BiocBook} template (default: \code{js2264/BiocBook.template}).}
+\item{skip_availability}{Optional. Whether to skip package name availability
+(default: FALSE).}
 
-\item{version}{Optional. Version of the template to use (default: "latest").}
-
-\item{commit}{Optional. Logical, whether to automatically push commits to remote Github origin (default: FALSE).}
-
-\item{.local}{Should only be used for examples/tests. Whether to create a matching Github repository or stay local (default: FALSE).}
+\item{.local}{Should only be used for examples/tests. Whether to create a
+matching Github repository or stay local (default: FALSE).}
 
 \item{path}{Path of an existing \code{BiocBook}.}
 

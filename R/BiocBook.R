@@ -18,6 +18,7 @@ methods::setClass("BiocBook",
 
 init <- function(
     new_package, 
+    push = NA, 
     skip_availability = FALSE, 
     .local = FALSE  
 ) {
@@ -224,22 +225,29 @@ init <- function(
         gert::git_remote_add(url = remote$html_url, name = 'origin', repo = repo)
 
         ## Pushing first commit to Github
-        msg <- glue::glue("Is it ok to push the first commit to Github?")
-        if (!is.na(commit)) {
-            if (commit) {
+        prompt_msg <- glue::glue("Is it ok to push the first commit to Github?")
+        success_msg <- cli::col_grey("Commits pushed to origin {cli::col_cyan(gert::git_remote_list(repo = repo)$url[1])}")
+        abort_msg <- cli::col_grey("Don't forget to push the latest commit to the remote `origin`.")
+        if (!is.na(push)) {
+            if (push) {
                 gert::git_push(repo = repo)
-                cli::cli_alert_success(cli::col_grey("Commits pushed to origin {cli::col_cyan(gert::git_remote_list(repo = repo)$url[1])}"))
+                cli::cli_alert_success(success_msg)
             }
             else {
-                invisible(BiocBook(repo))
+                cli::cli_alert_info(abort_msg)
             }
         }
-        else if (usethis::ui_yeah(msg)) {
-            gert::git_push(repo = repo)
-            cli::cli_alert_success(cli::col_grey("Commits pushed to origin {cli::col_cyan(gert::git_remote_list(repo = repo)$url[1])}"))
+        else if (rlang::is_interactive()) {
+            if (usethis::ui_yeah(prompt_msg)) {
+                gert::git_push(repo = repo)
+                cli::cli_alert_success(success_msg)
+            }
+            else {
+                cli::cli_alert_info(abort_msg)
+            }
         } 
         else {
-            cli::cli_alert_info(cli::col_grey("Don't forget to push the latest commit to the remote `origin`."))
+            cli::cli_alert_info(abort_msg)
         }
 
         ## Create remote empty `gh-pages` branch [ripped from usethis]

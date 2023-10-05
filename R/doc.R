@@ -150,11 +150,10 @@ NULL
 #' @param new_package Name to use when initiating a new `BiocBook`. 
 #' This name should be compatible with package naming conventions 
 #' from R and Bioconductor (i.e. no `_` or `-`, no name starting with a number).
-#' @param skip_availability Optional. Whether to skip package name availability (default: FALSE).
-#' @param template Optional. Github repository used for `BiocBook` template (default: `js2264/BiocBook.template`). 
-#' @param version Optional. Version of the template to use (default: "latest").
-#' @param commit Optional. Logical, whether to automatically push commits to remote Github origin (default: FALSE). 
-#' @param .local Should only be used for examples/tests. Whether to create a matching Github repository or stay local (default: FALSE).
+#' @param push Optional. Logical, whether to automatically push commits to 
+#' remote Github origin. If NA, a prompt will ask whether to push commits or 
+#' not (default: NA). 
+#' @param skip_availability Optional. Whether to skip package name availability
 #' @param path Path of an existing `BiocBook`. 
 #' @param object A `BiocBook` object, created by `BiocBook` or `init()`.
 #' 
