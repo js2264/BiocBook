@@ -145,7 +145,12 @@ NULL
 #' 
 #' `status(biocbook)`
 #' 
-#' @return A `BiocBook` object (invisible). 
+#' @return
+#' - `init("newBook")` creates a local directory, synchronizes it with the 
+#' registered GitHub user, and invisibly returns a `BiocBook` object. 
+#' - `BiocBook("newBook")` returns a `BiocBook` object.
+#' - `path(bb)`, `releases(bb)` and `chapters(bb)` return the corresponding 
+#' information related to the `bb` BiocBook.
 #' 
 #' @param new_package Name to use when initiating a new `BiocBook`. 
 #' This name should be compatible with package naming conventions 
@@ -154,6 +159,9 @@ NULL
 #' remote Github origin. If NA, a prompt will ask whether to push commits or 
 #' not (default: NA). 
 #' @param skip_availability Optional. Whether to skip package name availability
+#' (default: FALSE).
+#' @param .local Should only be used for examples/tests. Whether to create a 
+#' matching Github repository or stay local (default: FALSE).
 #' @param path Path of an existing `BiocBook`. 
 #' @param object A `BiocBook` object, created by `BiocBook` or `init()`.
 #' 

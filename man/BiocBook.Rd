@@ -49,7 +49,13 @@ matching Github repository or stay local (default: FALSE).}
 \item{object}{A \code{BiocBook} object, created by \code{BiocBook} or \code{init()}.}
 }
 \value{
-A \code{BiocBook} object (invisible).
+\itemize{
+\item \code{init("newBook")} creates a local directory, synchronizes it with the
+registered GitHub user, and invisibly returns a \code{BiocBook} object.
+\item \code{BiocBook("newBook")} returns a \code{BiocBook} object.
+\item \code{path(bb)}, \code{releases(bb)} and \code{chapters(bb)} return the corresponding
+information related to the \code{bb} BiocBook.
+}
 }
 \description{
 \code{BiocBook}s are local R packages containing an extra \code{pages} folder to
