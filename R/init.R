@@ -170,10 +170,11 @@ init <- function(
     Sys.sleep(1)
 
     ## Commit all changes to local git repo
+    version <- read.dcf(file.path(repo, "DESCRIPTION"))[1,"BiocBookTemplate"]
     staged <- gert::git_add(files = f$file, repo = repo)
     commit_sha <- gert::git_commit(
         repo = repo, 
-        message = paste0("Init BiocBook from template version ", version), 
+        message = paste0("Init BiocBook from template version ", version[[1]]), 
         author = gitsig
     )
 
