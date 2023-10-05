@@ -120,18 +120,11 @@ init <- function(
     ## Move files from temp folder to `new_package` folder
     repo <- new_package
     dir.create(repo)
-    d <- list.dirs(tmpdir, full.names = TRUE, recursive = TRUE)
-    d <- d[dirname(d) != '.']
-    pattern <- file.path(tmpdir, basename(d)[dirname(dirname(d)) == '.'])
-    d <- d[dirname(dirname(d)) != '.']
-    f <- list.files(
-        tmpdir, 
-        all.files = TRUE, full.names = TRUE, recursive = TRUE
+    content <- list.files(
+        file.path(tmpdir, 'BiocBook.template'), 
+        all.files=TRUE, full.names=TRUE, no..=TRUE
     )
-    f <- f[!grepl("archive.zip$", f)]
-    for (.d in d) dir.create(gsub(pattern, repo, .d))
-    for (.f in f) file.copy(from = .f, to = gsub(pattern, repo, .f))
-    unlink(tmpdir, recursive = TRUE)
+    file.copy(content, repo, recursive=TRUE)
     cli::cli_alert_success(cli::col_grey(
         "New local book `{repo}` successfully created"
     ))
@@ -312,4 +305,3 @@ init <- function(
     invisible(BiocBook(repo))
 
 }
-
