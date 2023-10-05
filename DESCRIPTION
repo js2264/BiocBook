@@ -58,6 +58,7 @@ License: MIT + file LICENSE
 Collate: 
     'doc.R'
     'imports.R'
+    'init.R'
     'BiocBook.R'
     'BiocBook-methods.R'
     'check.R'
