@@ -13,14 +13,7 @@
 \alias{show,BiocBook-method}
 \title{Handling BiocBook directories}
 \usage{
-init(
-  new_package,
-  skip_availability = FALSE,
-  template = "js2264/BiocBook.template",
-  version = "latest",
-  commit = NA,
-  .local = FALSE
-)
+init(new_package, push = NA, skip_availability = FALSE, .local = FALSE)
 
 BiocBook(path)
 

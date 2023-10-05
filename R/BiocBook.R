@@ -19,9 +19,6 @@ methods::setClass("BiocBook",
 init <- function(
     new_package, 
     skip_availability = FALSE, 
-    template = "js2264/BiocBook.template", 
-    version = 'latest', 
-    commit = NA, 
     .local = FALSE  
 ) {
 
@@ -126,36 +123,21 @@ init <- function(
         Sys.sleep(1)
     }
 
-    ## Check latest template version 
-    if (version == "latest") {
-        latest <- paste0("https://api.github.com/repos/", template, "/releases/latest") |> 
-            httr::GET() |> 
-            httr::content()
-        version <- latest$name
-    }
-    cli::cli_alert_success(cli::col_grey("Using template: {template}@{version}"))
-
+    ## Create new local repo copied from BiocBook.template archive, in a temp folder
     cli::cli_text("")
     cli::cat_rule("Initiating a new `BiocBook`", col = "cyan", line = 2)
     Sys.sleep(1)
-    cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Creating new repository from `{template}@{version}`"))
+    cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Creating new repository from template provided in BiocBook `inst/` directory`"))
 
-    ## Create new local repo copied from BiocBook.template, in a temp folder
-    repo <- new_package
-    dir.create(repo)
-    tmpdir <- paste0('.', paste0(
-        sample(c(seq(0, 9), LETTERS), 8, replace = TRUE), collapse = ""
-    ))
+    ## Extract template archive in a temp folder
+    tmpdir <- tempfile()
     dir.create(tmpdir)
-    tmpfile <- file.path(tmpdir, 'archive')
-    utils::download.file(
-        # paste0("https://github.com/", template, "/archive/refs/heads/devel.zip"), 
-        paste0("https://github.com/", template, "/archive/refs/tags/", version, ".tar.gz"), 
-        paste0(tmpfile, '.tar.gz')
-    )
-    utils::untar(paste0(tmpfile, '.tar.gz'), exdir = tmpdir)
+    template <- system.file("template", "archive.tar.gz", package = "BiocBook")
+    utils::untar(template, exdir = tmpdir)
 
     ## Move files from temp folder to `new_package` folder
+    repo <- new_package
+    dir.create(repo)
     d <- list.dirs(tmpdir, full.names = TRUE, recursive = TRUE)
     d <- d[dirname(d) != '.']
     pattern <- file.path(tmpdir, basename(d)[dirname(dirname(d)) == '.'])
