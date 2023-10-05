@@ -25,11 +25,14 @@ if (!require("BiocManager", quietly = TRUE)) install.packages("BiocManager")
 BiocManager::install("BiocBook")
 ```
 
-To install `BiocBook` development version, you can use:
+To install `BiocBook` development version from Bioconductor, you can use:
 
 ```r
-install.packages("devtools")
-devtools::install_github("js2264/BiocBook")
+if (!require("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+
+BiocManager::install(version = 'devel')
+
+BiocManager::install("BiocBook")
 ```
 
 ## How to create a `BiocBook`

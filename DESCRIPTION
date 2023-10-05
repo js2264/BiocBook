@@ -15,8 +15,8 @@ Authors@R:
         "Jacques", "Serizay", , "jacquesserizay@gmail.com", 
         role = c("aut", "cre")
     )
-URL: https://github.com/js2264/BiocBook
-BugReports: https://github.com/js2264/BiocBook
+URL: https://bioconductor.org/packages/BiocBook
+BugReports: https://github.com/js2264/BiocBook/issues
 Depends:
     R (>= 4.3)
 Imports: 
