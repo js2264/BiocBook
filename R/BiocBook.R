@@ -113,12 +113,6 @@ init <- function(
                     cli::cli_abort("Package name is not available. Please pick another name for this BiocBook.")
                 }
                 cli::cli_alert_success(cli::col_grey("Package name `{new_package}` is available"))
-            }, 
-            warning = function(e) {
-                cli::cli_alert_warning(cli::col_grey("`available` server is currently unavailable. Skipping validation..."))
-            }, 
-            error = function(e) {
-                cli::cli_alert_warning(cli::col_grey("`available` server is currently unavailable. Skipping validation..."))
             }
         )
         Sys.sleep(1)
