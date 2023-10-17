@@ -150,9 +150,10 @@ can be listed with
 
 \examples{
 ## In practice, you should not use `.local` argument. 
-init('localbook', .local = TRUE)
-bb <- BiocBook('localbook')
+bookname <- paste(Sys.info()[['sysname']], 'localbook1', sep = '.')
+init(bookname, .local = TRUE)
+bb <- BiocBook(bookname)
 chapters(bb)
 releases(bb)
-unlink('localbook', recursive = TRUE)
+unlink(bookname, recursive = TRUE)
 }

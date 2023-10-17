@@ -110,10 +110,11 @@ existing Dockerfiles
 
 \examples{
 ## In practice, you should not use `.local` argument. 
-bb <- init('localbook', .local = TRUE)
+bookname <- paste(Sys.info()[['sysname']], 'localbook1', sep = '.')
+bb <- init(bookname, .local = TRUE)
 add_preamble(bb, open = FALSE)
 add_chapter(bb, title = "Chapitre Un", open = FALSE)
-unlink('localbook', recursive = TRUE)
+unlink(bookname, recursive = TRUE)
 }
 \seealso{
 \code{\link{BiocBook}}
