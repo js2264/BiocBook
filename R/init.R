@@ -33,7 +33,7 @@ init <- function(
 
 }
 
-.preflight_checks <- function(new_package, skip_availability, .local) {
+.preflight_checks <- function(new_package, skip_availability = FALSE, .local = FALSE) {
 
     cli::cat_rule("Running preflight checklist", col = "cyan", line = 2)
     cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Checking that no folder named `{new_package}` already exists"))
@@ -67,7 +67,7 @@ init <- function(
     return(creds)
 }
 
-.check_creds <- function(new_package, .local) {
+.check_creds <- function(new_package, .local = FALSE) {
 
     ## git
     if (!.local) {
@@ -111,7 +111,7 @@ init <- function(
     return(creds)
 }
 
-.creds_git <- function(.local) {
+.creds_git <- function(.local = FALSE) {
 
     ## Check that git is configured 
     cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Checking git configuration"))
@@ -151,6 +151,11 @@ init <- function(
             cli::cli_abort("Could not find any stored Github credentials. Consider adding a Github token (a.k.a. `PAT`) to your `.Renviron`.\n")
         }
     )
+    gh_scopes <- gh::gh_whoami(.token = PAT)$scopes
+    for (scope in c("repo", "workflow", "user:email")) {
+        if (!grepl(scope, gh_scopes)) 
+            cli::cli_abort("The provided PAT does not authorize the `{scope}` scope. Please change the PAT settings @ https://github.com/settings/tokens to enable this scope.\n")
+    }
     gh_user <- gh::gh_whoami(.token = PAT)$login
     cli::cli_alert_success(cli::col_grey("Successfully logged in Github"))
     cli::cli_ul(c(
@@ -162,7 +167,7 @@ init <- function(
     ## Get all repos for one user
     req <- gh::gh("/users/{user}/repos", user = gh_user, per_page = 30, .token = PAT)
     gh_repos <- purrr::map_chr(req, 'name')
-    while({length(gh_repos) %% 30} == 0) {
+    while({length(gh_repos) %% 30} != 0) {
         req <- gh::gh_next(req)
         gh_repos <- c(gh_repos, purrr::map_chr(req, 'name'))
     }
