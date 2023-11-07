@@ -152,10 +152,12 @@ init <- function(
         }
     )
     gh_scopes <- gh::gh_whoami(.token = PAT)$scopes
-    for (scope in c("repo", "workflow", "user:email")) {
+    for (scope in c("repo", "workflow")) {
         if (!grepl(scope, gh_scopes)) 
             cli::cli_abort("The provided PAT does not authorize the `{scope}` scope. Please change the PAT settings @ https://github.com/settings/tokens to enable this scope.\n")
     }
+    if (!grepl("user:email|user", gh_scopes)) 
+        cli::cli_abort("The provided PAT does not authorize the `user:email` scope. Please change the PAT settings @ https://github.com/settings/tokens to enable this scope.\n")
     gh_user <- gh::gh_whoami(.token = PAT)$login
     cli::cli_alert_success(cli::col_grey("Successfully logged in Github"))
     cli::cli_ul(c(
