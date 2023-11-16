@@ -5,6 +5,7 @@
 \name{BiocBook}
 \alias{BiocBook}
 \alias{init}
+\alias{quick_init}
 \alias{BiocBook-class}
 \alias{releases}
 \alias{chapters}
@@ -15,6 +16,8 @@
 \title{Handling BiocBook directories}
 \usage{
 init(new_package, push = NA, skip_availability = FALSE, .local = FALSE)
+
+quick_init(new_package, user)
 
 BiocBook(path)
 
@@ -45,6 +48,8 @@ not (default: NA).}
 \item{.local}{Should only be used for examples/tests. Whether to create a
 matching Github repository or stay local (default: FALSE).}
 
+\item{user}{Ideally, the Github ID of the main author/organization.}
+
 \item{path}{Path of an existing \code{BiocBook}.}
 
 \item{object}{A \code{BiocBook} object, created by \code{BiocBook} or \code{init()}.}
@@ -62,7 +67,8 @@ information related to the \code{bb} BiocBook.
 \code{BiocBook}s are local R packages containing an extra \code{pages} folder to
 write up online book chapters.
 \enumerate{
-\item A new \code{BiocBook} should be created using \code{init(new_package = "...")}.
+\item A new \code{BiocBook} should be created using \code{init(new_package = "...")} (or
+alternatively, locally with \code{quick_init(new_package = "...", user = "...")}).
 \item A newly created \code{BiocBook} can be accessed to in R using \code{biocbook <- BiocBook(path = "...")}.
 \item To edit an existing \code{BiocBook} object, several helper functions exist:
 }
@@ -107,6 +113,39 @@ This function performs the following operations:
 }
 
 The \code{init(new_package = "...")} function returns a \code{BiocBook} object.
+}
+
+\section{Quickly create a local \code{BiocBook}}{
+
+
+Alternatively, a \strong{local} \code{BiocBook} can be quickly created using the
+\code{quick_init(new_package = "...", user = "...")} function.
+
+This function only creates a new \strong{local} repository, using the
+\code{BiocBook} template from \code{js2264/BiocBook}.
+
+It does \strong{NOT}:
+\itemize{
+\item Check that the provided package name is available;
+\item Set up/push the local repository to a \strong{remote} Github repository;
+\item Set up a \code{gh-pages} to serve rendered books;
+}
+
+This implies that functions committing/pushing (\code{publish()})
+or checking remote status (\code{status()}) do not work properly with a
+\code{BiocBook} initiated with \code{quick_init()}, unless a remote is manually
+set up.
+
+To enable Github support for a local \code{BiocBook}, one has to manually
+initiate a \code{git} repository and add a remote as follows:
+
+\if{html}{\out{<div class="sourceCode sh">}}\preformatted{git init 
+git symbolic-ref HEAD refs/heads/devel
+git add . 
+git commit -m 'first commit'
+git remote add origin git@github.com:<user>/<biocbook>.git
+git push --set-upstream origin devel
+}\if{html}{\out{</div>}}
 }
 
 \section{Editing an existing \code{BiocBook}}{

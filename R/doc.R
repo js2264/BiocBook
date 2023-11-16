@@ -74,7 +74,8 @@ NULL
 #' `BiocBook`s are local R packages containing an extra `pages` folder to 
 #' write up online book chapters.
 #' 
-#' 1. A new `BiocBook` should be created using `init(new_package = "...")`.  
+#' 1. A new `BiocBook` should be created using `init(new_package = "...")` (or 
+#' alternatively, locally with `quick_init(new_package = "...", user = "...")`).  
 #' 2. A newly created `BiocBook` can be accessed to in R using `biocbook <- BiocBook(path = "...")`. 
 #' 3. To edit an existing `BiocBook` object, several helper functions exist: 
 #'   - `add_preamble(biocbook)` 
@@ -111,6 +112,37 @@ NULL
 #' 6. It edits several placeholders from the template and commits the changes. 
 #' 
 #' The `init(new_package = "...")` function returns a `BiocBook` object. 
+#' 
+#' @section Quickly create a local `BiocBook`: 
+#' 
+#' Alternatively, a **local** `BiocBook` can be quickly created using the 
+#' `quick_init(new_package = "...", user = "...")` function.  
+#' 
+#' This function only creates a new **local** repository, using the 
+#' `BiocBook` template from `js2264/BiocBook`. 
+#' 
+#' It does **NOT**: 
+#' 
+#' - Check that the provided package name is available;
+#' - Set up/push the local repository to a **remote** Github repository; 
+#' - Set up a `gh-pages` to serve rendered books; 
+#' 
+#' This implies that functions committing/pushing (`publish()`)
+#' or checking remote status (`status()`) do not work properly with a 
+#' `BiocBook` initiated with `quick_init()`, unless a remote is manually 
+#' set up. 
+#' 
+#' To enable Github support for a local `BiocBook`, one has to manually 
+#' initiate a `git` repository and add a remote as follows: 
+#' 
+#' ```{sh eval = FALSE}
+#' git init 
+#' git symbolic-ref HEAD refs/heads/devel
+#' git add . 
+#' git commit -m 'first commit'
+#' git remote add origin git@github.com:<user>/<biocbook>.git
+#' git push --set-upstream origin devel
+#' ```
 #' 
 #' @section Editing an existing `BiocBook`:
 #' 
@@ -156,6 +188,7 @@ NULL
 #' @param new_package Name to use when initiating a new `BiocBook`. 
 #' This name should be compatible with package naming conventions 
 #' from R and Bioconductor (i.e. no `_` or `-`, no name starting with a number).
+#' @param user Ideally, the Github ID of the main author/organization.
 #' @param push Optional. Logical, whether to automatically push commits to 
 #' remote Github origin. If NA, a prompt will ask whether to push commits or 
 #' not (default: NA). 

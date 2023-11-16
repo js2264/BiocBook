@@ -33,6 +33,14 @@ init <- function(
 
 }
 
+#' @rdname BiocBook
+#' @export
+
+quick_init <- function(new_package, user) {
+    .init_folder(new_package, user)
+    invisible(BiocBook(new_package))
+}
+
 .preflight_checks <- function(new_package, skip_availability = FALSE, .local = FALSE) {
 
     cli::cat_rule("Running preflight checklist", col = "cyan", line = 2)
