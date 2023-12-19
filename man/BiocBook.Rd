@@ -189,7 +189,8 @@ can be listed with
 
 \examples{
 ## In practice, you should not use `.local` argument. 
-bookname <- paste(Sys.info()[['sysname']], 'localbook1', sep = '.')
+unique_id <- sample(c(LETTERS, 0:9), 8) |> paste(collapse = '')
+bookname <- paste(Sys.info()[['sysname']], unique_id, sep = '.')
 init(bookname, .local = TRUE)
 bb <- BiocBook(bookname)
 chapters(bb)

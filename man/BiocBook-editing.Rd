@@ -110,7 +110,8 @@ existing Dockerfiles
 
 \examples{
 ## In practice, you should not use `.local` argument. 
-bookname <- paste(Sys.info()[['sysname']], 'localbook1', sep = '.')
+unique_id <- sample(c(LETTERS, 0:9), 8) |> paste(collapse = '')
+bookname <- paste(Sys.info()[['sysname']], unique_id, sep = '.')
 bb <- init(bookname, .local = TRUE)
 add_preamble(bb, open = FALSE)
 add_chapter(bb, title = "Chapitre Un", open = FALSE)
