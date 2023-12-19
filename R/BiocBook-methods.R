@@ -47,8 +47,13 @@ setMethod("chapters", signature("BiocBook"), function(object) {
         file.path('inst', 'assets', '_book.yml'), 
         criterion = is_biocbook, path = path(object)
     )
+    chaps <- yaml::read_yaml(book.yml)$book$chapters
+    if (is.list(chaps)) {
+        chaps <- unlist(chaps)
+        chaps <- chaps[names(chaps) != 'part'] |> unlist() |> unname()
+    }
     chapters <- rprojroot::find_root_file(
-        file.path('inst', yaml::read_yaml(book.yml)$book$chapters), 
+        file.path('inst', chaps), 
         criterion = is_biocbook, path = path(object)
     )
     purrr::map(chapters, ~ {
@@ -86,12 +91,14 @@ setMethod("show", signature("BiocBook"), function(object) {
     d <- cli::cli_div(theme = list(ul = list(`margin-left` = 2, before = "")))
     cli::cli_ul(cli::col_grey(releases(object)))
     cli::cli_end(d)
-    cat(paste0("- Chapters(", length(chapters(object)), "):\n"))
+    chaps <- chapters(object)
+    chaps_names <- names(chaps) |> gsub(' \\{.*}$', '', x = _)
+    cat(paste0("- Chapters(", length(chaps), "):\n"))
     d <- cli::cli_div(theme = list(ul = list(`margin-left` = 2, before = "")))
     cli::cli_ul(paste0(
-        cli::col_grey(stringr::str_trunc(names(chapters(object)), 30) |> stringr::str_pad(31, "right")),
+        cli::col_grey(stringr::str_trunc(chaps_names, 30) |> stringr::str_pad(31, "right")),
         ' [', 
-        cli::col_cyan(gsub(path(object), "", chapters(object))),
+        cli::col_cyan(gsub(path(object), "", chaps)),
         ']')
     )
     cli::cli_end(d)
