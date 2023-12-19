@@ -8,7 +8,7 @@ Description:
     3) publish (deploy an online book to disseminate the compendium), and 4) 
     version (automatically generate specific online book versions 
     and Docker images for specific Bioconductor releases). 
-Version: 1.1.1
+Version: 1.1.2
 Date: 2023-08-03
 Authors@R: 
     person(
