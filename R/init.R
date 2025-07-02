@@ -58,10 +58,18 @@ quick_init <- function(new_package, user) {
         Sys.sleep(1)
         tryCatch(
             expr = {
-                x <- available::available(name = new_package, browse = FALSE)
-                if (any(!unlist(x[c(1, 2, 3)]))) {
-                    print(x)
-                    cli::cli_abort("Package name is not available. Please pick another name for this BiocBook.")
+                x <- pak::pkg_name_check(name = new_package)$basics
+                if (!x$valid) {
+                    cli::cli_abort("Package name `{new_package}` is invalid Please pick another name for this BiocBook.")
+                }
+                if (!x$crandb$crandb) {
+                    cli::cli_abort("Package name `{new_package}` is already taken by a CRAN package name. Please pick another name for this BiocBook.")
+                }
+                if (!x$bioc$bioc) {
+                    cli::cli_abort("Package name `{new_package}` is already taken by a Bioconductor package name. Please pick another name for this BiocBook.")
+                }
+                if (x$profanity) {
+                    cli::cli_abort("Package name `{new_package}` is considered profanity. Please pick another name for this BiocBook.")
                 }
                 cli::cli_alert_success(cli::col_grey("Package name `{new_package}` is available"))
             }
