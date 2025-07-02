@@ -110,7 +110,7 @@ existing Dockerfiles
 
 \examples{
 ## In practice, you should not use `.local` argument. 
-unique_id <- sample(c(LETTERS, 0:9), 8) |> paste(collapse = '')
+unique_id <- as.numeric(Sys.time())
 bookname <- paste(Sys.info()[['sysname']], unique_id, sep = '.')
 bb <- init(bookname, .local = TRUE)
 add_preamble(bb, open = FALSE)
