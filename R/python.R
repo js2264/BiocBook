@@ -4,59 +4,50 @@
 #'
 #' @description
 #'
-#' `BiocBook` pages can execute `python` code as well as `R` code. The
-#' difficulty is not making `python` run: `quarto` does that out of the box.
-#' The difficulty is making sure the book still renders on machines that have
-#' no `python`, the *Bioconductor Build System* (BBS) chief among them.
+#' `BiocBook` pages can execute `python` code as well as `R` code. The code is
+#' executed on every render, including when the *Bioconductor Build System*
+#' (BBS) rebuilds the book: `R CMD build` runs `vignettes/Makefile`, which runs
+#' `quarto render`. That is deliberate. A `BiocBook` is versioned against a
+#' Bioconductor release so that its code is re-proven against that release, and
+#' output that is stored rather than recomputed would quietly stop being true.
 #'
-#' Note that the `python.reticulate` option in `inst/assets/_knitr.yml` must be
-#' `true` (its default) for this to work. When it is `false`, `knitr` runs every
-#' `python` chunk as a separate `python -c ...` subprocess: no variable survives
-#' from one chunk to the next, and `matplotlib` figures are silently dropped.
+#' The consequence is that the `python` packages a book uses must be installed
+#' at build time, wherever the book is built. `setup_python()` does that from
+#' within the book itself, so the book carries its own `python` environment
+#' rather than relying on one being present.
 #'
-#' The strategy implemented here is to **freeze** `python`-using pages. A frozen
-#' page is executed only when its author asks for it; its computed output is
-#' stored in `inst/_freeze/` and committed to the repository. Every subsequent
-#' render (by the BBS, by a co-author, by a reader) replays that stored output
-#' instead of re-executing the code, and therefore needs no `python` at all.
+#' - `setup_python()`: provision and activate the book's `python` environment
+#'   from `inst/requirements.txt`. Call it from the first page that needs
+#'   `python`; later pages re-activate it with `reticulate::use_virtualenv()`.
+#' - `add_python_chapter()`: add a new chapter wired up to execute `python`.
 #'
-#' - `add_python_chapter()`: add a new chapter set up to execute `python` code.
-#' - `refresh_freeze()`: re-execute frozen pages and update `inst/_freeze/`.
-#' - `check_freeze()`: check that every `python`-using page has an up-to-date
-#'   frozen result, i.e. that the book will render without `python`.
-#' - `setup_python()`: provision a `python` environment from `inst/requirements.txt`,
-#'   for books that would rather execute their `python` at build time.
+#' Note that `python.reticulate` must be `true` in `inst/assets/_knitr.yml`
+#' (its default, and what the `BiocBook` template ships). When it is `false`,
+#' `knitr` runs every `python` chunk as a separate `python -c ...` subprocess:
+#' no variable survives from one chunk to the next, and `matplotlib` figures are
+#' silently dropped.
 #'
-#' `setup_python()` covers the other strategy: rather than freezing, provision
-#' the `python` environment from within the book itself, so that the code really
-#' does run on every build. Call it from a setup chunk of the first page that
-#' needs `python`; later pages re-use the environment with
-#' `reticulate::use_virtualenv()`. This is the approach taken by the
-#' [OSTA](https://github.com/lmweber/OSTA) book. It keeps the output always
-#' current, at the cost of making every build depend on `PyPI` being reachable
-#' and on the environment resolving identically each time.
+#' @section Engines:
+#'
+#' `quarto` binds an execution engine per file. A page holding at least one `R`
+#' chunk uses `knitr`, and its `python` chunks then run through `reticulate` in
+#' a single session shared with `R`. A page with no `R` chunk at all uses
+#' `jupyter` instead.
+#'
+#' Prefer `knitr`. It is the only way to share objects between `R` and `python`,
+#' it keeps the book's house style (`collapse`, `comment`, `fig.align` from
+#' `inst/assets/_knitr.yml`) and `code-link`, which apply to `knitr` pages only
+#' -- and, decisively, the Bioconductor builders provide `python3` but not
+#' `jupyter`, so a `jupyter` page cannot be rendered there at all.
 #'
 #' @param book A `BiocBook` object.
 #' @param title Title of the new chapter.
 #' @param file Name of the new `.qmd` file. If `NA`, derived from `title`.
 #' @param position Position of the new chapter in the book.
-#' @param engine Which `quarto` engine the new page should use.
-#'
-#'   `"reticulate"` (the default) keeps the page on the `knitr` engine: it may
-#'   mix `R` and `python` chunks sharing a single `python` session, and it
-#'   keeps the book's house style, since `knitr` chunk options (`collapse`,
-#'   `comment`, `fig.align`, set in `inst/assets/_knitr.yml`) and `code-link`
-#'   only apply to `knitr` pages.
-#'
-#'   `"jupyter"` produces a `python`-only page executed by a Jupyter kernel.
-#'   `quarto` binds the engine per file: a page holding at least one `R` chunk
-#'   is always `knitr`, and a page with no `R` chunk at all is always
-#'   `jupyter`. A `jupyter` page therefore cannot contain `R` code, silently
-#'   loses `code-link`, and ignores the book's `knitr` chunk options.
+#' @param setup Whether the new chapter should open with a `setup_python()`
+#'   chunk. Use `TRUE` for the first `python` chapter of a book, and `FALSE`
+#'   for later ones, which only need to re-activate the environment.
 #' @param open Whether to open the file for editing.
-#' @param pages Character vector of pages to refresh, relative to `inst/`
-#'   (e.g. `"pages/Chapter-4.qmd"`). If `NULL`, every frozen page is refreshed.
-#' @param quiet Whether to suppress `quarto` output.
 #' @param packages Character vector of `python` package specifications, ideally
 #'   pinned (e.g. `c("numpy==1.26.4", "scanpy==1.9.6")`). Takes precedence over
 #'   `requirements`.
@@ -67,269 +58,20 @@
 #'   normal R session.
 #' @param envname Name of the virtual environment to create or re-use.
 #' @param python_version `python` version to install and build the environment
-#'   against, e.g. `"3.12"`. If `NULL`, the `python` already available is used.
+#'   against, e.g. `"3.12"`. If `NULL`, the `python` already on the machine is
+#'   used, which is faster and is usually what you want.
 #'
 #' @return
 #'
-#' `add_python_chapter()` and `refresh_freeze()` invisibly return `book`.
 #' `setup_python()` invisibly returns the environment name.
-#' `check_freeze()` invisibly returns a `tibble` describing each page that
-#' executes `python`.
+#' `add_python_chapter()` invisibly returns `book`.
 #'
 #' @examples
 #' \dontrun{
 #' book <- BiocBook("path/to/book")
 #' add_python_chapter(book, "Working with anndata")
-#' refresh_freeze(book, "pages/working-with-anndata.qmd")
-#' check_freeze(book)
 #' }
 NULL
-
-.python_chunk_regex <- "^\\s*```+\\s*\\{python"
-
-## Strip `<!-- ... -->` blocks so that python chunks shown *as documentation*
-## are not mistaken for chunks that will actually be executed.
-.drop_html_comments <- function(lines) {
-    txt <- paste(lines, collapse = "\n")
-    txt <- gsub("<!--.*?-->", "", txt, perl = TRUE)
-    strsplit(txt, "\n", fixed = TRUE)[[1]]
-}
-
-.page_uses_python <- function(path) {
-    if (!file.exists(path)) return(FALSE)
-    lines <- .drop_html_comments(readLines(path, warn = FALSE))
-    starts <- which(grepl(.python_chunk_regex, lines))
-    if (!length(starts)) return(FALSE)
-    fences <- which(grepl("^\\s*```", lines))
-    for (start in starts) {
-        ends <- fences[fences > start]
-        end <- if (length(ends)) ends[1] else length(lines)
-        opts <- lines[seq(start, end)]
-        ## a chunk that is never evaluated needs neither python nor a freeze
-        if (any(grepl("^\\s*#\\|\\s*eval:\\s*false\\s*$", opts))) next
-        return(TRUE)
-    }
-    FALSE
-}
-
-.page_is_frozen <- function(path) {
-    if (!file.exists(path)) return(FALSE)
-    lines <- readLines(path, warn = FALSE)
-    ## Only inspect the YAML front matter, i.e. up to the second `---`
-    delim <- which(grepl("^---\\s*$", lines))
-    if (length(delim) < 2 || delim[1] != 1) return(FALSE)
-    yml <- lines[seq(delim[1] + 1, delim[2] - 1)]
-    parsed <- tryCatch(yaml::yaml.load(paste(yml, collapse = "\n")), error = function(e) NULL)
-    freeze <- parsed[["execute"]][["freeze"]]
-    !is.null(freeze) && !identical(freeze, FALSE)
-}
-
-.freeze_result <- function(book, page) {
-    stem <- tools::file_path_sans_ext(page)
-    file.path(path(book), "inst", "_freeze", stem, "execute-results")
-}
-
-.book_pages <- function(book) {
-    pages_dir <- file.path(path(book), "inst", "pages")
-    files <- list.files(pages_dir, pattern = "\\.qmd$", full.names = TRUE, recursive = TRUE)
-    index <- file.path(path(book), "inst", "index.qmd")
-    if (file.exists(index)) files <- c(index, files)
-    files
-}
-
-.page_id <- function(book, file) {
-    inst <- normalizePath(file.path(path(book), "inst"), mustWork = FALSE)
-    file <- normalizePath(file, mustWork = FALSE)
-    gsub("\\\\", "/", substring(file, nchar(inst) + 2L))
-}
-
-#' @rdname BiocBook-python
-#' @export
-
-add_python_chapter <- function(
-    book,
-    title,
-    file = NA,
-    position = NULL,
-    engine = c("reticulate", "jupyter"),
-    open = TRUE
-) {
-
-    engine <- match.arg(engine)
-    if (is.na(file)) file <- .sanitize_filename(title)
-
-    body <- if (engine == "reticulate") {
-        glue::glue(
-            "---\n",
-            "execute:\n",
-            "  freeze: true\n",
-            "---\n",
-            "\n",
-            "# {title}\n",
-            "\n",
-            "```{{r}}\n",
-            "#| include: false\n",
-            "library(reticulate)\n",
-            "```\n",
-            "\n",
-            "```{{python}}\n",
-            "print(\"Hello from python\")\n",
-            "```\n"
-        )
-    } else {
-        glue::glue(
-            "---\n",
-            "engine: jupyter\n",
-            "execute:\n",
-            "  freeze: true\n",
-            "---\n",
-            "\n",
-            "# {title}\n",
-            "\n",
-            "```{{python}}\n",
-            "print(\"Hello from python\")\n",
-            "```\n"
-        )
-    }
-
-    full_path <- .add_page(book, title, file, position, open = FALSE, body = body)
-
-    cli::cli_alert_info(cli::col_grey(
-        "This page is {.strong frozen}: its `python` code runs only when you call \\
-        `refresh_freeze()`, and the results committed in `inst/_freeze/` are replayed \\
-        everywhere else. Declare the `python` packages it needs in `inst/requirements.yml`."
-    ))
-    if (rlang::is_interactive() && open) usethis::edit_file(full_path)
-
-    invisible(book)
-}
-
-#' @rdname BiocBook-python
-#' @export
-
-refresh_freeze <- function(book, pages = NULL, quiet = FALSE) {
-
-    inst <- file.path(path(book), "inst")
-    all_pages <- .book_pages(book)
-    frozen <- all_pages[vapply(all_pages, .page_is_frozen, logical(1))]
-
-    if (is.null(pages)) {
-        targets <- frozen
-    } else {
-        targets <- file.path(inst, gsub("^inst[/\\\\]", "", pages))
-        missing <- targets[!file.exists(targets)]
-        if (length(missing)) cli::cli_abort(
-            "Cannot find page{?s}: {.file {missing}}"
-        )
-    }
-
-    if (!length(targets)) {
-        cli::cli_alert_info("No frozen page found in this book. Nothing to refresh.")
-        return(invisible(book))
-    }
-
-    cli::cli_alert_info(cli::col_grey(
-        "Re-executing {length(targets)} frozen page{?s}. This requires `python` \\
-        (and the packages listed in {.file inst/requirements.yml}) to be available."
-    ))
-
-    for (target in targets) {
-        id <- .page_id(book, target)
-        cli::cli_progress_message(cli::col_grey("{cli::pb_spin} Executing {id}"))
-        ## A *single-file* render deliberately bypasses the freeze, executes the
-        ## page, and rewrites its frozen result. A project-wide render would do
-        ## the opposite: replay the existing freeze.
-        quarto::quarto_render(input = target, quiet = quiet)
-        cli::cli_alert_success(cli::col_grey("Refreshed {id}"))
-    }
-
-    cli::cli_alert_warning(cli::col_grey(
-        "Remember to commit {.file inst/_freeze/} along with the page{?s} you \\
-        just refreshed, otherwise the book will not render without `python`."
-    ))
-
-    invisible(book)
-}
-
-#' @rdname BiocBook-python
-#' @export
-
-check_freeze <- function(book) {
-
-    all_pages <- .book_pages(book)
-    py_pages <- all_pages[vapply(all_pages, .page_uses_python, logical(1))]
-
-    if (!length(py_pages)) {
-        cli::cli_alert_success("No page executes `python` code in this book.")
-        return(invisible(tibble::tibble(
-            page = character(0), frozen = logical(0),
-            has_result = logical(0), up_to_date = logical(0)
-        )))
-    }
-
-    res <- purrr::map_dfr(py_pages, function(page) {
-        frozen <- .page_is_frozen(page)
-        results_dir <- .freeze_result(book, .page_id(book, page))
-        results <- list.files(results_dir, pattern = "\\.json$", full.names = TRUE)
-        has_result <- length(results) > 0
-        up_to_date <- has_result &&
-            all(file.mtime(results) >= file.mtime(page))
-        tibble::tibble(
-            page = .page_id(book, page),
-            frozen = frozen,
-            has_result = has_result,
-            up_to_date = up_to_date
-        )
-    })
-
-    not_frozen <- res$page[!res$frozen]
-    if (length(not_frozen)) {
-        cli::cli_alert_danger(
-            "{length(not_frozen)} page{?s} execute{?s/} `python` but {?is/are} not frozen:"
-        )
-        d <- cli::cli_div(theme = list(ul = list(`margin-left` = 2, before = "")))
-        cli::cli_ul(not_frozen)
-        cli::cli_end(d)
-        cli::cli_alert_info(cli::col_grey(
-            "Add `execute: freeze: true` to their YAML front matter, or the book will \\
-            fail to render anywhere `python` is missing, including on the \\
-            Bioconductor Build System."
-        ))
-    }
-
-    no_result <- res$page[res$frozen & !res$has_result]
-    if (length(no_result)) {
-        cli::cli_alert_danger(
-            "{length(no_result)} frozen page{?s} {?has/have} no committed result in `inst/_freeze/`:"
-        )
-        d <- cli::cli_div(theme = list(ul = list(`margin-left` = 2, before = "")))
-        cli::cli_ul(no_result)
-        cli::cli_end(d)
-        cli::cli_alert_info(cli::col_grey("Run `refresh_freeze(book)` and commit `inst/_freeze/`."))
-    }
-
-    stale <- res$page[res$frozen & res$has_result & !res$up_to_date]
-    if (length(stale)) {
-        cli::cli_alert_warning(
-            "{length(stale)} frozen page{?s} {?is/are} possibly stale (edited after last execution):"
-        )
-        d <- cli::cli_div(theme = list(ul = list(`margin-left` = 2, before = "")))
-        cli::cli_ul(stale)
-        cli::cli_end(d)
-        cli::cli_alert_info(cli::col_grey(
-            "A frozen page replays its stored output verbatim, so edits (including \\
-            edits to prose) will not appear until you `refresh_freeze()` it."
-        ))
-    }
-
-    if (!length(not_frozen) && !length(no_result) && !length(stale)) {
-        cli::cli_alert_success(
-            "All {nrow(res)} `python` page{?s} {?is/are} frozen and up to date."
-        )
-    }
-
-    invisible(res)
-}
 
 #' @rdname BiocBook-python
 #' @export
@@ -338,8 +80,7 @@ setup_python <- function(
     packages = NULL,
     requirements = NULL,
     envname = "BiocBook",
-    python_version = NULL,
-    quiet = FALSE
+    python_version = NULL
 ) {
 
     rlang::check_installed("reticulate", "to execute `python` code in a BiocBook.")
@@ -359,30 +100,28 @@ setup_python <- function(
         ))
     }
 
-    if (!is.null(python_version)) {
-        if (!quiet) cli::cli_alert_info(cli::col_grey(
-            "Installing `python` {python_version}"
+    ## An environment may already have been provisioned, typically by the book's
+    ## Docker image. Re-use it rather than rebuilding it.
+    if (isTRUE(tryCatch(reticulate::virtualenv_exists(envname), error = function(e) FALSE))) {
+        cli::cli_alert_success(cli::col_grey(
+            "Re-using existing `python` environment {.val {envname}}"
         ))
+        reticulate::use_virtualenv(envname, required = TRUE)
+        return(invisible(envname))
+    }
+
+    if (!is.null(python_version)) {
+        cli::cli_alert_info(cli::col_grey("Installing `python` {python_version}"))
         reticulate::install_python(version = python_version)
     }
 
-    existing <- tryCatch(
-        reticulate::virtualenv_exists(envname), error = function(e) FALSE
-    )
-    if (!existing) {
-        if (!quiet) cli::cli_alert_info(cli::col_grey(
-            "Creating virtual environment {.val {envname}}"
-        ))
-        args <- list(envname = envname)
-        if (!is.null(python_version)) args$python <- python_version
-        if (is.null(packages)) args$requirements <- requirements
-        else args$packages <- packages
-        do.call(reticulate::virtualenv_create, args)
-    } else if (!quiet) {
-        cli::cli_alert_success(cli::col_grey(
-            "Re-using existing virtual environment {.val {envname}}"
-        ))
-    }
+    cli::cli_alert_info(cli::col_grey(
+        "Creating `python` environment {.val {envname}}"
+    ))
+    args <- list(envname = envname)
+    if (!is.null(python_version)) args$version <- python_version
+    if (is.null(packages)) args$requirements <- requirements else args$packages <- packages
+    do.call(reticulate::virtualenv_create, args)
 
     reticulate::use_virtualenv(envname, required = TRUE)
     invisible(envname)
@@ -412,4 +151,57 @@ setup_python <- function(
         if (nzchar(req)) return(req)
     }
     NULL
+}
+
+#' @rdname BiocBook-python
+#' @export
+
+add_python_chapter <- function(
+    book,
+    title,
+    file = NA,
+    position = NULL,
+    setup = TRUE,
+    open = TRUE
+) {
+
+    if (is.na(file)) file <- .sanitize_filename(title)
+
+    ## The `R` chunk is not decoration: it is what binds the page to the knitr
+    ## engine, and therefore to reticulate rather than to a Jupyter kernel.
+    activate <- if (setup) {
+        "BiocBook::setup_python()"
+    } else {
+        "reticulate::use_virtualenv(\"BiocBook\", required = TRUE)"
+    }
+
+    body <- glue::glue(
+        "# {title}\n",
+        "\n",
+        "```{{r}}\n",
+        "#| include: false\n",
+        "library(reticulate)\n",
+        "{activate}\n",
+        "```\n",
+        "\n",
+        "```{{python}}\n",
+        "print(\"Hello from python\")\n",
+        "```\n"
+    )
+
+    full_path <- .add_page(book, title, file, position, open = FALSE, body = body)
+
+    cli::cli_alert_info(cli::col_grey(
+        "This page executes `python` on every render, including on the \\
+        Bioconductor Build System. Declare the packages it needs in \\
+        {.file inst/requirements.txt}."
+    ))
+    cli::cli_alert_info(cli::col_grey(
+        "Keep at least one `R` chunk on the page: it is what keeps `quarto` on \\
+        the `knitr` engine. A page with only `python` chunks uses `jupyter` \\
+        instead, which the Bioconductor builders do not provide."
+    ))
+    if (rlang::is_interactive() && open) usethis::edit_file(full_path)
+
+    invisible(book)
 }

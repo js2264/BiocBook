@@ -2,63 +2,27 @@
 % Please edit documentation in R/python.R
 \name{BiocBook-python}
 \alias{BiocBook-python}
-\alias{add_python_chapter}
-\alias{refresh_freeze}
-\alias{check_freeze}
 \alias{setup_python}
+\alias{add_python_chapter}
 \title{Executing \code{python} code in a BiocBook}
 \usage{
+setup_python(
+  packages = NULL,
+  requirements = NULL,
+  envname = "BiocBook",
+  python_version = NULL
+)
+
 add_python_chapter(
   book,
   title,
   file = NA,
   position = NULL,
-  engine = c("reticulate", "jupyter"),
+  setup = TRUE,
   open = TRUE
-)
-
-refresh_freeze(book, pages = NULL, quiet = FALSE)
-
-check_freeze(book)
-
-setup_python(
-  packages = NULL,
-  requirements = NULL,
-  envname = "BiocBook",
-  python_version = NULL,
-  quiet = FALSE
 )
 }
 \arguments{
-\item{book}{A \code{BiocBook} object.}
-
-\item{title}{Title of the new chapter.}
-
-\item{file}{Name of the new \code{.qmd} file. If \code{NA}, derived from \code{title}.}
-
-\item{position}{Position of the new chapter in the book.}
-
-\item{engine}{Which \code{quarto} engine the new page should use.
-
-\code{"reticulate"} (the default) keeps the page on the \code{knitr} engine: it may
-mix \code{R} and \code{python} chunks sharing a single \code{python} session, and it
-keeps the book's house style, since \code{knitr} chunk options (\code{collapse},
-\code{comment}, \code{fig.align}, set in \code{inst/assets/_knitr.yml}) and \code{code-link}
-only apply to \code{knitr} pages.
-
-\code{"jupyter"} produces a \code{python}-only page executed by a Jupyter kernel.
-\code{quarto} binds the engine per file: a page holding at least one \code{R} chunk
-is always \code{knitr}, and a page with no \code{R} chunk at all is always
-\code{jupyter}. A \code{jupyter} page therefore cannot contain \code{R} code, silently
-loses \code{code-link}, and ignores the book's \code{knitr} chunk options.}
-
-\item{open}{Whether to open the file for editing.}
-
-\item{pages}{Character vector of pages to refresh, relative to \code{inst/}
-(e.g. \code{"pages/Chapter-4.qmd"}). If \code{NULL}, every frozen page is refreshed.}
-
-\item{quiet}{Whether to suppress \code{quarto} output.}
-
 \item{packages}{Character vector of \code{python} package specifications, ideally
 pinned (e.g. \code{c("numpy==1.26.4", "scanpy==1.9.6")}). Takes precedence over
 \code{requirements}.}
@@ -72,52 +36,70 @@ normal R session.}
 \item{envname}{Name of the virtual environment to create or re-use.}
 
 \item{python_version}{\code{python} version to install and build the environment
-against, e.g. \code{"3.12"}. If \code{NULL}, the \code{python} already available is used.}
+against, e.g. \code{"3.12"}. If \code{NULL}, the \code{python} already on the machine is
+used, which is faster and is usually what you want.}
+
+\item{book}{A \code{BiocBook} object.}
+
+\item{title}{Title of the new chapter.}
+
+\item{file}{Name of the new \code{.qmd} file. If \code{NA}, derived from \code{title}.}
+
+\item{position}{Position of the new chapter in the book.}
+
+\item{setup}{Whether the new chapter should open with a \code{setup_python()}
+chunk. Use \code{TRUE} for the first \code{python} chapter of a book, and \code{FALSE}
+for later ones, which only need to re-activate the environment.}
+
+\item{open}{Whether to open the file for editing.}
 }
 \value{
-\code{add_python_chapter()} and \code{refresh_freeze()} invisibly return \code{book}.
-\code{check_freeze()} invisibly returns a \code{tibble} describing each page that
-executes \code{python}. \code{setup_python()} invisibly returns the environment name.
+\code{setup_python()} invisibly returns the environment name.
+\code{add_python_chapter()} invisibly returns \code{book}.
 }
 \description{
-\code{BiocBook} pages can execute \code{python} code as well as \code{R} code. The
-difficulty is not making \code{python} run: \code{quarto} does that out of the box.
-The difficulty is making sure the book still renders on machines that have
-no \code{python}, the \emph{Bioconductor Build System} (BBS) chief among them.
+\code{BiocBook} pages can execute \code{python} code as well as \code{R} code. The code is
+executed on every render, including when the \emph{Bioconductor Build System}
+(BBS) rebuilds the book: \code{R CMD build} runs \code{vignettes/Makefile}, which runs
+\code{quarto render}. That is deliberate. A \code{BiocBook} is versioned against a
+Bioconductor release so that its code is re-proven against that release, and
+output that is stored rather than recomputed would quietly stop being true.
 
-Note that the \code{python.reticulate} option in \code{inst/assets/_knitr.yml} must be
-\code{true} (its default) for this to work. When it is \code{false}, \code{knitr} runs every
-\code{python} chunk as a separate \code{python -c ...} subprocess: no variable survives
-from one chunk to the next, and \code{matplotlib} figures are silently dropped.
-
-The strategy implemented here is to \strong{freeze} \code{python}-using pages. A frozen
-page is executed only when its author asks for it; its computed output is
-stored in \code{inst/_freeze/} and committed to the repository. Every subsequent
-render (by the BBS, by a co-author, by a reader) replays that stored output
-instead of re-executing the code, and therefore needs no \code{python} at all.
+The consequence is that the \code{python} packages a book uses must be installed
+at build time, wherever the book is built. \code{setup_python()} does that from
+within the book itself, so the book carries its own \code{python} environment
+rather than relying on one being present.
 \itemize{
-\item \code{add_python_chapter()}: add a new chapter set up to execute \code{python} code.
-\item \code{refresh_freeze()}: re-execute frozen pages and update \code{inst/_freeze/}.
-\item \code{check_freeze()}: check that every \code{python}-using page has an up-to-date
-frozen result, i.e. that the book will render without \code{python}.
-\item \code{setup_python()}: provision a \code{python} environment from \code{inst/requirements.txt},
-for books that would rather execute their \code{python} at build time.
+\item \code{setup_python()}: provision and activate the book's \code{python} environment
+from \code{inst/requirements.txt}. Call it from the first page that needs
+\code{python}; later pages re-activate it with \code{reticulate::use_virtualenv()}.
+\item \code{add_python_chapter()}: add a new chapter wired up to execute \code{python}.
 }
 
-\code{setup_python()} covers the other strategy: rather than freezing, provision
-the \code{python} environment from within the book itself, so that the code really
-does run on every build. Call it from a setup chunk of the first page that
-needs \code{python}; later pages re-use the environment with
-\code{reticulate::use_virtualenv()}. This is the approach taken by the
-\href{https://github.com/lmweber/OSTA}{OSTA} book. It keeps the output always
-current, at the cost of making every build depend on \code{PyPI} being reachable
-and on the environment resolving identically each time.
+Note that \code{python.reticulate} must be \code{true} in \code{inst/assets/_knitr.yml}
+(its default, and what the \code{BiocBook} template ships). When it is \code{false},
+\code{knitr} runs every \code{python} chunk as a separate \code{python -c ...} subprocess:
+no variable survives from one chunk to the next, and \code{matplotlib} figures are
+silently dropped.
 }
+\section{Engines}{
+
+
+\code{quarto} binds an execution engine per file. A page holding at least one \code{R}
+chunk uses \code{knitr}, and its \code{python} chunks then run through \code{reticulate} in
+a single session shared with \code{R}. A page with no \code{R} chunk at all uses
+\code{jupyter} instead.
+
+Prefer \code{knitr}. It is the only way to share objects between \code{R} and \code{python},
+it keeps the book's house style (\code{collapse}, \code{comment}, \code{fig.align} from
+\code{inst/assets/_knitr.yml}) and \code{code-link}, which apply to \code{knitr} pages only
+-- and, decisively, the Bioconductor builders provide \code{python3} but not
+\code{jupyter}, so a \code{jupyter} page cannot be rendered there at all.
+}
+
 \examples{
 \dontrun{
 book <- BiocBook("path/to/book")
 add_python_chapter(book, "Working with anndata")
-refresh_freeze(book, "pages/working-with-anndata.qmd")
-check_freeze(book)
 }
 }

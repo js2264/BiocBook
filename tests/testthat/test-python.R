@@ -1,4 +1,4 @@
-test_that("python chapters are created, detected and checked", {
+test_that("python chapters are wired for build-time execution", {
 
     tmpdir <- paste0(paste0(
         sample(LETTERS, 5, replace = TRUE),
@@ -9,58 +9,29 @@ test_that("python chapters are created, detected and checked", {
     init(tmpdir, .local = TRUE)
     bb <- BiocBook(tmpdir)
 
-    ## A book with no python page at all is trivially fine
-    expect_invisible(   res <- check_freeze(bb))
-    expect_equal(       nrow(res), 0L)
-
-    ## add_python_chapter() creates a frozen page for both engines
     expect_invisible(   add_python_chapter(bb, title = 'Py chapter', open = FALSE))
-    expect_invisible(   add_python_chapter(
-        bb, title = 'Jupyter chapter', engine = "jupyter", open = FALSE
-    ))
-    expect_error(       add_python_chapter(
-        bb, title = 'Bad', file = "bad", open = FALSE
-    ))
+    expect_error(       add_python_chapter(bb, title = 'Bad', file = "bad", open = FALSE))
 
     ## `_book.yml` must stay valid YAML after appending chapters
     expect_no_error(    chapters(bb))
     expect_true(        "pages/py-chapter.qmd" %in% chapters(bb))
-    expect_true(        "pages/jupyter-chapter.qmd" %in% chapters(bb))
 
-    reticulate_page <- file.path(tmpdir, "inst", "pages", "py-chapter.qmd")
-    jupyter_page <- file.path(tmpdir, "inst", "pages", "jupyter-chapter.qmd")
-    expect_true(        BiocBook:::.page_uses_python(reticulate_page))
-    expect_true(        BiocBook:::.page_is_frozen(reticulate_page))
-    expect_true(        any(grepl(
-        "engine: jupyter", readLines(jupyter_page)
-    )))
+    page <- readLines(file.path(tmpdir, "inst", "pages", "py-chapter.qmd"))
 
-    ## Neither page has been executed yet, so both lack a frozen result
-    res <- check_freeze(bb)
-    expect_equal(       nrow(res), 2L)
-    expect_true(        all(res$frozen))
-    expect_false(       any(res$has_result))
+    ## Nothing is frozen: the book is meant to be re-executed on every render
+    expect_false(       any(grepl("freeze", page)))
 
-    ## Chunks that are shown but never evaluated need no python and no freeze
-    doc_only <- file.path(tmpdir, "inst", "pages", "doc-only.qmd")
-    writeLines(c(
-        "# Doc only", "", "```{python}", "#| eval: false", "1 + 1", "```"
-    ), doc_only)
-    expect_false(       BiocBook:::.page_uses_python(doc_only))
+    ## An R chunk must be present, since it is what binds the page to the knitr
+    ## engine (and therefore reticulate) rather than to a Jupyter kernel
+    expect_true(        any(grepl("^```\\{r\\}", page)))
+    expect_true(        any(grepl("^```\\{python\\}", page)))
+    expect_true(        any(grepl("setup_python\\(\\)", page)))
 
-    ## Python chunks inside an HTML comment are documentation, not code
-    commented <- file.path(tmpdir, "inst", "pages", "commented.qmd")
-    writeLines(c(
-        "# Commented", "", "<!--", "```{python}", "1 + 1", "```", "-->"
-    ), commented)
-    expect_false(       BiocBook:::.page_uses_python(commented))
-
-    ## An unfrozen python page is reported as such
-    loose <- file.path(tmpdir, "inst", "pages", "loose.qmd")
-    writeLines(c("# Loose", "", "```{python}", "1 + 1", "```"), loose)
-    res <- check_freeze(bb)
-    expect_true(        "pages/loose.qmd" %in% res$page)
-    expect_false(       res$frozen[res$page == "pages/loose.qmd"])
+    ## Later chapters re-activate the environment instead of rebuilding it
+    add_python_chapter(bb, title = 'Second py', setup = FALSE, open = FALSE)
+    page2 <- readLines(file.path(tmpdir, "inst", "pages", "second-py.qmd"))
+    expect_false(       any(grepl("setup_python", page2)))
+    expect_true(        any(grepl("use_virtualenv", page2)))
 
     unlink(tmpdir, recursive = TRUE, force = TRUE)
 
