@@ -1,6 +1,6 @@
 #' @importFrom usethis edit_file
 
-.add_page <- function(book, title, file = NA, position = NULL, open = TRUE) {
+.add_page <- function(book, title, file = NA, position = NULL, open = TRUE, body = NULL) {
     if (is.na(file)) file <- .sanitize_filename(title)
     full_path <- .find_path(file.path('pages', file), book)
     path_from_book_root <- .find_path(file.path('pages', file), book, .from_book_root = TRUE)
@@ -27,19 +27,26 @@
     ## Create file in `pages/`
     if (!file.exists(dirname(full_path))) {dir.create(dirname(full_path))}
     writeLines(
-        text = glue::glue("# {title}"), 
+        text = if (is.null(body)) glue::glue("# {title}") else body, 
         full_path 
     )
     
     ## Add entry in `_book.yml`
     book.yml <- .find_path(file.path('assets', '_book.yml'), book)
     book.yml.lines <- readLines(book.yml)
-    if (is.null(position)) position <- length(chapters(book)) + 1
-    temp <- tempfile()
-    writeLines(book.yml.lines[seq(1, position+3-1)], temp)
-    write(glue::glue("    - {path_from_book_root}"), temp, append = TRUE)
-    write(book.yml.lines[seq(position+3, length(book.yml.lines))], temp, append = TRUE)
-    file.copy(temp, book.yml, overwrite = TRUE)
+    chapters.line <- grep("^\\s*chapters:\\s*$", book.yml.lines)[1]
+    if (is.na(chapters.line)) cli::cli_abort(
+        "Could not find a `chapters:` entry in {.file {book.yml}}"
+    )
+    n.chapters <- length(chapters(book))
+    if (is.null(position)) position <- n.chapters + 1
+    position <- max(1L, min(as.integer(position), n.chapters + 1L))
+    book.yml.lines <- append(
+        book.yml.lines,
+        as.character(glue::glue("    - {path_from_book_root}")),
+        after = chapters.line + position - 1L
+    )
+    writeLines(book.yml.lines, book.yml)
     cli::cli_alert_success("File created @ `{full_path}`")
 
     ## Open new page and edit

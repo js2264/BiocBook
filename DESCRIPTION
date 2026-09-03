@@ -44,6 +44,7 @@ Imports:
     renv
 Suggests:
     BiocStyle,
+    reticulate,
     knitr,
     testthat (>= 3.0.0),
     rmarkdown
@@ -66,5 +67,6 @@ Collate:
     'editing.R'
     'globals.R'
     'pages.R'
+    'python.R'
     'utils.R'
 Config/testthat/edition: 3
