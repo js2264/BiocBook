@@ -31,35 +31,36 @@ test_that("python chapters are wired for build-time execution", {
     add_python_chapter(bb, title = 'Second py', setup = FALSE, open = FALSE)
     page2 <- readLines(file.path(tmpdir, "inst", "pages", "second-py.qmd"))
     expect_false(       any(grepl("setup_python", page2)))
-    expect_true(        any(grepl("use_virtualenv", page2)))
+    expect_true(        any(grepl("use_condaenv", page2)))
 
     unlink(tmpdir, recursive = TRUE, force = TRUE)
 
 })
 
-test_that("setup_python() finds the book's requirements.txt", {
+test_that("setup_python() finds the book's requirements.yml", {
 
     tmpdir <- file.path(tempdir(), "reqbook")
     dir.create(file.path(tmpdir, "inst", "pages"), recursive = TRUE)
     writeLines("project:\n  type: book", file.path(tmpdir, "inst", "_quarto.yml"))
 
-    ## No requirements.txt yet
+    ## No requirements.yml yet
     expect_null(        BiocBook:::.find_requirements(
         file.path(tmpdir, "inst", "pages")
     ))
 
-    writeLines("numpy==1.26.4", file.path(tmpdir, "inst", "requirements.txt"))
+    writeLines(c("name:", "    BiocBook", "dependencies:", "    - numpy=1.26"),
+               file.path(tmpdir, "inst", "requirements.yml"))
 
     ## Found from the page folder (where quarto runs) and from the book root
     expect_equal(
         normalizePath(BiocBook:::.find_requirements(
             file.path(tmpdir, "inst", "pages")
         )),
-        normalizePath(file.path(tmpdir, "inst", "requirements.txt"))
+        normalizePath(file.path(tmpdir, "inst", "requirements.yml"))
     )
     expect_equal(
         normalizePath(BiocBook:::.find_requirements(file.path(tmpdir, "inst"))),
-        normalizePath(file.path(tmpdir, "inst", "requirements.txt"))
+        normalizePath(file.path(tmpdir, "inst", "requirements.yml"))
     )
 
     unlink(tmpdir, recursive = TRUE, force = TRUE)

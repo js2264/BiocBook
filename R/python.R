@@ -13,12 +13,14 @@
 #'
 #' The consequence is that the `python` packages a book uses must be installed
 #' at build time, wherever the book is built. `setup_python()` does that from
-#' within the book itself, so the book carries its own `python` environment
-#' rather than relying on one being present.
+#' within the book itself, building the `conda` environment declared in
+#' `inst/requirements.yml`, so the book carries its own `python` environment
+#' rather than relying on one being present. A `conda` implementation
+#' (`conda`, `mamba` or `micromamba`) must exist on the build machine.
 #'
-#' - `setup_python()`: provision and activate the book's `python` environment
-#'   from `inst/requirements.txt`. Call it from the first page that needs
-#'   `python`; later pages re-activate it with `reticulate::use_virtualenv()`.
+#' - `setup_python()`: provision and activate the book's `conda` environment
+#'   from `inst/requirements.yml`. Call it from the first page that needs
+#'   `python`; later pages re-activate it with `reticulate::use_condaenv()`.
 #' - `add_python_chapter()`: add a new chapter wired up to execute `python`.
 #'
 #' Note that `python.reticulate` must be `true` in `inst/assets/_knitr.yml`
@@ -48,18 +50,16 @@
 #'   chunk. Use `TRUE` for the first `python` chapter of a book, and `FALSE`
 #'   for later ones, which only need to re-activate the environment.
 #' @param open Whether to open the file for editing.
-#' @param packages Character vector of `python` package specifications, ideally
-#'   pinned (e.g. `c("numpy==1.26.4", "scanpy==1.9.6")`). Takes precedence over
-#'   `requirements`.
-#' @param requirements Path to a `requirements.txt` file. When neither
-#'   `packages` nor `requirements` is given, `inst/requirements.txt` is located
-#'   by walking up from the working directory to the folder holding
-#'   `_quarto.yml`, which works both while `quarto` renders a page and from a
-#'   normal R session.
-#' @param envname Name of the virtual environment to create or re-use.
-#' @param python_version `python` version to install and build the environment
-#'   against, e.g. `"3.12"`. If `NULL`, the `python` already on the machine is
-#'   used, which is faster and is usually what you want.
+#' @param requirements Path to a `conda` environment file. If `NULL`,
+#'   `inst/requirements.yml` is located by walking up from the working directory
+#'   to the folder holding `_quarto.yml`, which works both while `quarto`
+#'   renders a page and from a normal R session.
+#' @param envname Name of the `conda` environment to create or re-use. If
+#'   `NULL`, the `name:` declared in the environment file is used.
+#' @param conda Path to the `conda`, `mamba` or `micromamba` binary, or
+#'   `"auto"` to let `reticulate` find one. `reticulate` looks at the
+#'   `RETICULATE_CONDA` environment variable, which is how the book's `Docker`
+#'   image points it at `micromamba`.
 #'
 #' @return
 #'
@@ -77,53 +77,81 @@ NULL
 #' @export
 
 setup_python <- function(
-    packages = NULL,
     requirements = NULL,
-    envname = "BiocBook",
-    python_version = NULL
+    envname = NULL,
+    conda = "auto"
 ) {
 
     rlang::check_installed("reticulate", "to execute `python` code in a BiocBook.")
 
-    ## Resolve the requirements file. This has to work in two very different
+    ## Locate `inst/requirements.yml`. This has to work in two very different
     ## situations: while `quarto` renders a page (the package is typically not
     ## installed yet, and the working directory is the page's own folder), and
     ## from a normal R session.
-    if (is.null(packages)) {
-        if (is.null(requirements)) requirements <- .find_requirements()
-        if (is.null(requirements) || !file.exists(requirements)) cli::cli_abort(c(
-            "Could not find a `requirements.txt` file for this book.",
-            "i" = "Create {.file inst/requirements.txt} listing the `python` packages \\
-                   this book needs, one pinned specification per line.",
-            "i" = "Or pass them directly, e.g. \\
-                   {.code setup_python(packages = c('numpy==1.26.4'))}."
-        ))
-    }
-
-    ## An environment may already have been provisioned, typically by the book's
-    ## Docker image. Re-use it rather than rebuilding it.
-    if (isTRUE(tryCatch(reticulate::virtualenv_exists(envname), error = function(e) FALSE))) {
-        cli::cli_alert_success(cli::col_grey(
-            "Re-using existing `python` environment {.val {envname}}"
-        ))
-        reticulate::use_virtualenv(envname, required = TRUE)
-        return(invisible(envname))
-    }
-
-    if (!is.null(python_version)) {
-        cli::cli_alert_info(cli::col_grey("Installing `python` {python_version}"))
-        reticulate::install_python(version = python_version)
-    }
-
-    cli::cli_alert_info(cli::col_grey(
-        "Creating `python` environment {.val {envname}}"
+    if (is.null(requirements)) requirements <- .find_requirements()
+    if (is.null(requirements) || !file.exists(requirements)) cli::cli_abort(c(
+        "Could not find a `requirements.yml` file for this book.",
+        "i" = "Create {.file inst/requirements.yml} declaring the `conda` \\
+               environment this book needs, or edit it with \\
+               {.code edit_requirements_yml(book)}."
     ))
-    args <- list(envname = envname)
-    if (!is.null(python_version)) args$version <- python_version
-    if (is.null(packages)) args$requirements <- requirements else args$packages <- packages
-    do.call(reticulate::virtualenv_create, args)
 
-    reticulate::use_virtualenv(envname, required = TRUE)
+    spec <- yaml::read_yaml(requirements)
+    if (is.null(envname)) {
+        envname <- if (is.null(spec[["name"]])) "BiocBook" else trimws(spec[["name"]])
+    }
+
+    ## `conda` environment files may carry a `pip:` block. This book stack is
+    ## deliberately conda-only, so say so rather than silently dropping packages.
+    deps <- spec[["dependencies"]]
+    is_pip <- vapply(deps, is.list, logical(1))
+    if (any(is_pip)) cli::cli_abort(c(
+        "{.file {basename(requirements)}} contains a `pip:` section.",
+        "x" = "`BiocBook` provisions `conda` environments only.",
+        "i" = "Declare these packages as `conda` packages instead, from the \\
+               `conda-forge` or `bioconda` channels."
+    ))
+    packages <- unlist(deps)
+
+    ## The environment may already exist, typically because the book's Docker
+    ## image pre-built it. Re-use it rather than resolving it all over again.
+    existing <- tryCatch(
+        reticulate::conda_list(conda = conda), error = function(e) NULL
+    )
+    if (is.null(existing)) cli::cli_abort(c(
+        "No `conda` binary could be found.",
+        "i" = "`BiocBook` provisions `conda` environments, so one of `conda`, \\
+               `mamba` or `micromamba` must be installed where the book is built.",
+        "i" = "Point `reticulate` at it with the {.envvar RETICULATE_CONDA} \\
+               environment variable, e.g. \\
+               {.code RETICULATE_CONDA=/usr/local/bin/micromamba}."
+    ))
+
+    if (envname %in% existing$name) {
+        cli::cli_alert_success(cli::col_grey(
+            "Re-using existing `conda` environment {.val {envname}}"
+        ))
+    } else {
+        cli::cli_alert_info(cli::col_grey(
+            "Creating `conda` environment {.val {envname}}"
+        ))
+        ## Deliberately `conda create` rather than `conda env create -f <file>`.
+        ## reticulate rediscovers an environment's `conda` binary by parsing the
+        ## `# cmd:` line of its `conda-meta/history`, and the extra word in
+        ## `env create` makes that parse yield a path that does not exist. The
+        ## environment is then unusable: reticulate falls back to the system
+        ## `python` without failing, so the book would render against the wrong
+        ## interpreter.
+        reticulate::conda_create(
+            envname = envname,
+            packages = packages,
+            channel = spec[["channels"]],
+            forge = FALSE,
+            conda = conda
+        )
+    }
+
+    reticulate::use_condaenv(envname, required = TRUE, conda = conda)
     invisible(envname)
 }
 
@@ -134,7 +162,7 @@ setup_python <- function(
     dir <- normalizePath(start, mustWork = FALSE)
     for (i in seq_len(10L)) {
         if (file.exists(file.path(dir, "_quarto.yml"))) {
-            req <- file.path(dir, "requirements.txt")
+            req <- file.path(dir, "requirements.yml")
             return(if (file.exists(req)) req else NULL)
         }
         parent <- dirname(dir)
@@ -147,7 +175,7 @@ setup_python <- function(
         error = function(e) NULL
     )
     if (!is.null(desc) && "Package" %in% colnames(desc)) {
-        req <- system.file("requirements.txt", package = desc[1, "Package"])
+        req <- system.file("requirements.yml", package = desc[1, "Package"])
         if (nzchar(req)) return(req)
     }
     NULL
@@ -172,7 +200,7 @@ add_python_chapter <- function(
     activate <- if (setup) {
         "BiocBook::setup_python()"
     } else {
-        "reticulate::use_virtualenv(\"BiocBook\", required = TRUE)"
+        "reticulate::use_condaenv(\"BiocBook\", required = TRUE)"
     }
 
     body <- glue::glue(
@@ -194,7 +222,7 @@ add_python_chapter <- function(
     cli::cli_alert_info(cli::col_grey(
         "This page executes `python` on every render, including on the \\
         Bioconductor Build System. Declare the packages it needs in \\
-        {.file inst/requirements.txt}."
+        {.file inst/requirements.yml}."
     ))
     cli::cli_alert_info(cli::col_grey(
         "Keep at least one `R` chunk on the page: it is what keeps `quarto` on \\

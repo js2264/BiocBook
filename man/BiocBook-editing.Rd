@@ -5,7 +5,6 @@
 \alias{check_deps}
 \alias{edit_yml}
 \alias{edit_bib}
-\alias{edit_requirements}
 \alias{edit_requirements_yml}
 \alias{edit_css}
 \alias{preview}
@@ -21,8 +20,6 @@ check_deps(book)
 edit_yml(book, yml = c("_book", "_website", "_knitr", "_format"), open = TRUE)
 
 edit_bib(book, open = TRUE)
-
-edit_requirements(book, open = TRUE)
 
 edit_requirements_yml(book, open = TRUE)
 

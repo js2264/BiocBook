@@ -6,12 +6,7 @@
 \alias{add_python_chapter}
 \title{Executing \code{python} code in a BiocBook}
 \usage{
-setup_python(
-  packages = NULL,
-  requirements = NULL,
-  envname = "BiocBook",
-  python_version = NULL
-)
+setup_python(requirements = NULL, envname = NULL, conda = "auto")
 
 add_python_chapter(
   book,
@@ -23,21 +18,18 @@ add_python_chapter(
 )
 }
 \arguments{
-\item{packages}{Character vector of \code{python} package specifications, ideally
-pinned (e.g. \code{c("numpy==1.26.4", "scanpy==1.9.6")}). Takes precedence over
-\code{requirements}.}
+\item{requirements}{Path to a \code{conda} environment file. If \code{NULL},
+\code{inst/requirements.yml} is located by walking up from the working directory
+to the folder holding \code{_quarto.yml}, which works both while \code{quarto}
+renders a page and from a normal R session.}
 
-\item{requirements}{Path to a \code{requirements.txt} file. When neither
-\code{packages} nor \code{requirements} is given, \code{inst/requirements.txt} is located
-by walking up from the working directory to the folder holding
-\code{_quarto.yml}, which works both while \code{quarto} renders a page and from a
-normal R session.}
+\item{envname}{Name of the \code{conda} environment to create or re-use. If
+\code{NULL}, the \code{name:} declared in the environment file is used.}
 
-\item{envname}{Name of the virtual environment to create or re-use.}
-
-\item{python_version}{\code{python} version to install and build the environment
-against, e.g. \code{"3.12"}. If \code{NULL}, the \code{python} already on the machine is
-used, which is faster and is usually what you want.}
+\item{conda}{Path to the \code{conda}, \code{mamba} or \code{micromamba} binary, or
+\code{"auto"} to let \code{reticulate} find one. \code{reticulate} looks at the
+\code{RETICULATE_CONDA} environment variable, which is how the book's \code{Docker}
+image points it at \code{micromamba}.}
 
 \item{book}{A \code{BiocBook} object.}
 
@@ -67,12 +59,14 @@ output that is stored rather than recomputed would quietly stop being true.
 
 The consequence is that the \code{python} packages a book uses must be installed
 at build time, wherever the book is built. \code{setup_python()} does that from
-within the book itself, so the book carries its own \code{python} environment
-rather than relying on one being present.
+within the book itself, building the \code{conda} environment declared in
+\code{inst/requirements.yml}, so the book carries its own \code{python} environment
+rather than relying on one being present. A \code{conda} implementation
+(\code{conda}, \code{mamba} or \code{micromamba}) must exist on the build machine.
 \itemize{
-\item \code{setup_python()}: provision and activate the book's \code{python} environment
-from \code{inst/requirements.txt}. Call it from the first page that needs
-\code{python}; later pages re-activate it with \code{reticulate::use_virtualenv()}.
+\item \code{setup_python()}: provision and activate the book's \code{conda} environment
+from \code{inst/requirements.yml}. Call it from the first page that needs
+\code{python}; later pages re-activate it with \code{reticulate::use_condaenv()}.
 \item \code{add_python_chapter()}: add a new chapter wired up to execute \code{python}.
 }
 
