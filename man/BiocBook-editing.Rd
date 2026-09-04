@@ -39,14 +39,7 @@ add_chapter(book, title, file = NA, position = NULL, open = TRUE)
 
 edit_page(book, file, open = TRUE)
 
-add_python_chapter(
-  book,
-  title,
-  file = NA,
-  position = NULL,
-  setup = TRUE,
-  open = TRUE
-)
+add_python_chapter(book, title, file = NA, position = NULL, open = TRUE)
 }
 \arguments{
 \item{book}{A \code{BiocBook} object, opened with \code{BiocBook} or created by \code{init()}.}

@@ -28,7 +28,7 @@ test_that("python chapters are wired for build-time execution", {
     expect_true(        any(grepl("setup_python\\(\\)", page)))
 
     ## Later chapters re-activate the environment instead of rebuilding it
-    add_python_chapter(bb, title = 'Second py', setup = FALSE, open = FALSE)
+    add_python_chapter(bb, title = 'Second py', open = FALSE)
     page2 <- readLines(file.path(tmpdir, "inst", "pages", "second-py.qmd"))
     expect_true(       any(grepl("setup_python", page2)))
 

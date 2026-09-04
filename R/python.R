@@ -16,8 +16,8 @@
 #' rather than relying on one being present.
 #'
 #' - `setup_python()`: provision and activate the book's `conda` environment
-#'   from `inst/requirements.yml`. Call it from the first page that needs
-#'   `python`; later pages re-activate it with `reticulate::use_condaenv()`.
+#'   from `inst/requirements.yml`. Call it from any page that needs
+#'   `python`.
 #' - `micromamba()`: path to the `micromamba` binary the book provisions with,
 #'   downloading a pinned, checksummed copy on first use if none is present.
 #'
@@ -43,14 +43,6 @@
 #' -- and, decisively, the Bioconductor builders provide `python3` but not
 #' `jupyter`, so a `jupyter` page cannot be rendered there at all.
 #'
-#' @param book A `BiocBook` object.
-#' @param title Title of the new chapter.
-#' @param file Name of the new `.qmd` file. If `NA`, derived from `title`.
-#' @param position Position of the new chapter in the book.
-#' @param setup Whether the new chapter should open with a `setup_python()`
-#'   chunk. Use `TRUE` for the first `python` chapter of a book, and `FALSE`
-#'   for later ones, which only need to re-activate the environment.
-#' @param open Whether to open the file for editing.
 #' @param requirements Path to a `conda` environment file. If `NULL`,
 #'   `inst/requirements.yml` is located by walking up from the working directory
 #'   to the folder holding `_quarto.yml`, which works both while `quarto`
@@ -74,10 +66,14 @@
 #' `add_python_chapter()` invisibly returns `book`.
 #'
 #' @examples
-#' \dontrun{
-#' book <- BiocBook("path/to/book")
-#' add_python_chapter(book, "Working with anndata")
-#' }
+#' ## In practice, you should not use `.local` argument. 
+#' unique_id <- as.numeric(Sys.time())
+#' bookname <- paste(Sys.info()[['sysname']], unique_id, sep = '.')
+#' bb <- init(bookname, .local = TRUE)
+#' add_preamble(bb, open = FALSE)
+#' add_chapter(bb, title = "Chapitre Un", open = FALSE)
+#' add_python_chapter(bb, title = "Chapitre Deux", open = FALSE)
+#' unlink(bookname, recursive = TRUE)
 NULL
 
 #' @rdname BiocBook-python
@@ -231,7 +227,6 @@ add_python_chapter <- function(
     title,
     file = NA,
     position = NULL,
-    setup = TRUE,
     open = TRUE
 ) {
 

@@ -36,20 +36,6 @@ prefixes may each hold an environment of the same name.}
 
 \item{conda}{Path to the \code{conda}, \code{mamba} or \code{micromamba} binary to
 provision with. Defaults to \code{micromamba()}, which finds or fetches one.}
-
-\item{book}{A \code{BiocBook} object.}
-
-\item{title}{Title of the new chapter.}
-
-\item{file}{Name of the new \code{.qmd} file. If \code{NA}, derived from \code{title}.}
-
-\item{position}{Position of the new chapter in the book.}
-
-\item{setup}{Whether the new chapter should open with a \code{setup_python()}
-chunk. Use \code{TRUE} for the first \code{python} chapter of a book, and \code{FALSE}
-for later ones, which only need to re-activate the environment.}
-
-\item{open}{Whether to open the file for editing.}
 }
 \value{
 \code{setup_python()} invisibly returns the path of the environment it
@@ -100,8 +86,12 @@ it keeps the book's house style (\code{collapse}, \code{comment}, \code{fig.alig
 }
 
 \examples{
-\dontrun{
-book <- BiocBook("path/to/book")
-add_python_chapter(book, "Working with anndata")
-}
+## In practice, you should not use `.local` argument. 
+unique_id <- as.numeric(Sys.time())
+bookname <- paste(Sys.info()[['sysname']], unique_id, sep = '.')
+bb <- init(bookname, .local = TRUE)
+add_preamble(bb, open = FALSE)
+add_chapter(bb, title = "Chapitre Un", open = FALSE)
+add_python_chapter(bb, title = "Chapitre Deux", open = FALSE)
+unlink(bookname, recursive = TRUE)
 }
