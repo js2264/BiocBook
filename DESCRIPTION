@@ -29,6 +29,7 @@ Imports:
     gitcreds,
     httr, 
     usethis,
+    remotes, 
     dplyr, 
     purrr, 
     tibble, 
