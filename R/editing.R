@@ -24,7 +24,7 @@ edit_bib <- function(book, open = TRUE) {
 #' @export 
 
 edit_requirements_yml <- function(book, open = TRUE) {
-    .edit(book, file.path("inst", "requirements"), open = open)
+    .edit(book, file.path("inst", "requirements.yml"), open = open)
 }
 
 #' @rdname BiocBook-editing

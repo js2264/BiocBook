@@ -21,6 +21,7 @@ Depends:
     R (>= 4.3)
 Imports: 
     BiocGenerics, 
+    digest, 
     pak,
     cli, 
     glue,
@@ -43,12 +44,13 @@ Imports:
     renv
 Suggests:
     BiocStyle,
+    reticulate,
     knitr,
     testthat (>= 3.0.0),
     rmarkdown
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 biocViews: 
     Infrastructure, 
     ReportWriting, 
@@ -64,6 +66,8 @@ Collate:
     'check.R'
     'editing.R'
     'globals.R'
+    'micromamba.R'
     'pages.R'
+    'python.R'
     'utils.R'
 Config/testthat/edition: 3
