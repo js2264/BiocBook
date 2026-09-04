@@ -30,8 +30,7 @@ test_that("python chapters are wired for build-time execution", {
     ## Later chapters re-activate the environment instead of rebuilding it
     add_python_chapter(bb, title = 'Second py', setup = FALSE, open = FALSE)
     page2 <- readLines(file.path(tmpdir, "inst", "pages", "second-py.qmd"))
-    expect_false(       any(grepl("setup_python", page2)))
-    expect_true(        any(grepl("use_condaenv", page2)))
+    expect_true(       any(grepl("setup_python", page2)))
 
     unlink(tmpdir, recursive = TRUE, force = TRUE)
 

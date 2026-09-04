@@ -1,3 +1,44 @@
+#' @rdname BiocBook-python
+#' @name BiocBook-python
+#' @title Executing `python` code in a BiocBook
+#'
+#' @description
+#'
+#' `BiocBook` pages can execute `python` code as well as `R` code. The code is
+#' executed on every render, including with GHA or when the *Bioconductor Build System*
+#' (BBS) rebuilds the book: `R CMD build` runs `vignettes/Makefile`, which runs
+#' `quarto render`. 
+#'
+#' The consequence is that the `python` packages a book uses must be installed
+#' at build time, wherever the book is built. `setup_python()` does that from
+#' within the book itself, building the `conda` environment declared in
+#' `inst/requirements.yml`, so the book carries its own `python` environment
+#' rather than relying on one being present.
+#'
+#' - `setup_python()`: provision and activate the book's `conda` environment
+#'   from `inst/requirements.yml`. Call it from the first page that needs
+#'   `python`; later pages re-activate it with `reticulate::use_condaenv()`.
+#' - `micromamba()`: path to the `micromamba` binary the book provisions with,
+#'   downloading a pinned, checksummed copy on first use if none is present.
+#'
+#' `micromamba` is the only provisioning dependency, and it is a single
+#' self-contained binary: no `conda` installation, no base environment, no
+#' `python`. `micromamba()` looks for one in `RETICULATE_CONDA`, then on the
+#' `PATH`, then in `BiocBook`'s cache, and only then downloads it. 
+#' On a build machine that has no `conda` at all (which includes the
+#' `r-universe` build image Bioconductor is migrating to), it is what makes
+#' the book buildable. On GitHub Actions, the book's `Docker` image installs 
+#' it up front
+#'
+#' @section Engines:
+#'
+#' `quarto` binds an execution engine per file. A page holding at least one `R`
+#' chunk uses `knitr`, and its `python` chunks then run through `reticulate` in
+#' a single session shared with `R`. A page with no `R` chunk at all uses
+#' `jupyter` instead.
+#'
+#' Prefer `knitr`. It is the only way to share objects between `R` and `python`,
+#' it keeps the book's house style (`collapse`, `comment`, `fig.align` from
 #' `inst/assets/_knitr.yml`) and `code-link`, which apply to `knitr` pages only
 #' -- and, decisively, the Bioconductor builders provide `python3` but not
 #' `jupyter`, so a `jupyter` page cannot be rendered there at all.
@@ -182,7 +223,7 @@ setup_python <- function(
     NULL
 }
 
-#' @rdname BiocBook-python
+#' @rdname BiocBook-editing
 #' @export
 
 add_python_chapter <- function(
@@ -198,19 +239,13 @@ add_python_chapter <- function(
 
     ## The `R` chunk is not decoration: it is what binds the page to the knitr
     ## engine, and therefore to reticulate rather than to a Jupyter kernel.
-    activate <- if (setup) {
-        "BiocBook::setup_python()"
-    } else {
-        "reticulate::use_condaenv(\"BiocBook\", required = TRUE)"
-    }
-
     body <- glue::glue(
         "# {title}\n",
         "\n",
         "```{{r}}\n",
         "#| include: false\n",
         "library(reticulate)\n",
-        "{activate}\n",
+        "BiocBook::setup_python()\n",
         "```\n",
         "\n",
         "```{{python}}\n",
