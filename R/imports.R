@@ -42,6 +42,7 @@
 #' @importFrom purrr map_dfr
 #' @importFrom tibble tibble
 #' @importFrom dplyr case_when
+#' @importFrom digest digest
 #' @exportClass BiocBook
 #' @importMethodsFrom BiocGenerics path
 #' @importMethodsFrom methods show

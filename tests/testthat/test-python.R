@@ -66,3 +66,45 @@ test_that("setup_python() finds the book's requirements.yml", {
     unlink(tmpdir, recursive = TRUE, force = TRUE)
 
 })
+
+test_that("micromamba() resolves a binary without downloading when one exists", {
+
+    ## An explicit RETICULATE_CONDA always wins
+    fake <- tempfile(); file.create(fake)
+    withr <- Sys.getenv("RETICULATE_CONDA", unset = NA)
+    Sys.setenv(RETICULATE_CONDA = fake)
+    on.exit({
+        if (is.na(withr)) Sys.unsetenv("RETICULATE_CONDA")
+        else Sys.setenv(RETICULATE_CONDA = withr)
+        unlink(fake)
+    }, add = TRUE)
+    expect_equal(       micromamba(), fake)
+
+})
+
+test_that("the pinned micromamba release is fully specified", {
+
+    ## Every platform BiocBook claims to support needs a checksum, or the
+    ## download could not be verified there.
+    sums <- BiocBook:::.micromamba_sha256
+    expect_setequal(
+        names(sums),
+        c("linux-64", "linux-aarch64", "linux-ppc64le",
+          "osx-64", "osx-arm64", "win-64")
+    )
+    expect_true(        all(nchar(sums) == 64L))
+    expect_true(        all(grepl("^[0-9a-f]{64}$", sums)))
+    expect_match(       BiocBook:::.micromamba_version, "^[0-9.]+-[0-9]+$")
+
+})
+
+test_that("the environment prefix is addressed by path, not by name", {
+
+    ## Environments of the same name can exist under several conda root
+    ## prefixes; addressing by path is what keeps a book on its own.
+    p <- BiocBook:::.book_env_prefix("BiocBook")
+    expect_true(        grepl("BiocBook", p))
+    expect_true(        grepl("envs", p))
+    expect_true(        nchar(dirname(p)) > 0L)
+
+})

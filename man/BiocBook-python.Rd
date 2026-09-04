@@ -4,9 +4,15 @@
 \alias{BiocBook-python}
 \alias{setup_python}
 \alias{add_python_chapter}
+\alias{micromamba}
 \title{Executing \code{python} code in a BiocBook}
 \usage{
-setup_python(requirements = NULL, envname = NULL, conda = "auto")
+setup_python(
+  requirements = NULL,
+  envname = NULL,
+  prefix = NULL,
+  conda = micromamba()
+)
 
 add_python_chapter(
   book,
@@ -16,6 +22,8 @@ add_python_chapter(
   setup = TRUE,
   open = TRUE
 )
+
+micromamba(version = .micromamba_version, quiet = FALSE)
 }
 \arguments{
 \item{requirements}{Path to a \code{conda} environment file. If \code{NULL},
@@ -26,10 +34,8 @@ renders a page and from a normal R session.}
 \item{envname}{Name of the \code{conda} environment to create or re-use. If
 \code{NULL}, the \code{name:} declared in the environment file is used.}
 
-\item{conda}{Path to the \code{conda}, \code{mamba} or \code{micromamba} binary, or
-\code{"auto"} to let \code{reticulate} find one. \code{reticulate} looks at the
-\code{RETICULATE_CONDA} environment variable, which is how the book's \code{Docker}
-image points it at \code{micromamba}.}
+\item{conda}{Path to the \code{conda}, \code{mamba} or \code{micromamba} binary to
+provision with. Defaults to \code{micromamba()}, which finds or fetches one.}
 
 \item{book}{A \code{BiocBook} object.}
 
@@ -44,10 +50,22 @@ chunk. Use \code{TRUE} for the first \code{python} chapter of a book, and \code{
 for later ones, which only need to re-activate the environment.}
 
 \item{open}{Whether to open the file for editing.}
+
+\item{prefix}{Full path of the \code{conda} environment. If \code{NULL}, a path under
+\code{BiocBook}'s cache is derived from \code{envname}. Environments are always
+addressed by path rather than by name, since several \code{conda} root
+prefixes may each hold an environment of the same name.}
+
+\item{version}{Pinned \code{micromamba} release to use, as \code{"<version>-<build>"}.
+Bump it here rather than tracking \code{latest}.}
+
+\item{quiet}{Whether to suppress progress messages.}
 }
 \value{
-\code{setup_python()} invisibly returns the environment name.
+\code{setup_python()} invisibly returns the path of the environment it
+activated, or of the interpreter that was already configured.
 \code{add_python_chapter()} invisibly returns \code{book}.
+\code{micromamba()} returns the path of the \code{micromamba} binary.
 }
 \description{
 \code{BiocBook} pages can execute \code{python} code as well as \code{R} code. The code is
@@ -61,14 +79,23 @@ The consequence is that the \code{python} packages a book uses must be installed
 at build time, wherever the book is built. \code{setup_python()} does that from
 within the book itself, building the \code{conda} environment declared in
 \code{inst/requirements.yml}, so the book carries its own \code{python} environment
-rather than relying on one being present. A \code{conda} implementation
-(\code{conda}, \code{mamba} or \code{micromamba}) must exist on the build machine.
+rather than relying on one being present.
 \itemize{
 \item \code{setup_python()}: provision and activate the book's \code{conda} environment
 from \code{inst/requirements.yml}. Call it from the first page that needs
 \code{python}; later pages re-activate it with \code{reticulate::use_condaenv()}.
 \item \code{add_python_chapter()}: add a new chapter wired up to execute \code{python}.
+\item \code{micromamba()}: path to the \code{micromamba} binary the book provisions
+with, downloading a pinned, checksummed copy on first use if none is present.
 }
+
+\code{micromamba} is the only provisioning dependency, and it is a single
+self-contained binary: no \code{conda} installation, no base environment, no
+\code{python}. \code{micromamba()} looks for one in \code{RETICULATE_CONDA}, then on the
+\code{PATH}, then in \code{BiocBook}'s cache, and only then downloads it. The book's
+\code{Docker} image installs it up front, so the download never happens there; on a
+build machine that has no \code{conda} at all -- which includes the \code{r-universe}
+build image Bioconductor is migrating to -- it is what makes the book buildable.
 
 Note that \code{python.reticulate} must be \code{true} in \code{inst/assets/_knitr.yml}
 (its default, and what the \code{BiocBook} template ships). When it is \code{false},

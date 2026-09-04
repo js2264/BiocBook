@@ -15,13 +15,23 @@
 #' at build time, wherever the book is built. `setup_python()` does that from
 #' within the book itself, building the `conda` environment declared in
 #' `inst/requirements.yml`, so the book carries its own `python` environment
-#' rather than relying on one being present. A `conda` implementation
-#' (`conda`, `mamba` or `micromamba`) must exist on the build machine.
+#' rather than relying on one being present.
 #'
 #' - `setup_python()`: provision and activate the book's `conda` environment
 #'   from `inst/requirements.yml`. Call it from the first page that needs
 #'   `python`; later pages re-activate it with `reticulate::use_condaenv()`.
 #' - `add_python_chapter()`: add a new chapter wired up to execute `python`.
+#' - `micromamba()`: path to the `micromamba` binary the book provisions with,
+#'   downloading a pinned, checksummed copy on first use if none is present.
+#'
+#' `micromamba` is the only provisioning dependency, and it is a single
+#' self-contained binary: no `conda` installation, no base environment, no
+#' `python`. `micromamba()` looks for one in `RETICULATE_CONDA`, then on the
+#' `PATH`, then in `BiocBook`'s cache, and only then downloads it. The book's
+#' `Docker` image installs it up front, so the download never happens there;
+#' on a build machine that has no `conda` at all -- which includes the
+#' `r-universe` build image Bioconductor is migrating to -- it is what makes
+#' the book buildable.
 #'
 #' Note that `python.reticulate` must be `true` in `inst/assets/_knitr.yml`
 #' (its default, and what the `BiocBook` template ships). When it is `false`,
@@ -56,14 +66,20 @@
 #'   renders a page and from a normal R session.
 #' @param envname Name of the `conda` environment to create or re-use. If
 #'   `NULL`, the `name:` declared in the environment file is used.
-#' @param conda Path to the `conda`, `mamba` or `micromamba` binary, or
-#'   `"auto"` to let `reticulate` find one. `reticulate` looks at the
-#'   `RETICULATE_CONDA` environment variable, which is how the book's `Docker`
-#'   image points it at `micromamba`.
+#' @param prefix Full path of the `conda` environment. If `NULL`, a path under
+#'   `BiocBook`'s cache is derived from `envname`. Environments are always
+#'   addressed by path rather than by name, since several `conda` root
+#'   prefixes may each hold an environment of the same name.
+#' @param conda Path to the `conda`, `mamba` or `micromamba` binary to
+#'   provision with. Defaults to `micromamba()`, which finds or fetches one.
+#' @param version Pinned `micromamba` release to use, as
+#'   `"<version>-<build>"`. Bump it here rather than tracking `latest`.
+#' @param quiet Whether to suppress progress messages.
 #'
 #' @return
 #'
-#' `setup_python()` invisibly returns the environment name.
+#' `setup_python()` invisibly returns the path of the environment it
+#' activated, or of the interpreter that was already configured.
 #' `add_python_chapter()` invisibly returns `book`.
 #'
 #' @examples
@@ -79,10 +95,23 @@ NULL
 setup_python <- function(
     requirements = NULL,
     envname = NULL,
-    conda = "auto"
+    prefix = NULL,
+    conda = micromamba()
 ) {
 
     rlang::check_installed("reticulate", "to execute `python` code in a BiocBook.")
+
+    ## An interpreter may already have been chosen for us. The book's Docker
+    ## image sets `RETICULATE_PYTHON` in `Renviron.site`, and `reticulate`
+    ## honours it on its own, so there is nothing to provision or activate.
+    chosen <- Sys.getenv("RETICULATE_PYTHON", unset = NA)
+    if (!is.na(chosen) && nzchar(chosen) && file.exists(chosen)) {
+        cli::cli_alert_success(cli::col_grey(
+            "Using the `python` already configured for this session: \\
+            {.file {chosen}}"
+        ))
+        return(invisible(chosen))
+    }
 
     ## Locate `inst/requirements.yml`. This has to work in two very different
     ## situations: while `quarto` renders a page (the package is typically not
@@ -113,46 +142,68 @@ setup_python <- function(
     ))
     packages <- unlist(deps)
 
-    ## The environment may already exist, typically because the book's Docker
-    ## image pre-built it. Re-use it rather than resolving it all over again.
-    existing <- tryCatch(
-        reticulate::conda_list(conda = conda), error = function(e) NULL
-    )
-    if (is.null(existing)) cli::cli_abort(c(
-        "No `conda` binary could be found.",
-        "i" = "`BiocBook` provisions `conda` environments, so one of `conda`, \\
-               `mamba` or `micromamba` must be installed where the book is built.",
-        "i" = "Point `reticulate` at it with the {.envvar RETICULATE_CONDA} \\
-               environment variable, e.g. \\
-               {.code RETICULATE_CONDA=/usr/local/bin/micromamba}."
-    ))
+    ## Address the environment by its full path, never by name. Environments
+    ## of the same name can exist under several `conda` root prefixes at once,
+    ## and `reticulate` then warns and picks the first it happens to list --
+    ## which may not be this book's.
+    if (is.null(prefix)) prefix <- .book_env_prefix(envname)
 
-    if (envname %in% existing$name) {
+    if (dir.exists(prefix)) {
         cli::cli_alert_success(cli::col_grey(
-            "Re-using existing `conda` environment {.val {envname}}"
+            "Re-using `conda` environment {.file {prefix}}"
         ))
     } else {
         cli::cli_alert_info(cli::col_grey(
-            "Creating `conda` environment {.val {envname}}"
+            "Creating `conda` environment {.file {prefix}}"
         ))
-        ## Deliberately `conda create` rather than `conda env create -f <file>`.
-        ## reticulate rediscovers an environment's `conda` binary by parsing the
-        ## `# cmd:` line of its `conda-meta/history`, and the extra word in
-        ## `env create` makes that parse yield a path that does not exist. The
-        ## environment is then unusable: reticulate falls back to the system
-        ## `python` without failing, so the book would render against the wrong
-        ## interpreter.
-        reticulate::conda_create(
-            envname = envname,
-            packages = packages,
-            channel = spec[["channels"]],
-            forge = FALSE,
-            conda = conda
-        )
+        .setup_conda_env(prefix, packages, spec[["channels"]], conda)
     }
 
-    reticulate::use_condaenv(envname, required = TRUE, conda = conda)
-    invisible(envname)
+    ## `reticulate` rediscovers an environment's `conda` binary from the
+    ## `# cmd:` line of its `conda-meta/history`. If the binary that built the
+    ## environment has since moved or gone, activation fails with an opaque
+    ## `normalizePath` error, so rebuild rather than surface that.
+    activated <- tryCatch({
+        reticulate::use_condaenv(prefix, required = TRUE, conda = conda)
+        TRUE
+    }, error = function(e) FALSE)
+
+    if (!activated) {
+        cli::cli_alert_warning(cli::col_grey(
+            "The environment at {.file {prefix}} is not usable, most likely \\
+            because the `conda` binary that created it has moved. Rebuilding it."
+        ))
+        unlink(prefix, recursive = TRUE, force = TRUE)
+        .setup_conda_env(prefix, packages, spec[["channels"]], conda)
+        reticulate::use_condaenv(prefix, required = TRUE, conda = conda)
+    }
+
+    invisible(prefix)
+}
+
+## Book environments live under BiocBook's own cache, so that a book always
+## resolves its own environment rather than a same-named one belonging to
+## something else.
+.book_env_prefix <- function(envname) {
+    file.path(tools::R_user_dir("BiocBook", which = "cache"), "envs", envname)
+}
+
+## Deliberately `conda create` rather than `conda env create -f <file>`.
+## reticulate rediscovers an environment's `conda` binary by parsing the
+## `# cmd:` line of its `conda-meta/history`, and the extra word in
+## `env create` makes that parse yield a path that does not exist. The
+## environment is then unusable in a way that does not fail: reticulate falls
+## back to the system `python`, so the book would render against the wrong
+## interpreter.
+.setup_conda_env <- function(prefix, packages, channels, conda) {
+    dir.create(dirname(prefix), recursive = TRUE, showWarnings = FALSE)
+    reticulate::conda_create(
+        envname = prefix,
+        packages = packages,
+        channel = channels,
+        forge = FALSE,
+        conda = conda
+    )
 }
 
 ## Walk up from the working directory looking for the book root, i.e. the
