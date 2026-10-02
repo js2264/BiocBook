@@ -1,3 +1,29 @@
+# BiocBook 1.11.3
+
+## New features
+
+- `from_bookdown()` migrates a `bookdown` book to a `BiocBook` in one call. It
+  creates the book package from the template, as `init()` does, and converts
+  the `bookdown` project into it: pages (with parts and appendices),
+  cross-references, figure layout options and `msmbstyle` question/solution
+  blocks, bibliographies, CSS and images, `DESCRIPTION` (title, authors,
+  dependencies), and the setup of the single R session `bookdown` renders
+  every chapter in. `MIGRATION.md` lists how often each rule was applied and
+  what still needs to be done by hand.
+- The template's `biocbook` GitHub workflow can be run manually on any branch:
+  it then builds the book against Bioconductor devel without pushing its
+  `Docker` image or deploying it, so that a branch can be checked before it
+  is merged. Deployments also index the `llms.txt` of every deployed version
+  of a book in `docs/llms.txt`.
+
+## Bug fixes
+
+- `chapters()` drops header attributes (e.g. `{#sec-intro}`) from chapter
+  titles.
+- The template's question and answer callouts are styled again: `quarto`
+  (>= 1.3) drops extra classes from callouts, so they are now wrapped in a
+  `.callout-question` or `.callout-answer` div.
+
 # BiocBook 1.11.2
 
 ## New features
