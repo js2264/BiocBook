@@ -29,8 +29,8 @@
 #' `PATH`, then in `BiocBook`'s cache, and only then downloads it. 
 #' On a build machine that has no `conda` at all (which includes the
 #' `r-universe` build image Bioconductor is migrating to), it is what makes
-#' the book buildable. On GitHub Actions, the book's `Docker` image installs 
-#' it up front
+#' the book buildable. The book's `Docker` image downloads it while the image
+#' is built, and keeps it, together with the book's environment.
 #'
 #' @section Cached environments:
 #'

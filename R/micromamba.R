@@ -7,7 +7,7 @@ micromamba <- function(version = .micromamba_version, quiet = FALSE) {
     from_env <- Sys.getenv("RETICULATE_CONDA", unset = NA)
     if (!is.na(from_env) && nzchar(from_env) && file.exists(from_env)) return(from_env)
 
-    ## 2. One already on the PATH (the book's Docker image installs it there)
+    ## 2. One already on the PATH
     on_path <- Sys.which("micromamba")
     if (nzchar(on_path)) return(unname(on_path))
 

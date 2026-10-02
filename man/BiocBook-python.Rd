@@ -81,8 +81,8 @@ self-contained binary: no \code{conda} installation, no base environment, no
 \code{PATH}, then in \code{BiocBook}'s cache, and only then downloads it.
 On a build machine that has no \code{conda} at all (which includes the
 \code{r-universe} build image Bioconductor is migrating to), it is what makes
-the book buildable. On GitHub Actions, the book's \code{Docker} image installs
-it up front
+the book buildable. The book's \code{Docker} image downloads it while the image
+is built, and keeps it, together with the book's environment.
 }
 \section{Cached environments}{
 
