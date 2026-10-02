@@ -204,7 +204,7 @@ enrich_llms_txt <- function(output_dir = "docs", project_dir = ".") {
         lines <- c(lines, paste0(
             "- Other versions of this book: one per Bioconductor release, at ",
             code(paste0(root, "/<version>/")),
-            " (e.g. <", root, "/devel/>)"
+            " (e.g. <", root, "/devel/>), indexed in <", root, "/llms.txt>"
         ))
     }
     lines

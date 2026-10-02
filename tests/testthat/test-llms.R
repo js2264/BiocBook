@@ -38,6 +38,7 @@ test_that("enrich_llms_txt() writes a minimal llms.txt for older quarto", {
     expect_true(        any(grepl(sprintf("ghcr.io/dummy/%s:0.98.0", tolower(fx$book)), block, fixed = TRUE)))
     expect_true(        any(grepl("`python=3.12`, `numpy=1.26`", block, fixed = TRUE)))
     expect_true(        any(grepl(sprintf("https://dummy.github.io/%s/devel/", fx$book), block, fixed = TRUE)))
+    expect_true(        any(grepl(sprintf("indexed in <https://dummy.github.io/%s/llms.txt>", fx$book), block, fixed = TRUE)))
 
     ## Chapters point at the HTML pages, which is all older quarto renders
     chapters <- llms[seq(which(llms == "## Chapters"), length(llms))]
