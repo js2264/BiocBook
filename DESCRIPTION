@@ -66,6 +66,7 @@ Collate:
     'check.R'
     'editing.R'
     'globals.R'
+    'llms.R'
     'micromamba.R'
     'pages.R'
     'python.R'
