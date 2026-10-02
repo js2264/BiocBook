@@ -1,0 +1,54 @@
+## End-to-end test: create a book from the template, add a python chapter and
+## render it with quarto, as the book's own CI and the Bioconductor builders
+## would. It builds a conda environment, so it runs here rather than in
+## R CMD check (tests/testthat/test-e2e.R is skipped unless BIOCBOOK_E2E is set).
+
+name: e2e
+
+on:
+  push:
+    paths:
+      - 'R/**'
+      - 'inst/template/**'
+      - 'tests/testthat/test-e2e.R'
+      - 'DESCRIPTION'
+      - '.github/workflows/e2e.yml'
+  pull_request:
+    branches:
+      - devel
+      - RELEASE_**
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    name: e2e (quarto ${{ matrix.quarto }})
+    container: ghcr.io/bioconductor/bioconductor:devel
+    strategy:
+      fail-fast: false
+      matrix:
+        ## `image`: the quarto shipped with the Bioconductor image. A pinned
+        ## quarto >= 1.11 also renders llms.txt and the pages' Markdown copies.
+        quarto: [image, 1.11.5]
+    env:
+      BIOCBOOK_E2E: "true"
+    steps:
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v7
+
+      - name: 🔧 Pin quarto
+        if: matrix.quarto != 'image'
+        run: |
+          curl -fsSL -o /tmp/quarto.tar.gz "https://github.com/quarto-dev/quarto-cli/releases/download/v${{ matrix.quarto }}/quarto-${{ matrix.quarto }}-linux-amd64.tar.gz"
+          mkdir -p /opt/quarto
+          tar -xzf /tmp/quarto.tar.gz -C /opt/quarto --strip-components=1
+          ln -sf /opt/quarto/bin/quarto /usr/local/bin/quarto
+
+      - name: 📦 Install BiocBook and the template's dependencies
+        run: |
+          quarto --version
+          Rscript -e 'install.packages("remotes") ; BiocManager::install(c("sessioninfo", "glue", "testthat"), ask = FALSE, update = FALSE) ; remotes::install_local(".", dependencies = TRUE, upgrade = "never", repos = BiocManager::repositories())'
+
+      - name: 📚 Render a new book with python chunks
+        run: |
+          Rscript -e 'library(testthat) ; library(BiocBook) ; res <- as.data.frame(test_file("tests/testthat/test-e2e.R", reporter = "progress")) ; if (any(res$failed > 0 | res$error | res$skipped)) stop("The end-to-end test did not pass")'
