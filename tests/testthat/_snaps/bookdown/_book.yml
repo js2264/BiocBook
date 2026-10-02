@@ -1,0 +1,27 @@
+book:
+  title: "A mini bookdown book"
+  subtitle: "Every rule from_bookdown() knows"
+  author:
+    - "Jane Doe"
+    - "John Smith"
+  date: "today"
+  chapters:
+    - index.qmd
+    - part: "Basics"
+      chapters:
+        - pages/01-intro.qmd
+  appendices:
+    - pages/02-annex.qmd
+  cover-image: assets/cover.png
+  favicon: assets/favicon.png
+  sidebar: 
+    tools:
+      - icon: git
+        menu:
+          - text: Source Code
+            url:  https://github.com/dummy/BookdownMini/
+          - text: Browse version `devel`
+            url:  https://dummy.github.io/BookdownMini/devel/
+    style: "docked"
+    background: "light"
+    collapse-level: 5

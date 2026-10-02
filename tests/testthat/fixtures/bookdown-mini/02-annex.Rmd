@@ -1,0 +1,9 @@
+# (APPENDIX) Appendix {-}
+
+# Annex {#sec-annex}
+
+Back to the \@ref(intro) and to a missing section, \@ref(nowhere).
+
+```{r si}
+sessionInfo()
+```
