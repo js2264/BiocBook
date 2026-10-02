@@ -240,14 +240,16 @@ enrich_llms_txt <- function(output_dir = "docs", project_dir = ".") {
 }
 
 ## quarto writes book chapter titles with their numbering spans, e.g.
-## `[[1]{.chapter-number}  [Intro]{.chapter-title}](pages/intro.llms.md)`,
-## separated by a non-breaking space
+## `[[1]{.chapter-number}  [Intro]{.chapter-title}](pages/intro.llms.md)`
+## (separated by a non-breaking space), and wraps the titles of chapters with
+## an id in one more span, e.g. `[[2 Intro]{#sec-intro .quarto-section-identifier}](...)`
 .llms_tidy_titles <- function(lines) {
-    gsub(
+    lines <- gsub(
         "\\[([^][]*)\\]\\{\\.chapter-number\\}[^][]*\\[([^][]*)\\]\\{\\.chapter-title\\}",
         "\\1 \\2",
         lines
     )
+    gsub("\\[\\[([^][]*)\\]\\{[^}]*\\}\\]\\(", "[\\1](", lines)
 }
 
 ## With `code-link: true`, R code blocks carry a `downlit` class, which

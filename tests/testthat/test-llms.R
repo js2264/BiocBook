@@ -60,6 +60,7 @@ test_that("enrich_llms_txt() adds the BiocBook context to quarto's llms.txt", {
         "",
         sprintf("- [%s](index.llms.md)", fx$book),
         "- [[1]{.chapter-number}\u00a0 [First chapter]{.chapter-title}](pages/first-chapter.llms.md)",
+        "- [[[2]{.chapter-number}\u00a0 [Py chapter]{.chapter-title}]{#sec-py .quarto-section-identifier}](pages/py-chapter.llms.md)",
         ""
     ), file.path(fx$docs, "llms.txt"))
     writeLines(
@@ -77,7 +78,8 @@ test_that("enrich_llms_txt() adds the BiocBook context to quarto's llms.txt", {
 
     ## Chapter numbering spans are flattened
     expect_true(        "- [1 First chapter](pages/first-chapter.llms.md)" %in% llms)
-    expect_false(       any(grepl("chapter-number", llms)))
+    expect_true(        "- [2 Py chapter](pages/py-chapter.llms.md)" %in% llms)
+    expect_false(       any(grepl("chapter-number|section-identifier", llms)))
 
     ## R code blocks are labelled as such, other languages are left alone
     page <- readLines(file.path(fx$docs, "pages", "first-chapter.llms.md"))
