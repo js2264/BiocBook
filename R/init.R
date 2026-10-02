@@ -246,6 +246,11 @@ quick_init <- function(new_package, user) {
     cli::cli_alert_success(cli::col_grey("Filled out `{cli::col_cyan(path)}` fields"))
     cli::cli_alert_info(cli::col_grey("Please finish editing the `{cli::col_cyan(path)}` fields, including the `Welcome` section"))
     Sys.sleep(1)
+    # ---- in `requirements.yml` (templates >= 1.1.0 name the book's conda env after it)
+    path <- file.path("inst", "requirements.yml")
+    if (file.exists(file.path(repo, path))) {
+        .fix_placeholders(file.path(repo, path), pkg = repo, usr = user)
+    }
 
 }
 
