@@ -183,7 +183,7 @@ from_bookdown <- function(
         "{.file _bookdown.yml} lists files that do not exist: {.file {missing}}"
     )
 
-    pages <- lapply(files, function(f) readLines(file.path(path, f), warn = FALSE))
+    pages <- lapply(files, function(f) readLines(file.path(path, f), warn = FALSE, encoding = "UTF-8"))
     names(pages) <- files
     index <- .split_front_matter(pages[[1]])
     pages[[1]] <- index$body
@@ -441,7 +441,7 @@ from_bookdown <- function(
         script <- unlist(bd$config[["before_chapter_script"]])
         for (s in script) {
             f <- file.path(bd$path, s)
-            if (file.exists(f)) setup <- c(setup, readLines(f, warn = FALSE))
+            if (file.exists(f)) setup <- c(setup, readLines(f, warn = FALSE, encoding = "UTF-8"))
         }
         if (length(setup)) {
             chunk <- c(
@@ -472,7 +472,7 @@ from_bookdown <- function(
     count("asset paths of `index.Rmd` -> `pages/...`", attr(index_body, "n"))
     .write_index(file.path(inst, "index.qmd"), index_body)
     for (i in seq_along(pages)[-1]) {
-        writeLines(pages[[i]], file.path(inst, targets[i]))
+        writeLines(pages[[i]], file.path(inst, targets[i]), useBytes = TRUE)
     }
     cli::cli_alert_success(cli::col_grey("Converted {length(pages)} page{?s}"))
 
@@ -730,7 +730,7 @@ from_bookdown <- function(
 }
 
 .write_index <- function(file, body) {
-    lines <- readLines(file, warn = FALSE)
+    lines <- readLines(file, warn = FALSE, encoding = "UTF-8")
     start <- grep("^# Welcome \\{-\\}", lines)[1]
     end <- grep("^# ", lines)
     end <- end[end > start][1]
@@ -740,13 +740,13 @@ from_bookdown <- function(
     else {
         lines <- c(lines[seq_len(start - 1)], body, "", lines[seq(end, length(lines))])
     }
-    writeLines(lines, file)
+    writeLines(lines, file, useBytes = TRUE)
 }
 
 .yaml_quote <- function(x) sprintf('"%s"', gsub('"', '\\\\"', gsub("\\\\", "\\\\\\\\", x)))
 
 .write_book_yml <- function(file, meta, targets, part_of, appendix) {
-    lines <- readLines(file, warn = FALSE)
+    lines <- readLines(file, warn = FALSE, encoding = "UTF-8")
     title <- meta[["title"]]
     if (!is.null(title)) {
         lines <- sub("^  title: .*$", paste("  title:", .yaml_quote(title)), lines)
@@ -789,13 +789,13 @@ from_bookdown <- function(
     end <- start
     while (end < length(lines) && grepl("^    ", lines[end + 1])) end <- end + 1L
     rest <- if (end < length(lines)) lines[seq(end + 1, length(lines))] else character(0)
-    writeLines(c(lines[seq_len(start - 1)], block, rest), file)
+    writeLines(c(lines[seq_len(start - 1)], block, rest), file, useBytes = TRUE)
 }
 
 ## `_format.yml`: bibliographies, CSS, and the output options quarto has an
 ## equivalent for. Returns the options that could not be translated.
 .write_format_yml <- function(file, bd, dirs) {
-    lines <- readLines(file, warn = FALSE)
+    lines <- readLines(file, warn = FALSE, encoding = "UTF-8")
     opts <- bd$options
     bibs <- c("bibliography.bib", setdiff(attr(dirs, "bibs"), "bibliography.bib"))
     at <- grep("^    bibliography: ", lines)[1]
@@ -810,7 +810,7 @@ from_bookdown <- function(
     if (isTRUE(bd$meta[["link-citations"]]) || identical(bd$meta[["link-citations"]], "yes")) {
         extra <- c(extra, "    link-citations: true")
     }
-    writeLines(c(lines, extra), file)
+    writeLines(c(lines, extra), file, useBytes = TRUE)
 
     ## Everything else has no direct equivalent
     known <- c("css", "margin_references", "toc_depth", "toc")
@@ -940,7 +940,7 @@ from_bookdown <- function(
     add <- function(section, item) todo[[section]] <<- c(todo[[section]], item)
     network <- "pxget\\(|download\\.file\\(|curl_download\\(|httr2?::|BiocFileCache|ExperimentHub\\(|AnnotationHub\\(|[\"']https?://"
     for (target in targets) {
-        lines <- readLines(file.path(book, "inst", target), warn = FALSE)
+        lines <- readLines(file.path(book, "inst", target), warn = FALSE, encoding = "UTF-8")
         code <- .code_lines(lines)
         block <- .code_blocks(lines)
         opening <- block > 0 & !duplicated(block)
@@ -985,7 +985,7 @@ from_bookdown <- function(
             f <- normalizePath(r$file, mustWork = FALSE)
             if (!file.exists(f)) f <- normalizePath(file.path(book, "inst", r$file), mustWork = FALSE)
             if (file.exists(f)) {
-                l <- readLines(f, warn = FALSE)
+                l <- readLines(f, warn = FALSE, encoding = "UTF-8")
                 ## Left alone on purpose: code, and inline code
                 if (.code_lines(l)[r$line]) next
                 if (!grepl(r$bookdown_syntax, gsub("`+[^`]*`+", "", l[r$line]), fixed = TRUE)) next
@@ -1036,9 +1036,9 @@ from_bookdown <- function(
         "",
         if (length(todo)) todo else "Nothing left to do."
     )
-    writeLines(lines, file.path(book, "MIGRATION.md"))
+    writeLines(lines, file.path(book, "MIGRATION.md"), useBytes = TRUE)
     rbuildignore <- file.path(book, ".Rbuildignore")
-    writeLines(c(readLines(rbuildignore, warn = FALSE), "^MIGRATION\\.md$"), rbuildignore)
+    writeLines(c(readLines(rbuildignore, warn = FALSE, encoding = "UTF-8"), "^MIGRATION\\.md$"), rbuildignore, useBytes = TRUE)
     cli::cli_alert_success(cli::col_grey(
         "Wrote the migration report to {.file {file.path(book, 'MIGRATION.md')}}"
     ))

@@ -64,7 +64,7 @@ enrich_llms_txt <- function(output_dir = "docs", project_dir = ".") {
     llms_txt <- file.path(output_dir, "llms.txt")
 
     if (file.exists(llms_txt)) {
-        lines <- .llms_insert_block(readLines(llms_txt, warn = FALSE), block, info)
+        lines <- .llms_insert_block(readLines(llms_txt, warn = FALSE, encoding = "UTF-8"), block, info)
         lines <- .llms_tidy_titles(lines)
         .llms_tidy_pages(output_dir)
         msg <- "Added BiocBook context to {.file {llms_txt}}"
@@ -80,7 +80,7 @@ enrich_llms_txt <- function(output_dir = "docs", project_dir = ".") {
         )
         msg <- "Wrote a minimal {.file {llms_txt}} (no `quarto` >= 1.11 output found)"
     }
-    writeLines(lines, llms_txt)
+    writeLines(lines, llms_txt, useBytes = TRUE)
     cli::cli_alert_success(cli::col_grey(msg))
 
     invisible(llms_txt)
@@ -115,7 +115,7 @@ enrich_llms_txt <- function(output_dir = "docs", project_dir = ".") {
     pages <- list.files(project_dir, pattern = "\\.(qmd|Rmd|md)$", recursive = TRUE)
     pages <- pages[!grepl("^(docs|_book)/|\\.llms\\.md$", pages)]
     has_python <- any(vapply(file.path(project_dir, pages), function(f) {
-        any(grepl("^\\s*```\\s*\\{python", readLines(f, warn = FALSE)))
+        any(grepl("^\\s*```\\s*\\{python", readLines(f, warn = FALSE, encoding = "UTF-8")))
     }, logical(1)))
     python <- NULL
     if (has_python && file.exists(req_f)) {
@@ -257,9 +257,9 @@ enrich_llms_txt <- function(output_dir = "docs", project_dir = ".") {
 .llms_tidy_pages <- function(output_dir) {
     pages <- list.files(output_dir, pattern = "\\.llms\\.md$", recursive = TRUE, full.names = TRUE)
     for (page in pages) {
-        lines <- readLines(page, warn = FALSE)
+        lines <- readLines(page, warn = FALSE, encoding = "UTF-8")
         fixed <- sub("^((>\\s?)*\\s*```+)\\s*downlit\\s*$", "\\1 r", lines)
-        if (!identical(fixed, lines)) writeLines(fixed, page)
+        if (!identical(fixed, lines)) writeLines(fixed, page, useBytes = TRUE)
     }
     invisible(length(pages))
 }
@@ -288,7 +288,7 @@ enrich_llms_txt <- function(output_dir = "docs", project_dir = ".") {
 ## else its `title:`, else its file name.
 .page_title <- function(f) {
     if (!file.exists(f)) return(tools::file_path_sans_ext(basename(f)))
-    lines <- readLines(f, warn = FALSE)
+    lines <- readLines(f, warn = FALSE, encoding = "UTF-8")
     yaml_end <- 0L
     if (length(lines) && grepl("^---\\s*$", lines[1])) {
         yaml_end <- which(grepl("^---\\s*$", lines))[2]

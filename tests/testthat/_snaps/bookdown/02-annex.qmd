@@ -9,7 +9,7 @@ suppressPackageStartupMessages(library("tools"))
 library(utils)
 ```
 
-Back to the [-@sec-intro] and to a missing section, [-@sec-nowhere].
+Back to the [-@sec-intro] – and to a missing section, [-@sec-nowhere].
 
 ```{r si}
 sessionInfo()
