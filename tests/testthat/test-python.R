@@ -172,3 +172,32 @@ test_that("python_envs() lists and removes cached environments", {
     expect_identical(   nrow(python_envs()), 0L)
 
 })
+
+test_that("add_python_chapter() declares BiocBook and reticulate", {
+
+    tmpdir <- paste0(paste0(
+        sample(LETTERS, 5, replace = TRUE),
+        sample(c(seq(0, 9)), 5, replace = TRUE),
+        collapse = ""
+    ))
+    quick_init(tmpdir, user = "dummy")
+    on.exit(unlink(tmpdir, recursive = TRUE, force = TRUE), add = TRUE)
+
+    ## Books created from older templates do not list them
+    desc_f <- file.path(tmpdir, "DESCRIPTION")
+    d <- read.dcf(desc_f)
+    d[, "Suggests"] <- "knitr"
+    write.dcf(d, desc_f)
+
+    bb <- BiocBook(tmpdir)
+    add_python_chapter(bb, title = "Py chapter", open = FALSE)
+    suggests <- read.dcf(desc_f, fields = "Suggests")[1, 1]
+    expect_match(       suggests, "\\bBiocBook\\b")
+    expect_match(       suggests, "\\breticulate\\b")
+
+    ## The page is pinned to knitr, and its title is still picked up
+    page <- readLines(file.path(tmpdir, "inst", "pages", "py-chapter.qmd"))
+    expect_true(        "engine: knitr" %in% page)
+    expect_true(        "Py chapter" %in% names(chapters(bb)))
+
+})

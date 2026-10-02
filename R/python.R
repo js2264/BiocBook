@@ -330,7 +330,13 @@ add_python_chapter <- function(
 
     ## The `R` chunk is not decoration: it is what binds the page to the knitr
     ## engine, and therefore to reticulate rather than to a Jupyter kernel.
+    ## `engine: knitr` says the same thing explicitly, so the page stays on
+    ## knitr even if that chunk is later deleted.
     body <- glue::glue(
+        "---\n",
+        "engine: knitr\n",
+        "---\n",
+        "\n",
         "# {title}\n",
         "\n",
         "```{{r}}\n",
@@ -345,6 +351,14 @@ add_python_chapter <- function(
     )
 
     full_path <- .add_page(book, title, file, position, open = FALSE, body = body)
+
+    ## The page now calls `BiocBook::setup_python()` and runs through
+    ## `reticulate` while the book builds, so the book package must declare
+    ## both, or the build machines will not install them.
+    usethis::with_project(path(book), {
+        usethis::use_package("BiocBook", "Suggests")
+        usethis::use_package("reticulate", "Suggests")
+    }, quiet = TRUE)
 
     cli::cli_alert_info(cli::col_grey(
         "This page executes `python` on every render, including on the \\
