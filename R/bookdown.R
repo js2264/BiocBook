@@ -501,7 +501,7 @@ from_bookdown <- function(
     ))
 
     list(
-        source = bd$path,
+        source = .bookdown_source(bd$path),
         style = style,
         format = bd$format,
         files = data.frame(from = files, to = file.path("inst", targets)),
@@ -998,6 +998,24 @@ from_bookdown <- function(
     todo
 }
 
+## How MIGRATION.md names the bookdown project: the URL of the git repository
+## it comes from (without credentials), or its folder name. Never its local
+## path, which would end up committed to the book's repository.
+.bookdown_source <- function(path) {
+    path <- normalizePath(path)
+    folder <- sprintf("`%s`", basename(path))
+    root <- tryCatch(normalizePath(gert::git_find(path)), error = function(e) NULL)
+    if (is.null(root)) return(folder)
+    remotes <- tryCatch(gert::git_remote_list(repo = root), error = function(e) NULL)
+    url <- if (is.null(remotes)) NA_character_ else remotes$url[match("origin", remotes$name)]
+    if (is.na(url) || !nzchar(url)) return(folder)
+    url <- sub("^git@([^:/]+):", "https://\\1/", url)
+    url <- sub("^(https?://)[^/@]*@", "\\1", url)
+    url <- sub("\\.git$", "", url)
+    if (identical(root, path)) return(sprintf("<%s>", url))
+    sprintf("`%s` of <%s>", substring(path, nchar(root) + 2L), url)
+}
+
 .write_migration_report <- function(report, book) {
     rules <- if (length(report$rules)) {
         c("| Rule | Applied |", "|---|---:|", sprintf("| %s | %d |", names(report$rules), report$rules))
@@ -1009,7 +1027,7 @@ from_bookdown <- function(
         "# Migration from bookdown",
         "",
         sprintf(
-            "This book was converted from the bookdown project `%s` by `BiocBook::from_bookdown()` (BiocBook %s), with the `%s` style%s.",
+            "This book was converted from the bookdown project %s by `BiocBook::from_bookdown()` (BiocBook %s), with the `%s` style%s.",
             report$source, utils::packageVersion("BiocBook"), report$style,
             if (is.na(report$format)) "" else sprintf(" (output format: `%s`)", report$format)
         ),

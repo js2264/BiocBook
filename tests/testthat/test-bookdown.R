@@ -124,6 +124,27 @@ test_that("from_bookdown() reports what still needs a human", {
     expect_false(       any(grepl("@sec-x`", todo, fixed = TRUE)))
     expect_false(       any(grepl("\\@ref(intro)", todo, fixed = TRUE)))
 
+    ## The report is committed: it does not hold local paths
+    expect_false(       any(grepl(normalizePath(test_path("fixtures")), report, fixed = TRUE)))
+
+})
+
+test_that("from_bookdown() names the bookdown project by its git remote or folder", {
+
+    d <- tempfile("bookdown-src")
+    dir.create(file.path(d, "book"), recursive = TRUE)
+    on.exit(unlink(d, recursive = TRUE, force = TRUE), add = TRUE)
+    expect_identical(   .bookdown_source(d), sprintf("`%s`", basename(d)))
+    gert::git_init(d)
+    expect_identical(   .bookdown_source(d), sprintf("`%s`", basename(d)))
+
+    ## Credentials and `.git` are dropped, ssh remotes become https URLs
+    gert::git_remote_add("https://someone:t0ken@github.com/owner/repo.git", name = "origin", repo = d)
+    expect_identical(   .bookdown_source(d), "<https://github.com/owner/repo>")
+    expect_identical(   .bookdown_source(file.path(d, "book")), "`book` of <https://github.com/owner/repo>")
+    gert::git_remote_set_url("git@github.com:owner/repo.git", remote = "origin", repo = d)
+    expect_identical(   .bookdown_source(d), "<https://github.com/owner/repo>")
+
 })
 
 test_that("from_bookdown() only applies the rules of the chosen style", {
