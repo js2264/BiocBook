@@ -18,6 +18,8 @@
 #' - `setup_python()`: provision and activate the book's `conda` environment
 #'   from `inst/requirements.yml`. Call it from any page that needs
 #'   `python`.
+#' - `python_envs()`: list the `conda` environments `setup_python()` has
+#'   cached on this machine, and remove the ones that are no longer needed.
 #' - `micromamba()`: path to the `micromamba` binary the book provisions with,
 #'   downloading a pinned, checksummed copy on first use if none is present.
 #'
@@ -27,8 +29,23 @@
 #' `PATH`, then in `BiocBook`'s cache, and only then downloads it. 
 #' On a build machine that has no `conda` at all (which includes the
 #' `r-universe` build image Bioconductor is migrating to), it is what makes
-#' the book buildable. On GitHub Actions, the book's `Docker` image installs 
-#' it up front
+#' the book buildable. The book's `Docker` image downloads it while the image
+#' is built, and keeps it, together with the book's environment.
+#'
+#' @section Cached environments:
+#'
+#' Environments live under `BiocBook`'s cache
+#' (`tools::R_user_dir("BiocBook", "cache")`), in a folder named after the
+#' `name:` declared in `requirements.yml` followed by a short hash of the file
+#' itself, e.g. `envs/BiocBook-3f2a9c1b7d4e`. An environment is therefore
+#' re-used for as long as `requirements.yml` is unchanged: editing the file
+#' (adding, removing or re-pinning a package) gives a new environment on the
+#' next render, and two books only ever share an environment when they declare
+#' exactly the same thing.
+#'
+#' Older environments are not deleted automatically, since another book on the
+#' same machine may still use them. `python_envs()` lists them with their size,
+#' and `python_envs(remove = ...)` deletes them.
 #'
 #' @section Engines:
 #'
@@ -43,6 +60,18 @@
 #' -- and, decisively, the Bioconductor builders provide `python3` but not
 #' `jupyter`, so a `jupyter` page cannot be rendered there at all.
 #'
+#' @section matplotlib on the Bioconductor images:
+#'
+#' `matplotlib` >= 3.11, as built by `conda-forge`, links `libraqm`, which
+#' needs a more recent `harfbuzz` than the Bioconductor images (Ubuntu 24.04)
+#' ship. The `R` session has already loaded the system's `harfbuzz`
+#' when a page starts rendering, and a process cannot load a second library
+#' under the same name: `import matplotlib` then fails with
+#' `undefined symbol: hb_ft_font_get_ft_face`, directly or through any package
+#' that uses it. Importing `python` packages before attaching `R` packages does
+#' not help. Pin it below 3.11 in `inst/requirements.yml` instead, e.g.
+#' `- matplotlib-base=3.10`.
+#'
 #' @param requirements Path to a `conda` environment file. If `NULL`,
 #'   `inst/requirements.yml` is located by walking up from the working directory
 #'   to the folder holding `_quarto.yml`, which works both while `quarto`
@@ -50,7 +79,8 @@
 #' @param envname Name of the `conda` environment to create or re-use. If
 #'   `NULL`, the `name:` declared in the environment file is used.
 #' @param prefix Full path of the `conda` environment. If `NULL`, a path under
-#'   `BiocBook`'s cache is derived from `envname`. Environments are always
+#'   `BiocBook`'s cache is derived from `envname` and from a hash of the
+#'   `requirements` file (see "Cached environments"). Environments are always
 #'   addressed by path rather than by name, since several `conda` root
 #'   prefixes may each hold an environment of the same name.
 #' @param conda Path to the `conda`, `mamba` or `micromamba` binary to
@@ -58,11 +88,18 @@
 #' @param version Pinned `micromamba` release to use, as
 #'   `"<version>-<build>"`. Bump it here rather than tracking `latest`.
 #' @param quiet Whether to suppress progress messages.
+#' @param remove Names of cached environments to delete, as listed by
+#'   `python_envs()`. A name without its hash suffix (e.g. `"BiocBook"`)
+#'   matches every environment created from a `requirements.yml` declaring
+#'   that `name:`, and `"all"` deletes every cached environment.
 #'
 #' @return
 #'
 #' `setup_python()` invisibly returns the path of the environment it
 #' activated, or of the interpreter that was already configured.
+#' `python_envs()` returns a tibble with one row per cached environment
+#' (`name`, `path`, `size_mb`, `modified`), or, when `remove` is set, the rows
+#' of the environments it deleted, invisibly.
 #' `add_python_chapter()` invisibly returns `book`.
 #'
 #' @examples
@@ -74,6 +111,9 @@
 #' add_chapter(bb, title = "Chapitre Un", open = FALSE)
 #' add_python_chapter(bb, title = "Chapitre Deux", open = FALSE)
 #' unlink(bookname, recursive = TRUE)
+#'
+#' ## `conda` environments cached on this machine
+#' python_envs()
 NULL
 
 #' @rdname BiocBook-python
@@ -133,7 +173,7 @@ setup_python <- function(
     ## of the same name can exist under several `conda` root prefixes at once,
     ## and `reticulate` then warns and picks the first it happens to list --
     ## which may not be this book's.
-    if (is.null(prefix)) prefix <- .book_env_prefix(envname)
+    if (is.null(prefix)) prefix <- .book_env_prefix(envname, requirements)
 
     if (dir.exists(prefix)) {
         cli::cli_alert_success(cli::col_grey(
@@ -171,8 +211,76 @@ setup_python <- function(
 ## Book environments live under BiocBook's own cache, so that a book always
 ## resolves its own environment rather than a same-named one belonging to
 ## something else.
-.book_env_prefix <- function(envname) {
-    file.path(tools::R_user_dir("BiocBook", which = "cache"), "envs", envname)
+##
+## Key the environment on the requirements file itself: editing the file
+## must produce a new environment, and two books only share one when they
+## declare exactly the same thing. Machines that build every day (e.g. the
+## Bioconductor builders) would otherwise keep re-using whatever environment
+## the first build created, whatever `requirements.yml` now says.
+.book_env_prefix <- function(envname, requirements = NULL) {
+    if (!is.null(requirements)) {
+        envname <- paste(envname, substr(.sha256(requirements), 1, 12), sep = "-")
+    }
+    file.path(.book_envs_root(), envname)
+}
+
+.book_envs_root <- function() {
+    file.path(tools::R_user_dir("BiocBook", which = "cache"), "envs")
+}
+
+#' @rdname BiocBook-python
+#' @export
+
+python_envs <- function(remove = NULL) {
+
+    envs <- .list_book_envs()
+    if (is.null(remove)) return(envs)
+
+    ## A bare `name:` (no hash suffix) matches every environment built from a
+    ## requirements file declaring it, i.e. every past version of a book's
+    ## environment.
+    hit <- if (identical(remove, "all")) {
+        rep(TRUE, nrow(envs))
+    } else {
+        envs$name %in% remove | sub("-[0-9a-f]{12}$", "", envs$name) %in% remove
+    }
+    if (!any(hit)) {
+        cli::cli_alert_info(cli::col_grey(
+            "No cached `conda` environment matches {.val {remove}}."
+        ))
+        return(invisible(envs[hit, ]))
+    }
+    unlink(envs$path[hit], recursive = TRUE, force = TRUE)
+    cli::cli_alert_success(cli::col_grey(
+        "Removed {sum(hit)} cached `conda` environment{?s}: {.file {envs$name[hit]}}"
+    ))
+    invisible(envs[hit, ])
+}
+
+.list_book_envs <- function(root = .book_envs_root()) {
+    paths <- if (dir.exists(root)) {
+        list.dirs(root, full.names = TRUE, recursive = FALSE)
+    } else {
+        character(0)
+    }
+    ## `conda-meta/history` is rewritten by every install into the environment,
+    ## so it dates the environment's content better than its folder does
+    history <- file.path(paths, "conda-meta", "history")
+    stamps <- as.character(ifelse(file.exists(history), history, paths))
+    modified <- file.info(stamps)$mtime
+    tibble::tibble(
+        name = basename(paths),
+        path = paths,
+        size_mb = vapply(paths, .dir_size_mb, numeric(1), USE.NAMES = FALSE),
+        modified = modified
+    )
+}
+
+.dir_size_mb <- function(path) {
+    files <- list.files(
+        path, recursive = TRUE, full.names = TRUE, all.files = TRUE, no.. = TRUE
+    )
+    round(sum(file.size(files), na.rm = TRUE) / 1024^2, 1)
 }
 
 ## Deliberately `conda create` rather than `conda env create -f <file>`.
@@ -234,7 +342,13 @@ add_python_chapter <- function(
 
     ## The `R` chunk is not decoration: it is what binds the page to the knitr
     ## engine, and therefore to reticulate rather than to a Jupyter kernel.
+    ## `engine: knitr` says the same thing explicitly, so the page stays on
+    ## knitr even if that chunk is later deleted.
     body <- glue::glue(
+        "---\n",
+        "engine: knitr\n",
+        "---\n",
+        "\n",
         "# {title}\n",
         "\n",
         "```{{r}}\n",
@@ -249,6 +363,14 @@ add_python_chapter <- function(
     )
 
     full_path <- .add_page(book, title, file, position, open = FALSE, body = body)
+
+    ## The page now calls `BiocBook::setup_python()` and runs through
+    ## `reticulate` while the book builds, so the book package must declare
+    ## both, or the build machines will not install them.
+    usethis::with_project(path(book), {
+        usethis::use_package("BiocBook", "Suggests")
+        usethis::use_package("reticulate", "Suggests")
+    }, quiet = TRUE)
 
     cli::cli_alert_info(cli::col_grey(
         "This page executes `python` on every render, including on the \\

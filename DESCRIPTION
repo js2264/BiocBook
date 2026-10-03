@@ -8,7 +8,7 @@ Description:
     3) publish (deploy an online book to disseminate the compendium), and 4) 
     version (automatically generate specific online book versions 
     and Docker images for specific Bioconductor releases). 
-Version: 1.11.1
+Version: 1.11.3
 Date: 2023-08-03
 Authors@R: 
     person(
@@ -21,6 +21,7 @@ Depends:
     R (>= 4.3)
 Imports: 
     BiocGenerics, 
+    desc, 
     digest, 
     pak,
     cli, 
@@ -44,6 +45,7 @@ Imports:
     quarto,
     renv
 Suggests:
+    BiocManager,
     BiocStyle,
     knitr,
     testthat (>= 3.0.0),
@@ -63,9 +65,11 @@ Collate:
     'init.R'
     'BiocBook.R'
     'BiocBook-methods.R'
+    'bookdown.R'
     'check.R'
     'editing.R'
     'globals.R'
+    'llms.R'
     'micromamba.R'
     'pages.R'
     'python.R'

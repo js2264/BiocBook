@@ -1,0 +1,46 @@
+---
+title: "A mini bookdown book"
+subtitle: "Every rule from_bookdown() knows"
+author: "Jane Doe, John Smith"
+date: "`r Sys.Date()`"
+output:
+  msmbstyle::msmb_html_book:
+    highlight: tango
+    toc: TRUE
+    toc_depth: 1
+    split_by: chapter
+    margin_references: TRUE
+    css: style.css
+bibliography: [refs.bib]
+link-citations: yes
+---
+
+# Preamble
+
+```{r, echo = FALSE}
+options(digits = 4)
+```
+
+This mini book exercises every rewriting rule of
+[BiocBook](https://github.com/js2264/BiocBook). It is used to test
+`from_bookdown()`.
+
+```{r logo, fig.margin=TRUE, echo=FALSE, fig.cap="A logo."}
+knitr::include_graphics("./img/logo.png")
+```
+
+```{r env_0, echo = FALSE, message = FALSE}
+suppressPackageStartupMessages(library("tools"))
+library(utils)
+```
+
+```{r install, eval = FALSE}
+BiocManager::install("someone/somepkg")
+library(neverloaded)
+```
+
+```{r bib, include=FALSE}
+knitr::write_bib(c('base', 'knitr'), file = 'skeleton.bib')
+```
+
+The introduction is in chapter \@ref(intro), the annex in \@ref(sec-annex).

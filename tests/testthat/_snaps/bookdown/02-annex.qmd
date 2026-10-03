@@ -1,0 +1,16 @@
+# Annex {#sec-annex}
+
+```{r}
+#| include: false
+## bookdown ran every chapter in a single R session, quarto runs
+## each in its own: setup repeated by BiocBook::from_bookdown()
+options(digits = 4)
+suppressPackageStartupMessages(library("tools"))
+library(utils)
+```
+
+Back to the [-@sec-intro] – and to a missing section, [-@sec-nowhere].
+
+```{r si}
+sessionInfo()
+```

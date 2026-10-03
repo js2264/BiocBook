@@ -4,6 +4,7 @@
 \alias{micromamba}
 \alias{BiocBook-python}
 \alias{setup_python}
+\alias{python_envs}
 \title{Executing \code{python} code in a BiocBook}
 \usage{
 micromamba(version = .micromamba_version, quiet = FALSE)
@@ -14,6 +15,8 @@ setup_python(
   prefix = NULL,
   conda = micromamba()
 )
+
+python_envs(remove = NULL)
 }
 \arguments{
 \item{version}{Pinned \code{micromamba} release to use, as
@@ -30,16 +33,25 @@ renders a page and from a normal R session.}
 \code{NULL}, the \verb{name:} declared in the environment file is used.}
 
 \item{prefix}{Full path of the \code{conda} environment. If \code{NULL}, a path under
-\code{BiocBook}'s cache is derived from \code{envname}. Environments are always
+\code{BiocBook}'s cache is derived from \code{envname} and from a hash of the
+\code{requirements} file (see "Cached environments"). Environments are always
 addressed by path rather than by name, since several \code{conda} root
 prefixes may each hold an environment of the same name.}
 
 \item{conda}{Path to the \code{conda}, \code{mamba} or \code{micromamba} binary to
 provision with. Defaults to \code{micromamba()}, which finds or fetches one.}
+
+\item{remove}{Names of cached environments to delete, as listed by
+\code{python_envs()}. A name without its hash suffix (e.g. \code{"BiocBook"})
+matches every environment created from a \code{requirements.yml} declaring
+that \verb{name:}, and \code{"all"} deletes every cached environment.}
 }
 \value{
 \code{setup_python()} invisibly returns the path of the environment it
 activated, or of the interpreter that was already configured.
+\code{python_envs()} returns a tibble with one row per cached environment
+(\code{name}, \code{path}, \code{size_mb}, \code{modified}), or, when \code{remove} is set, the rows
+of the environments it deleted, invisibly.
 \code{add_python_chapter()} invisibly returns \code{book}.
 }
 \description{
@@ -55,8 +67,10 @@ within the book itself, building the \code{conda} environment declared in
 rather than relying on one being present.
 \itemize{
 \item \code{setup_python()}: provision and activate the book's \code{conda} environment
-from \code{inst/requirements.yml}. Call it from the first page that needs
-\code{python}; later pages re-activate it with \code{reticulate::use_condaenv()}.
+from \code{inst/requirements.yml}. Call it from any page that needs
+\code{python}.
+\item \code{python_envs()}: list the \code{conda} environments \code{setup_python()} has
+cached on this machine, and remove the ones that are no longer needed.
 \item \code{micromamba()}: path to the \code{micromamba} binary the book provisions with,
 downloading a pinned, checksummed copy on first use if none is present.
 }
@@ -67,9 +81,26 @@ self-contained binary: no \code{conda} installation, no base environment, no
 \code{PATH}, then in \code{BiocBook}'s cache, and only then downloads it.
 On a build machine that has no \code{conda} at all (which includes the
 \code{r-universe} build image Bioconductor is migrating to), it is what makes
-the book buildable. On GitHub Actions, the book's \code{Docker} image installs
-it up front
+the book buildable. The book's \code{Docker} image downloads it while the image
+is built, and keeps it, together with the book's environment.
 }
+\section{Cached environments}{
+
+
+Environments live under \code{BiocBook}'s cache
+(\code{tools::R_user_dir("BiocBook", "cache")}), in a folder named after the
+\verb{name:} declared in \code{requirements.yml} followed by a short hash of the file
+itself, e.g. \verb{envs/BiocBook-3f2a9c1b7d4e}. An environment is therefore
+re-used for as long as \code{requirements.yml} is unchanged: editing the file
+(adding, removing or re-pinning a package) gives a new environment on the
+next render, and two books only ever share an environment when they declare
+exactly the same thing.
+
+Older environments are not deleted automatically, since another book on the
+same machine may still use them. \code{python_envs()} lists them with their size,
+and \code{python_envs(remove = ...)} deletes them.
+}
+
 \section{Engines}{
 
 
@@ -85,6 +116,20 @@ it keeps the book's house style (\code{collapse}, \code{comment}, \code{fig.alig
 \code{jupyter}, so a \code{jupyter} page cannot be rendered there at all.
 }
 
+\section{matplotlib on the Bioconductor images}{
+
+
+\code{matplotlib} >= 3.11, as built by \code{conda-forge}, links \code{libraqm}, which
+needs a more recent \code{harfbuzz} than the Bioconductor images (Ubuntu 24.04)
+ship. The \code{R} session has already loaded the system's \code{harfbuzz}
+when a page starts rendering, and a process cannot load a second library
+under the same name: \verb{import matplotlib} then fails with
+\verb{undefined symbol: hb_ft_font_get_ft_face}, directly or through any package
+that uses it. Importing \code{python} packages before attaching \code{R} packages does
+not help. Pin it below 3.11 in \code{inst/requirements.yml} instead, e.g.
+\code{- matplotlib-base=3.10}.
+}
+
 \examples{
 ## In practice, you should not use `.local` argument. 
 unique_id <- as.numeric(Sys.time())
@@ -94,4 +139,7 @@ add_preamble(bb, open = FALSE)
 add_chapter(bb, title = "Chapitre Un", open = FALSE)
 add_python_chapter(bb, title = "Chapitre Deux", open = FALSE)
 unlink(bookname, recursive = TRUE)
+
+## `conda` environments cached on this machine
+python_envs()
 }

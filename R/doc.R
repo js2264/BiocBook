@@ -11,6 +11,11 @@
 #' `add_chapter()` and `add_preamble` are convenient functions 
 #' to add pages to a `BiocBook`. 
 #' 
+#' `add_python_chapter()` adds a page wired to execute `python` code while the
+#' book builds (see \code{\link{BiocBook-python}}). It also declares `BiocBook`
+#' and `reticulate` in the `Suggests` field of the book `DESCRIPTION`, so that
+#' the build machines install them.
+#' 
 #' @section `edit_*` functions:
 #' 
 #' Several accessory files can be manually edited: 

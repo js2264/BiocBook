@@ -83,6 +83,11 @@ sections for extended description.
 
 \code{add_chapter()} and \code{add_preamble} are convenient functions
 to add pages to a \code{BiocBook}.
+
+\code{add_python_chapter()} adds a page wired to execute \code{python} code while the
+book builds (see \code{\link{BiocBook-python}}). It also declares \code{BiocBook}
+and \code{reticulate} in the \code{Suggests} field of the book \code{DESCRIPTION}, so that
+the build machines install them.
 }
 
 \section{\verb{edit_*} functions}{

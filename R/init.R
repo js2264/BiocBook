@@ -246,10 +246,15 @@ quick_init <- function(new_package, user) {
     cli::cli_alert_success(cli::col_grey("Filled out `{cli::col_cyan(path)}` fields"))
     cli::cli_alert_info(cli::col_grey("Please finish editing the `{cli::col_cyan(path)}` fields, including the `Welcome` section"))
     Sys.sleep(1)
+    # ---- in `requirements.yml` (templates >= 1.1.0 name the book's conda env after it)
+    path <- file.path("inst", "requirements.yml")
+    if (file.exists(file.path(repo, path))) {
+        .fix_placeholders(file.path(repo, path), pkg = repo, usr = user)
+    }
 
 }
 
-.setup_git <- function(repo, gitsig) {
+.setup_git <- function(repo, gitsig, message = NULL) {
 
     gert::git_init(path = repo) 
     cli::cli_alert_info(cli::col_grey("The following files need to be committed: "))
@@ -261,10 +266,11 @@ quick_init <- function(new_package, user) {
 
     ## Commit all changes to local git repo
     version <- read.dcf(file.path(repo, "DESCRIPTION"))[1,"BiocBookTemplate"]
+    if (is.null(message)) message <- paste0("Init BiocBook from template version ", version[[1]])
     staged <- gert::git_add(files = f$file, repo = repo)
     commit_sha <- gert::git_commit(
         repo = repo, 
-        message = paste0("Init BiocBook from template version ", version[[1]]), 
+        message = message, 
         author = gitsig
     )
 
