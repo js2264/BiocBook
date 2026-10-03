@@ -116,6 +116,20 @@ it keeps the book's house style (\code{collapse}, \code{comment}, \code{fig.alig
 \code{jupyter}, so a \code{jupyter} page cannot be rendered there at all.
 }
 
+\section{matplotlib on the Bioconductor images}{
+
+
+\code{matplotlib} >= 3.11, as built by \code{conda-forge}, links \code{libraqm}, which
+needs a more recent \code{harfbuzz} than the Bioconductor images (Ubuntu 24.04)
+ship. The \code{R} session has already loaded the system's \code{harfbuzz}
+when a page starts rendering, and a process cannot load a second library
+under the same name: \verb{import matplotlib} then fails with
+\verb{undefined symbol: hb_ft_font_get_ft_face}, directly or through any package
+that uses it. Importing \code{python} packages before attaching \code{R} packages does
+not help. Pin it below 3.11 in \code{inst/requirements.yml} instead, e.g.
+\code{- matplotlib-base=3.10}.
+}
+
 \examples{
 ## In practice, you should not use `.local` argument. 
 unique_id <- as.numeric(Sys.time())

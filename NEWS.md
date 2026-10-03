@@ -23,6 +23,15 @@
 - The template's question and answer callouts are styled again: `quarto`
   (>= 1.3) drops extra classes from callouts, so they are now wrapped in a
   `.callout-question` or `.callout-answer` div.
+- The template's `Dockerfile` retries the `quarto` download on transient
+  errors (e.g. HTTP 503 from GitHub), which failed a book's build before
+  anything was installed.
+
+## Documentation
+
+- `?BiocBook-python` and the template's `requirements.yml` explain why
+  `matplotlib` >= 3.11 cannot be imported on the Bioconductor images, and how
+  to pin it.
 
 # BiocBook 1.11.2
 

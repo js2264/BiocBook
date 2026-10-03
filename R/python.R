@@ -60,6 +60,18 @@
 #' -- and, decisively, the Bioconductor builders provide `python3` but not
 #' `jupyter`, so a `jupyter` page cannot be rendered there at all.
 #'
+#' @section matplotlib on the Bioconductor images:
+#'
+#' `matplotlib` >= 3.11, as built by `conda-forge`, links `libraqm`, which
+#' needs a more recent `harfbuzz` than the Bioconductor images (Ubuntu 24.04)
+#' ship. The `R` session has already loaded the system's `harfbuzz`
+#' when a page starts rendering, and a process cannot load a second library
+#' under the same name: `import matplotlib` then fails with
+#' `undefined symbol: hb_ft_font_get_ft_face`, directly or through any package
+#' that uses it. Importing `python` packages before attaching `R` packages does
+#' not help. Pin it below 3.11 in `inst/requirements.yml` instead, e.g.
+#' `- matplotlib-base=3.10`.
+#'
 #' @param requirements Path to a `conda` environment file. If `NULL`,
 #'   `inst/requirements.yml` is located by walking up from the working directory
 #'   to the folder holding `_quarto.yml`, which works both while `quarto`
