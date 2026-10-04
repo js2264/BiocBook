@@ -10,6 +10,7 @@ name: rworkflows
     branches:
     - devel
     - RELEASE_**
+  workflow_dispatch:
 
 jobs:
   rworkflows:

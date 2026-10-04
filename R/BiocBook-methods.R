@@ -73,7 +73,7 @@ setMethod("chapters", signature("BiocBook"), function(object) {
         }
         chaplines <- chaplines[grepl("^# ", chaplines)]
         head <- gsub("^# ", "", chaplines[1])
-        head <- gsub(" \\{-\\}", "", head)
+        head <- gsub("\\s*\\{[^}]*\\}\\s*$", "", head)
     }) |> unlist()
     chapters
 })

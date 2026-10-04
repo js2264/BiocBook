@@ -96,3 +96,108 @@ test_that("the pinned micromamba release is fully specified", {
     expect_match(       BiocBook:::.micromamba_version, "^[0-9.]+-[0-9]+$")
 
 })
+
+test_that("conda environments are keyed on the contents of requirements.yml", {
+
+    req <- tempfile(fileext = ".yml")
+    on.exit(unlink(req), add = TRUE)
+    writeLines(c("name:", "    BiocBook", "dependencies:", "    - python=3.12"), req)
+
+    ## The same file always gives the same environment...
+    p1 <- BiocBook:::.book_env_prefix("BiocBook", req)
+    expect_identical(   BiocBook:::.book_env_prefix("BiocBook", req), p1)
+    expect_match(       basename(p1), "^BiocBook-[0-9a-f]{12}$")
+
+    ## ... and a one-character edit gives a new one
+    writeLines(c("name:", "    BiocBook", "dependencies:", "    - python=3.11"), req)
+    p2 <- BiocBook:::.book_env_prefix("BiocBook", req)
+    expect_false(       identical(p1, p2))
+    expect_identical(   dirname(p1), dirname(p2))
+
+    ## Without a requirements file, the name alone is used
+    expect_identical(   basename(BiocBook:::.book_env_prefix("BiocBook")), "BiocBook")
+
+})
+
+test_that("setup_python() leaves an already configured python alone", {
+
+    ## The book's Docker image sets RETICULATE_PYTHON: nothing must be
+    ## provisioned, whatever requirements.yml says
+    fake <- tempfile(); file.create(fake)
+    old <- Sys.getenv("RETICULATE_PYTHON", unset = NA)
+    Sys.setenv(RETICULATE_PYTHON = fake)
+    on.exit({
+        if (is.na(old)) Sys.unsetenv("RETICULATE_PYTHON")
+        else Sys.setenv(RETICULATE_PYTHON = old)
+        unlink(fake)
+    }, add = TRUE)
+    expect_identical(   suppressMessages(setup_python(conda = "/nonexistent")), fake)
+
+})
+
+test_that("python_envs() lists and removes cached environments", {
+
+    cache <- tempfile("cache")
+    old <- Sys.getenv("R_USER_CACHE_DIR", unset = NA)
+    Sys.setenv(R_USER_CACHE_DIR = cache)
+    on.exit({
+        if (is.na(old)) Sys.unsetenv("R_USER_CACHE_DIR")
+        else Sys.setenv(R_USER_CACHE_DIR = old)
+        unlink(cache, recursive = TRUE)
+    }, add = TRUE)
+
+    expect_identical(   nrow(python_envs()), 0L)
+
+    envs <- file.path(BiocBook:::.book_envs_root(),
+        c("BiocBook-0123456789ab", "BiocBook-ba9876543210", "OHCA-0123456789ab"))
+    for (env in envs) {
+        dir.create(file.path(env, "conda-meta"), recursive = TRUE)
+        writeLines("==> 2026-10-02 <==", file.path(env, "conda-meta", "history"))
+    }
+    listed <- python_envs()
+    expect_setequal(    listed$name, basename(envs))
+    expect_named(       listed, c("name", "path", "size_mb", "modified"))
+    expect_s3_class(    listed$modified, "POSIXct")
+
+    ## Unknown names are a no-op
+    expect_identical(   nrow(suppressMessages(python_envs(remove = "nope"))), 0L)
+    expect_identical(   nrow(python_envs()), 3L)
+
+    ## A bare `name:` matches every generation of that environment
+    removed <- suppressMessages(python_envs(remove = "BiocBook"))
+    expect_setequal(    removed$name, c("BiocBook-0123456789ab", "BiocBook-ba9876543210"))
+    expect_identical(   python_envs()$name, "OHCA-0123456789ab")
+
+    suppressMessages(python_envs(remove = "all"))
+    expect_identical(   nrow(python_envs()), 0L)
+
+})
+
+test_that("add_python_chapter() declares BiocBook and reticulate", {
+
+    tmpdir <- paste0(paste0(
+        sample(LETTERS, 5, replace = TRUE),
+        sample(c(seq(0, 9)), 5, replace = TRUE),
+        collapse = ""
+    ))
+    quick_init(tmpdir, user = "dummy")
+    on.exit(unlink(tmpdir, recursive = TRUE, force = TRUE), add = TRUE)
+
+    ## Books created from older templates do not list them
+    desc_f <- file.path(tmpdir, "DESCRIPTION")
+    d <- read.dcf(desc_f)
+    d[, "Suggests"] <- "knitr"
+    write.dcf(d, desc_f)
+
+    bb <- BiocBook(tmpdir)
+    add_python_chapter(bb, title = "Py chapter", open = FALSE)
+    suggests <- read.dcf(desc_f, fields = "Suggests")[1, 1]
+    expect_match(       suggests, "\\bBiocBook\\b")
+    expect_match(       suggests, "\\breticulate\\b")
+
+    ## The page is pinned to knitr, and its title is still picked up
+    page <- readLines(file.path(tmpdir, "inst", "pages", "py-chapter.qmd"))
+    expect_true(        "engine: knitr" %in% page)
+    expect_true(        "Py chapter" %in% names(chapters(bb)))
+
+})

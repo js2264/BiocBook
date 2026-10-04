@@ -1,0 +1,49 @@
+# (PART) Basics {-}
+
+# Introduction {#intro}
+
+As shown by @Doe2020, see Figure \@ref(fig:scatter) and Table \@ref(tab:tbl).
+
+```{r scatter, fig.cap = "A scatter plot.", fig.fullwidth = TRUE}
+plot(1:10)
+```
+
+```{r tbl}
+library(fixturepkg)
+knitr::kable(head(iris), caption = "A table.")
+```
+
+The equation \@ref(eq:sq) is
+
+$$
+f(x) = x^2 (\#eq:sq)
+$$
+
+`r msmbstyle::question_begin()`
+
+What is $f(2)$?
+
+`r msmbstyle::question_end()`
+
+`r solution_begin()`
+
+```{r}
+4
+```
+
+`r solution_end()`
+
+```{r margin_off, fig.margin=FALSE}
+plot(1)
+```
+
+```{r download, cache = TRUE}
+download.file("https://example.org/data.csv", "data.csv")
+```
+
+The code `\@ref(x)` in a chunk is left alone:
+
+```{r}
+## see \@ref(intro)
+x <- 1
+```

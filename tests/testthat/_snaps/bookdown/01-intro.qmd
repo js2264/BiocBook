@@ -1,0 +1,65 @@
+# Introduction {#sec-intro}
+
+```{r}
+#| include: false
+## bookdown ran every chapter in a single R session, quarto runs
+## each in its own: setup repeated by BiocBook::from_bookdown()
+options(digits = 4)
+suppressPackageStartupMessages(library("tools"))
+library(utils)
+```
+
+As shown by @Doe2020, see @fig-scatter and @tbl-tbl.
+
+```{r fig-scatter, fig.cap = "A scatter plot."}
+#| column: page
+plot(1:10)
+```
+
+```{r tbl-tbl}
+library(fixturepkg)
+knitr::kable(head(iris), caption = "A table.")
+```
+
+The @eq-sq is
+
+$$
+f(x) = x^2
+$$ {#eq-sq}
+
+:::: {.callout-question}
+::: {.callout-note}
+
+#### Question
+
+What is $f(2)$?
+
+:::
+::::
+
+:::: {.callout-answer}
+::: {.callout-note collapse="true"}
+
+#### Solution
+
+```{r}
+4
+```
+
+:::
+::::
+
+```{r margin_off}
+plot(1)
+```
+
+```{r download, cache = TRUE}
+download.file("https://example.org/data.csv", "data.csv")
+```
+
+The code `\@ref(x)` in a chunk is left alone:
+
+```{r}
+## see \@ref(intro)
+x <- 1
+```
