@@ -26,6 +26,9 @@
 - The template's `Dockerfile` retries the `quarto` download on transient
   errors (e.g. HTTP 503 from GitHub), which failed a book's build before
   anything was installed.
+- The template's `vignettes/Makefile` is portable again: template 1.1.0
+  switched the `llms` profile on with GNU make extensions (`:=` and
+  `$(shell ...)`), which `R CMD check` reports as a warning in every book.
 
 ## Documentation
 
