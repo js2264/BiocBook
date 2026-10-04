@@ -1,43 +1,64 @@
 #' @rdname BiocBook-bookdown
 #' @name BiocBook-bookdown
-#' @title Migrating a `bookdown` book to a BiocBook
+#' @title Converting a `bookdown` book to a BiocBook
 #'
 #' @description
 #'
-#' `from_bookdown()` turns a `bookdown` project into a new `BiocBook` in one
-#' call. It creates the book package from the `BiocBook` template, as `init()`
-#' does, and converts the `bookdown` project into it:
+#' `from_bookdown()` converts a `bookdown` project into a `BiocBook` in place:
+#' in its own folder and, when that folder is a git repository, on its current
+#' branch, one commit per step. Run it on a branch of its own: the conversion
+#' can then be reviewed step by step, and squashed or rebased onto the main
+#' branch like any other change.
 #'
-#' - **Pages**: `index.Rmd` becomes the landing page (`inst/index.qmd`), and
-#'   every chapter a page in `inst/pages/`, keeping its file name (e.g.
-#'   `10-raw.Rmd` becomes `inst/pages/10-raw.qmd`). They are listed in
-#'   `_book.yml` in the `bookdown` order, with its parts and appendices.
-#' - **Syntax**: `bookdown` cross-references and figure layout options, and
-#'   `msmbstyle` question and solution blocks, are rewritten for `quarto`
-#'   (outside code chunks, see "Rewriting rules").
-#' - **Assets**: bibliography files and CSS are copied to `inst/assets/`, and
-#'   asset folders (e.g. `img/`) to `inst/pages/`, so that relative paths in
-#'   chapters keep working. The `bookdown` output options are translated
-#'   where `quarto` has an equivalent.
-#' - **DESCRIPTION**: title, description and authors are taken from the
-#'   `index.Rmd` header, and the packages the pages use are added to
-#'   `Imports`.
-#' - **Shared session**: `bookdown` runs every chapter in a single R session
-#'   (unless `new_session: yes`), while `quarto` renders each chapter in its
-#'   own. The `library()`, `require()` and `options()` calls of `index.Rmd`
-#'   (and the `before_chapter_script`) are therefore repeated in a hidden
-#'   chunk at the top of each chapter.
+#' 1. **Add the BiocBook template**: `DESCRIPTION`, the `Dockerfile`, the GitHub
+#'    workflows, the `quarto` configuration (`inst/_quarto.yml`, `inst/assets/`)
+#'    and `vignettes/Makefile`, filled in as `init()` does. The book keeps its
+#'    `README.md`, which gets the BiocBook badges, and its `.gitignore` and
+#'    `.Rbuildignore`, which get the entries of the template.
+#' 2. **Move the pages to `inst/`**: `index.Rmd` becomes `inst/index.qmd`, and
+#'    every chapter a page of `inst/pages/` that keeps its file name (e.g.
+#'    `10-raw.Rmd` becomes `inst/pages/10-raw.qmd`). Asset folders (e.g.
+#'    `img/`) move to `inst/pages/` too, so that the relative paths of the
+#'    chapters keep working. Nothing else changes, so that git follows every
+#'    file.
+#' 3. **Move the book settings to `_book.yml` and `_format.yml`**: the title,
+#'    authors and list of chapters, with their parts and appendices, go to
+#'    `_book.yml`; the bibliographies, the CSS and the output options `quarto`
+#'    has an equivalent for go to `_format.yml`. Bibliography files and CSS move
+#'    to `inst/assets/`.
+#' 4. **Remove the bookdown build**: `_bookdown.yml`, `_output.yml`, the
+#'    rendered book (`output_dir`), the intermediate files of `bookdown`, and
+#'    the `Makefile`, shell scripts or GitHub workflows that render the book
+#'    with `bookdown`.
+#' 5. **Use the BiocBook landing page**: the preamble of `index.Rmd` becomes the
+#'    welcome part of the landing page of the template.
+#' 6. **Rewrite cross-references** for `quarto` (see "Rewriting rules").
+#' 7. **Turn questions and solutions into callouts**, in `msmbstyle` books.
+#' 8. **Translate figure layout options**.
+#' 9. **Set up every chapter as `index.Rmd` did**: `bookdown` runs every
+#'    chapter in a single R session (unless `new_session: yes`), while `quarto`
+#'    renders each chapter in its own. The `library()`, `require()` and
+#'    `options()` calls of `index.Rmd` (and the `before_chapter_script`) are
+#'    therefore repeated in a hidden chunk at the top of each chapter.
+#' 10. **Describe the book in `DESCRIPTION`**: title, description and authors
+#'    from the `index.Rmd` header, the packages the pages use in `Imports`, and
+#'    the licence of the book: a Creative Commons licence its pages link to,
+#'    its `LICENSE` file, or else the MIT licence of the template.
 #'
-#' `bookdown`'s `\@ref()` renders a number only, while `quarto`'s `@` 
-#' references render their own "Figure", "Table" or "Chapter": a type word right 
-#' before a reference is therefore dropped, and other references render their 
+#' A step with nothing to change is skipped. Rewrites leave code chunks, inline
+#' code and the blank lines of the book alone.
+#'
+#' `bookdown`'s `\@ref()` renders a number only, while `quarto`'s `@`
+#' references render their own "Figure", "Table" or "Chapter": a type word right
+#' before a reference is therefore dropped, and other references render their
 #' number only, as in `bookdown`.
 #'
 #' What still needs a human is listed in `MIGRATION.md`, at the root of the
-#' new book: downloads during the build, cached chunks, `knitr::write_bib()`
-#' calls, unresolved cross-references, dependencies that are not on CRAN or
-#' Bioconductor, and output options with no `quarto` equivalent. It also
-#' records how often each rewriting rule was applied.
+#' book, which is not committed: downloads during the build, cached chunks,
+#' `knitr::write_bib()` calls, unresolved cross-references, dependencies that
+#' are not on CRAN or Bioconductor, output options with no `quarto`
+#' equivalent, and files that are not part of a BiocBook. It also records how
+#' often each rewriting rule was applied. Delete it once done.
 #'
 #' @section Rewriting rules:
 #'
@@ -56,27 +77,31 @@
 #' | output option `margin_references: TRUE` | `citation-location: margin` |
 #'
 #' @param path Path to the `bookdown` project, i.e. the folder holding
-#'   `index.Rmd` (and optionally `_bookdown.yml`).
-#' @param new_package Name of the new book package, as in `init()`.
-#' @param user GitHub user or organization of the new book, used in the
-#'   template's links and `Docker` image name. Defaults to the user `init()`
-#'   logs in with (`"dummy"` with `.local = TRUE`).
+#'   `index.Rmd` (and optionally `_bookdown.yml`). When it is in a git
+#'   repository, it must be the root of the repository.
+#' @param package Name of the book package. Defaults to the `book_filename` of
+#'   `_bookdown.yml`, else to the name of the folder.
+#' @param user GitHub user or organization of the book, used in the links of
+#'   the template and in the name of its `Docker` image. Defaults to the owner
+#'   of the `origin` remote of the repository, when it is on GitHub, else to the
+#'   user of the GitHub token.
 #' @param style Syntax to convert: `"bookdown"`, `"msmbstyle"` (`bookdown`
 #'   with the `msmbstyle` question and solution blocks), or `"auto"` to detect
 #'   it from the output format and the pages.
 #' @param appendices Optional. Chapters to list as appendices of the new book
 #'   (file names, with or without extension), in addition to those following a
 #'   `# (APPENDIX)` header.
-#' @param push,skip_availability,.local As in `init()`. `skip_availability`
-#'   also skips checking that the dependencies of the book are on CRAN or
-#'   Bioconductor, which requires network access.
+#' @param commit Whether to commit each step, when `path` is a git repository.
+#'   Its working tree must then have no uncommitted changes.
+#' @param skip_availability Whether to skip checking that the dependencies of
+#'   the book are on CRAN or Bioconductor, which requires network access.
 #'
 #' @return A `BiocBook` object, invisibly.
 #'
 #' @seealso \code{\link{BiocBook}}
 #'
 #' @examples
-#' ## A minimal bookdown project
+#' ## A minimal bookdown project, in a git repository
 #' bd <- file.path(tempdir(), "bookdown-example")
 #' dir.create(bd)
 #' writeLines(c(
@@ -87,69 +112,78 @@
 #'     c("# Introduction {#intro}", "", "Some text."),
 #'     file.path(bd, "01-intro.Rmd")
 #' )
+#' gert::git_init(bd)
+#' gert::git_config_set("user.name", "Jane Doe", repo = bd)
+#' gert::git_config_set("user.email", "jane@example.com", repo = bd)
+#' gert::git_add(".", repo = bd)
+#' gert::git_commit("A bookdown book", repo = bd)
 #'
-#' ## In practice, you should not use `.local` argument.
-#' unique_id <- as.numeric(Sys.time())
-#' bookname <- paste(Sys.info()[['sysname']], unique_id, sep = '.')
-#' bb <- from_bookdown(bd, bookname, .local = TRUE, skip_availability = TRUE)
+#' ## Converted in place, one commit per step
+#' bb <- from_bookdown(bd, package = "myBook", user = "jane", skip_availability = TRUE)
 #' chapters(bb)
-#' readLines(file.path(bookname, "inst", "pages", "01-intro.qmd"))
-#' unlink(c(bd, bookname), recursive = TRUE)
+#' gert::git_log(repo = bd)$message
+#' unlink(bd, recursive = TRUE)
 NULL
 
 #' @rdname BiocBook-bookdown
 #' @export
 
 from_bookdown <- function(
-    path,
-    new_package,
+    path = ".",
+    package = NULL,
     user = NULL,
     style = c("auto", "bookdown", "msmbstyle"),
     appendices = NULL,
-    push = NA,
-    skip_availability = FALSE,
-    .local = FALSE
+    commit = TRUE,
+    skip_availability = FALSE
 ) {
 
     style <- match.arg(style)
 
-    ## Read the bookdown project before creating anything, so that a wrong
-    ## path fails early
+    ## Read the bookdown project, and check everything, before changing anything
+    if (file.exists(file.path(path, "inst", "_quarto.yml"))) cli::cli_abort(
+        "{.file {normalizePath(path)}} is already a {.pkg BiocBook}."
+    )
     bd <- .read_bookdown(path)
     if (identical(style, "auto")) style <- .bookdown_style(bd)
-
-    ## 0. Preflight checklist, as `init()`
-    checks <- .preflight_checks(new_package, skip_availability, .local)
-    if (is.null(user)) user <- checks[['gh_user']]
-
-    ## 1. Create new local repo copied from BiocBook.template archive
-    .init_folder(new_package, user)
-
-    ## 2. Convert the bookdown project into it
-    cli::cli_text("")
-    cli::cat_rule("Migrating the `bookdown` book", col = "cyan", line = 2)
-    report <- .convert_bookdown(bd, new_package, style, appendices, skip_availability)
-    .write_migration_report(report, new_package)
-
-    ## 3. Initiate local git repo
-    .setup_git(
-        new_package, checks[['gitsig']],
-        message = "Migrate from bookdown with BiocBook::from_bookdown()"
+    repo <- .bookdown_repo(bd$path, commit)
+    mig <- .bookdown_migration(
+        bd, style, appendices,
+        package = .bookdown_package(package, bd),
+        user = .bookdown_user(user, bd$path),
+        repo = repo,
+        skip_availability = skip_availability
     )
+    on.exit(unlink(dirname(mig$template), recursive = TRUE), add = TRUE)
 
-    ## 4. Syncing Github: create new repo, configure Pages, add remote, push
-    if (!is.null(checks[['PAT']])) {
-        .setup_github(new_package, checks[['gh_user']], checks[['PAT']], push)
+    cli::cli_text("")
+    cli::cat_rule("Converting the `bookdown` book", col = "cyan", line = 2)
+    steps <- list(
+        .bookdown_template_step, .bookdown_move_step, .bookdown_settings_step,
+        .bookdown_cleanup_step, .bookdown_landing_step, .bookdown_crossref_step,
+        .bookdown_callout_step, .bookdown_figure_step, .bookdown_setup_step,
+        .bookdown_description_step
+    )
+    for (step in steps) .bookdown_step(mig, step)
+    .write_migration_report(mig)
+
+    cli::cli_text("")
+    cli::cat_rule("Results", col = "cyan", line = 2)
+    if (is.null(repo)) {
+        cli::cli_alert_success("Converted {.file {bd$path}} to a BiocBook")
+    } else {
+        n <- length(mig$commits)
+        branch <- gert::git_branch(repo = repo)
+        cli::cli_alert_success(
+            "Converted {.file {bd$path}} to a BiocBook, in {n} commit{?s} on {.val {branch}}"
+        )
     }
-
-    ## 5. Wrap up info
     cli::cli_alert_info(cli::col_grey(
-        "Review {.file {file.path(new_package, 'MIGRATION.md')}}: it lists what \\
-        still needs to be done by hand."
+        "Review {.file MIGRATION.md}: it lists what still needs to be done by hand, and is not committed."
     ))
-    .wrap_up_info(new_package, .local)
+    cli::cli_text("")
 
-    invisible(BiocBook(new_package))
+    invisible(BiocBook(bd$path))
 }
 
 ## ---------------------------------------------------------------------------
@@ -228,6 +262,17 @@ from_bookdown <- function(
     if (any(qa)) "msmbstyle" else "bookdown"
 }
 
+## The name bookdown gives the book: its `book_filename`, without extension
+.bookdown_main_name <- function(bd) {
+    name <- bd$config[["book_filename"]]
+    if (is.null(name)) "_main" else sub("\\.[Rr]?md$", "", name)
+}
+
+.bookdown_output_dir <- function(bd) {
+    out <- bd$config[["output_dir"]]
+    if (is.null(out)) "_book" else sub("/+$", "", sub("^\\./", "", out))
+}
+
 ## ---------------------------------------------------------------------------
 ## Rewriting rules, kept as data so that adding a style is adding a list.
 ## Each rule is applied outside code chunks, to whole lines (`scope = "line"`)
@@ -300,45 +345,156 @@ from_bookdown <- function(
     "parallel", "splines", "stats", "stats4", "tcltk", "tools", "utils"
 )
 
+## The licences of R's licence database a Creative Commons link can name
+.bookdown_cc_licences <- c(
+    "CC BY 4.0", "CC BY-SA 4.0", "CC BY-NC 4.0", "CC BY-NC-SA 4.0", "CC BY-NC-ND 4.0"
+)
+
 ## ---------------------------------------------------------------------------
-## Conversion
+## Before converting: the repository, the package, the user
 ## ---------------------------------------------------------------------------
 
-.convert_bookdown <- function(bd, book, style, appendices = NULL, skip_availability = FALSE) {
-
-    rules <- .bookdown_rules[["bookdown"]]
-    if (identical(style, "msmbstyle")) rules <- c(rules, .bookdown_rules[["msmbstyle"]])
-    counts <- structure(integer(0), names = character(0))
-    count <- function(name, n = 1L) {
-        if (n > 0) counts[name] <<- (if (is.na(counts[name])) 0L else counts[name]) + as.integer(n)
+## The git repository whose current branch receives the conversion, or NULL
+## when nothing is committed
+.bookdown_repo <- function(path, commit) {
+    root <- tryCatch(normalizePath(gert::git_find(path)), error = function(e) NULL)
+    if (is.null(root)) {
+        if (commit) cli::cli_alert_info(cli::col_grey(
+            "{.file {path}} is not a git repository: the conversion is not committed."
+        ))
+        return(NULL)
     }
-    todo <- list()
-    add_todo <- function(section, item) todo[[section]] <<- c(todo[[section]], item)
+    if (!identical(root, path)) cli::cli_abort(c(
+        "{.file {path}} is a subfolder of the git repository {.file {root}}.",
+        "i" = "A BiocBook is the root of its repository: convert a bookdown project that is."
+    ))
+    if (!commit) return(NULL)
+    status <- gert::git_status(repo = root)
+    dirty <- status$file[!(status$status == "new" & !status$staged)]
+    if (length(dirty)) cli::cli_abort(c(
+        "{.file {path}} has uncommitted changes: {.file {dirty}}.",
+        "i" = "Commit or stash them first: each step of the conversion is committed."
+    ))
+    tryCatch(gert::git_signature_default(repo = root), error = function(e) cli::cli_abort(c(
+        "Git has no user name or email to commit with.",
+        "i" = "Set them with {.code gert::git_config_global_set('user.name', '...')} and {.code gert::git_config_global_set('user.email', '...')}."
+    )))
+    root
+}
 
-    pages <- bd$pages
-    files <- names(pages)
+.bookdown_package <- function(package, bd) {
+    if (is.null(package)) {
+        package <- .bookdown_main_name(bd)
+        if (!.is_package_name(package)) package <- basename(bd$path)
+    }
+    if (!.is_package_name(package)) cli::cli_abort(c(
+        "{.val {package}} is not a valid package name.",
+        "i" = "Name the book package with {.arg package}."
+    ))
+    package
+}
+
+.is_package_name <- function(x) {
+    is.character(x) && length(x) == 1L && grepl("^[[:alpha:]][[:alnum:].]*[[:alnum:]]$", x)
+}
+
+## The owner of the `origin` remote on GitHub, else the user of the token
+.bookdown_user <- function(user, path) {
+    if (!is.null(user)) return(user)
+    remotes <- tryCatch(gert::git_remote_list(repo = path), error = function(e) NULL)
+    url <- if (is.null(remotes)) NA_character_ else remotes$url[match("origin", remotes$name)]
+    if (!is.na(url)) {
+        url <- sub("^(https?://)[^/@]*@", "\\1", url)
+        pattern <- "^(https?://|ssh://)?(git@)?(www\\.)?github\\.com[:/]+([^/]+)/.*$"
+        if (grepl(pattern, url)) return(sub(pattern, "\\4", url))
+    }
+    login <- tryCatch(gh::gh_whoami()$login, error = function(e) NULL)
+    if (!is.null(login)) return(login)
+    cli::cli_abort(c(
+        "Cannot tell the GitHub user or organization of the book.",
+        "i" = "Give it with {.arg user}."
+    ))
+}
+
+.bookdown_template <- function() {
+    tmp <- tempfile("BiocBook.template")
+    dir.create(tmp)
+    utils::untar(
+        system.file("template", "BiocBook.template.tar.gz", package = "BiocBook"),
+        exdir = tmp
+    )
+    file.path(tmp, "BiocBook.template")
+}
+
+## Everything the steps need to know about the project, read before any of
+## them changes it
+.bookdown_migration <- function(bd, style, appendices, package, user, repo, skip_availability) {
+
+    mig <- new.env(parent = emptyenv())
+    mig$bd <- bd
+    mig$path <- root <- bd$path
+    mig$style <- style
+    mig$package <- package
+    mig$user <- user
+    mig$repo <- repo
+    mig$skip_availability <- skip_availability
+    mig$template <- .bookdown_template()
+    mig$counts <- structure(integer(0), names = character(0))
+    mig$todo <- list()
+    mig$commits <- character(0)
+    mig$changed <- character(0)
+    mig$deps <- character(0)
+    mig$setup <- character(0)
+
+    ## Pages: `index.Rmd` goes to `inst/`, the chapters to `inst/pages/`
+    files <- names(bd$pages)
     stems <- tools::file_path_sans_ext(basename(files))
-    targets <- c("index.qmd", file.path("pages", paste0(stems[-1], ".qmd")))
+    mig$files <- files
+    mig$targets <- c("index.qmd", file.path("pages", paste0(stems[-1], ".qmd")))
+    mig$pages <- file.path("inst", mig$targets)
 
-    ## -- Book structure: `(PART)` and `(APPENDIX)` headers -------------------
-    part_of <- rep(NA_character_, length(pages))
-    appendix <- rep(FALSE, length(pages))
+    ## Asset folders, which go next to the chapters, bibliographies and CSS
+    skip <- "^(docs|lib|_book|_bookdown_files|_freeze|renv|packrat|rsconnect|libs|site_libs|inst|vignettes)$|_(cache|files)$|^\\."
+    dirs <- list.dirs(root, full.names = FALSE, recursive = FALSE)
+    mig$dirs <- dirs[!grepl(skip, dirs) & dirs != .bookdown_output_dir(bd)]
+    mig$bibs <- list.files(root, pattern = "\\.bib$")
+    css <- as.character(unlist(bd$options[["css"]]))
+    mig$css <- css[file.exists(file.path(root, css))]
+
+    ## What the project already has: .gitignore, DESCRIPTION, LICENSE, the
+    ## files that build it with bookdown and its `before_chapter_script`
+    gitignore <- file.path(root, ".gitignore")
+    mig$gitignore <- if (file.exists(gitignore)) .read_page(gitignore) else character(0)
+    mig$old_deps <- NULL
+    mig$old_remotes <- character(0)
+    if (file.exists(file.path(root, "DESCRIPTION"))) {
+        d <- desc::desc(file = file.path(root, "DESCRIPTION"))
+        deps <- d$get_deps()
+        mig$old_deps <- deps[deps$package != "R", , drop = FALSE]
+        mig$old_remotes <- d$get_remotes()
+    }
+    mig$licence_file <- file.exists(file.path(root, "LICENSE"))
+    mig$build <- .bookdown_build_files(root)
+    scripts <- unlist(bd$config[["before_chapter_script"]])
+    mig$scripts <- scripts[file.exists(file.path(root, scripts))]
+    mig$script_lines <- unlist(lapply(mig$scripts, function(s) {
+        readLines(file.path(root, s), warn = FALSE, encoding = "UTF-8")
+    }))
+
+    ## Book structure: `(PART)` and `(APPENDIX)` headers
+    part_of <- rep(NA_character_, length(files))
+    appendix <- rep(FALSE, length(files))
     current_part <- NA_character_
     in_appendix <- FALSE
-    for (i in seq_along(pages)) {
-        lines <- pages[[i]]
+    for (i in seq_along(bd$pages)) {
+        lines <- bd$pages[[i]]
         code <- .code_lines(lines)
         is_part <- !code & grepl("^#\\s+\\(PART\\*?\\)", lines)
         is_appx <- !code & grepl("^#\\s+\\(APPENDIX\\)", lines)
         if (any(is_part)) {
             current_part <- .strip_header(sub("^#\\s+\\(PART\\*?\\)\\s*", "", lines[which(is_part)[1]]))
-            count("`# (PART) X {-}` -> `part:` in `_book.yml`", sum(is_part))
         }
-        if (any(is_appx)) {
-            in_appendix <- TRUE
-            count("`# (APPENDIX) X {-}` -> `appendices:` in `_book.yml`", sum(is_appx))
-        }
-        pages[[i]] <- lines[!(is_part | is_appx)]
+        if (any(is_appx)) in_appendix <- TRUE
         if (i > 1) {
             part_of[i] <- if (in_appendix) NA_character_ else current_part
             appendix[i] <- in_appendix
@@ -351,167 +507,608 @@ from_bookdown <- function(
         appendix[stems %in% asked & seq_along(stems) > 1] <- TRUE
         part_of[appendix] <- NA_character_
     }
+    mig$part_of <- part_of
+    mig$appendix <- appendix
 
-    ## -- Labels referenced across the book ----------------------------------
-    text <- unlist(lapply(pages, function(l) l[!.code_lines(l)]))
+    ## Labels referenced across the book
+    text <- unlist(lapply(bd$pages, function(l) l[!.code_lines(l)]))
     text <- gsub("`+[^`]*`+", "", text)
     refs <- function(prefix) {
         m <- regmatches(text, gregexpr(sprintf("\\\\@ref\\(%s:([^)]+)\\)", prefix), text))
         unique(sub(sprintf("^\\\\@ref\\(%s:(.*)\\)$", prefix), "\\1", unlist(m)))
     }
-    fig_refs <- refs("fig")
-    tab_refs <- refs("tab")
+    mig$fig_refs <- refs("fig")
+    mig$tab_refs <- refs("tab")
     sec_refs <- unlist(regmatches(text, gregexpr("\\\\@ref\\(([^):]+)\\)", text)))
-    sec_refs <- unique(sub("^\\\\@ref\\((.*)\\)$", "\\1", sec_refs))
-    sec_rename <- sec_refs[!startsWith(sec_refs, "sec-")]
+    mig$sec_refs <- unique(sub("^\\\\@ref\\((.*)\\)$", "\\1", sec_refs))
+    mig$sec_rename <- mig$sec_refs[!startsWith(mig$sec_refs, "sec-")]
 
-    ## -- Rewrite every page --------------------------------------------------
-    for (i in seq_along(pages)) {
-        lines <- pages[[i]]
+    mig
+}
+
+## A `Makefile`, shell scripts and GitHub workflows that render the book with
+## bookdown
+.bookdown_build_files <- function(root) {
+    workflows <- list.files(file.path(root, ".github", "workflows"), pattern = "\\.ya?ml$")
+    files <- c(
+        list.files(root, pattern = "^(Makefile|.*\\.sh)$"),
+        if (length(workflows)) file.path(".github", "workflows", workflows)
+    )
+    files[vapply(files, function(f) {
+        any(grepl("render_book|bookdown::", readLines(file.path(root, f), warn = FALSE)))
+    }, logical(1))]
+}
+
+## ---------------------------------------------------------------------------
+## Steps: each changes the book in place, records the files it changed, and
+## returns its commit message (or NULL when it has nothing to do)
+## ---------------------------------------------------------------------------
+
+.bookdown_step <- function(mig, step) {
+    mig$changed <- character(0)
+    msg <- step(mig)
+    if (is.null(msg) || !length(mig$changed)) return(invisible(FALSE))
+    cli::cli_alert_success(cli::col_grey(msg[1]))
+    if (!is.null(mig$repo)) .bookdown_commit(mig, c(msg, "", sprintf(
+        "Done by BiocBook::from_bookdown() (BiocBook %s).", utils::packageVersion("BiocBook")
+    )))
+    invisible(TRUE)
+}
+
+.bookdown_commit <- function(mig, message) {
+    paths <- unique(mig$changed)
+    here <- file.exists(file.path(mig$path, paths))
+    tracked <- gert::git_ls(repo = mig$repo)$path
+    gone <- paths[!here & paths %in% tracked]
+    if (length(gone)) gert::git_rm(gone, repo = mig$repo)
+    if (any(here)) gert::git_add(paths[here], force = TRUE, repo = mig$repo)
+    if (!nrow(gert::git_status(staged = TRUE, repo = mig$repo))) return(invisible(NULL))
+    sig <- gert::git_signature_default(repo = mig$repo)
+    sha <- gert::git_commit(
+        paste(message, collapse = "\n"), author = sig, committer = sig, repo = mig$repo
+    )
+    mig$commits <- c(mig$commits, sha)
+    invisible(sha)
+}
+
+## 1. The files every BiocBook has, filled in as `init()` does
+.bookdown_template_step <- function(mig) {
+
+    tpl <- mig$template
+    root <- mig$path
+    files <- list.files(tpl, recursive = TRUE, all.files = TRUE, no.. = TRUE)
+    own <- setdiff(files, c(
+        "README.md", ".gitignore", ".Rbuildignore", "LICENSE", "LICENSE.md", "inst/index.qmd"
+    ))
+    replaced <- own[file.exists(file.path(root, own))]
+    for (f in own) .bd_copy(mig, file.path(tpl, f), f)
+    for (f in intersect(c("inst/assets/_book.yml", "DESCRIPTION", "inst/requirements.yml"), own)) {
+        .fix_placeholders(file.path(root, f), pkg = mig$package, usr = mig$user)
+    }
+
+    ## README.md: the BiocBook badges, above the README of the book
+    badges <- .bookdown_fill(readLines(file.path(tpl, "README.md"), warn = FALSE), mig)
+    if (!file.exists(file.path(root, "README.md"))) {
+        .bd_write(mig, badges, "README.md")
+    } else {
+        lines <- .read_page(file.path(root, "README.md"))
+        at <- grep("^<!-- badges: start -->", lines)[1]
+        lines <- if (is.na(at)) c(badges, "", lines) else append(lines, badges[-c(1, length(badges))], after = at)
+        .bd_write(mig, lines, "README.md")
+    }
+
+    ## .gitignore and .Rbuildignore: the entries of the template the book misses
+    for (f in c(".gitignore", ".Rbuildignore")) {
+        new <- readLines(file.path(tpl, f), warn = FALSE)
+        old <- if (file.exists(file.path(root, f))) .read_page(file.path(root, f)) else character(0)
+        if (length(setdiff(new, old))) .bd_write(mig, c(old, setdiff(new, old)), f)
+    }
+
+    for (f in replaced) .bd_todo(mig, "Replaced files", sprintf(
+        "`%s` was replaced by the one of the template: check whether it held something the book needs", f
+    ))
+    version <- desc::desc_get_field("BiocBookTemplate", default = "", file = file.path(tpl, "DESCRIPTION"))
+    .commit_message(
+        "Add the BiocBook template",
+        sprintf(paste(
+            "The package files every BiocBook has, from the BiocBook template%s, filled in",
+            "as BiocBook::init() does: DESCRIPTION, the Dockerfile, the GitHub workflows,",
+            "the quarto configuration (inst/_quarto.yml and inst/assets/) and",
+            "vignettes/Makefile, which renders the book when the package is built."
+        ), if (nzchar(version)) sprintf(" (%s)", version) else ""),
+        "README.md gets the BiocBook badges, .gitignore and .Rbuildignore the entries of the template."
+    )
+}
+
+## 2. The pages, and the folders next to them, move as they are
+.bookdown_move_step <- function(mig) {
+    for (i in seq_along(mig$files)) .bd_move(mig, mig$files[i], mig$pages[i])
+    for (d in mig$dirs) .bd_move(mig, d, file.path("inst", "pages", d))
+    .commit_message(
+        "Move the pages to inst/",
+        sprintf(
+            "%s becomes inst/index.qmd, and each chapter a page of inst/pages/ that keeps its file name.",
+            mig$files[1]
+        ),
+        if (length(mig$dirs)) sprintf(
+            "%s %s next to the chapters, so that their relative paths keep working.",
+            .and(paste0(mig$dirs, "/")), if (length(mig$dirs) == 1L) "moves" else "move"
+        )
+    )
+}
+
+## 3. The header of `index.Rmd`, and the `(PART)` and `(APPENDIX)` headers,
+## become the configuration of the book
+.bookdown_settings_step <- function(mig) {
+
+    root <- mig$path
+    bd <- mig$bd
+
+    ## The header of `index.Rmd`
+    index <- .read_page(file.path(root, mig$pages[1]))
+    body <- .split_front_matter(index)$body
+    if (length(body) < length(index)) {
+        .bd_write(mig, .tidy_touched(body, seq_along(body) == 1L), mig$pages[1])
+    }
+
+    ## `(PART)` and `(APPENDIX)` headers
+    for (p in mig$pages) {
+        lines <- .read_page(file.path(root, p))
         code <- .code_lines(lines)
+        is_part <- !code & grepl("^#\\s+\\(PART\\*?\\)", lines)
+        is_appx <- !code & grepl("^#\\s+\\(APPENDIX\\)", lines)
+        .bd_count(mig, "`# (PART) X {-}` -> `part:` in `_book.yml`", sum(is_part))
+        .bd_count(mig, "`# (APPENDIX) X {-}` -> `appendices:` in `_book.yml`", sum(is_appx))
+        if (any(is_part | is_appx)) .bd_write(mig, .drop_lines(lines, is_part | is_appx), p)
+    }
 
-        ## Text rules, outside code
-        for (rule in rules) {
-            hits <- which(!code & grepl(rule$pattern, lines, perl = isTRUE(rule$perl)))
+    ## _book.yml, and _format.yml with the bibliographies and the CSS
+    assets <- file.path("inst", "assets")
+    .write_book_yml(
+        file.path(root, assets, "_book.yml"), bd$meta, mig$targets, mig$part_of, mig$appendix
+    )
+    .bd_mark(mig, file.path(assets, "_book.yml"))
+    for (b in mig$bibs) .bd_move(mig, b, file.path(assets, b))
+    for (css in mig$css) {
+        ## A CSS file in a folder has moved to inst/pages/ with it
+        from <- if (dirname(css) %in% c(".", "")) css else file.path("inst", "pages", css)
+        .bd_move(mig, from, file.path(assets, basename(css)))
+    }
+    dirs <- structure(mig$dirs, bibs = mig$bibs, css = basename(mig$css))
+    for (item in .write_format_yml(file.path(root, assets, "_format.yml"), bd, dirs)) {
+        .bd_todo(mig, "Unknown options", item)
+    }
+    .bd_mark(mig, file.path(assets, "_format.yml"))
+    if (length(bd$config[["language"]])) .bd_todo(
+        mig, "Unknown options",
+        "`language` (`_bookdown.yml`): translate the labels with quarto's `lang`/`language` options"
+    )
+
+    options <- c(
+        if (isTRUE(bd$options[["margin_references"]])) "margin references",
+        if (!is.null(bd$options[["toc_depth"]])) "toc depth",
+        if (isTRUE(bd$meta[["link-citations"]]) || identical(bd$meta[["link-citations"]], "yes")) "linked citations"
+    )
+    moved <- c(mig$bibs, basename(mig$css))
+    .commit_message(
+        "Move the book settings to _book.yml and _format.yml",
+        paste0(
+            "quarto reads them from the configuration of the book rather than from the header of ",
+            mig$files[1], ": its title, authors and list of chapters",
+            if (any(!is.na(mig$part_of)) || any(mig$appendix)) ", with its parts and appendices,",
+            " go to _book.yml; its bibliographies, CSS and the output options quarto has an equivalent for",
+            if (length(options)) sprintf(" (%s)", .and(options)),
+            " go to _format.yml."
+        ),
+        if (length(moved)) sprintf(
+            "%s %s to inst/assets/.", .and(moved), if (length(moved) == 1L) "moves" else "move"
+        )
+    )
+}
+
+## 4. What built the book with bookdown
+.bookdown_cleanup_step <- function(mig) {
+
+    root <- mig$path
+    out <- .bookdown_output_dir(mig$bd)
+    name <- unique(c("_main", .bookdown_main_name(mig$bd)))
+    made <- unique(c(
+        "_bookdown.yml", "_output.yml", out, "_bookdown_files",
+        as.vector(outer(name, c(".Rmd", ".md", "_files", "_cache"), paste0))
+    ))
+    gone <- c(made[file.exists(file.path(root, made))], mig$build)
+    folders <- gone[dir.exists(file.path(root, gone))]
+    for (g in gone) .bd_remove(mig, g)
+
+    ## Their entries in .gitignore: those of the template stay
+    dropped <- FALSE
+    if (length(mig$gitignore)) {
+        lines <- .read_page(file.path(root, ".gitignore"))
+        template <- readLines(file.path(mig$template, ".gitignore"), warn = FALSE)
+        entry <- gsub("^/+|/+$", "", trimws(lines))
+        drop <- seq_along(lines) <= length(mig$gitignore) & entry %in% made & !lines %in% template
+        if (any(drop)) {
+            .bd_write(mig, lines[!drop], ".gitignore")
+            dropped <- TRUE
+        }
+    }
+    if (!length(mig$changed)) return(NULL)
+    if (out %in% gone) .bd_todo(mig, "GitHub Pages", sprintf(paste(
+        "`%s/` held the rendered book: once the `biocbook` workflow has deployed it,",
+        "serve GitHub Pages from the `gh-pages` branch"
+    ), out))
+
+    removed <- paste0(gone, ifelse(gone %in% folders, "/", ""))
+    .commit_message(
+        "Remove the bookdown build",
+        paste(
+            "BiocBook builds the book from vignettes/Makefile, and deploys it to the gh-pages",
+            "branch: the bookdown configuration, its build and the book it rendered go."
+        ),
+        sprintf(
+            "Removed: %s%s.", .and(removed), if (dropped) ", and their entries in .gitignore" else ""
+        )
+    )
+}
+
+## 5. The landing page of the template, around the preamble of the book
+.bookdown_landing_step <- function(mig) {
+    index <- file.path(mig$path, mig$pages[1])
+    body <- .index_body(.read_page(index), mig$dirs)
+    n <- attr(body, "n")
+    .bd_count(mig, "asset paths of `index.Rmd` -> `pages/...`", n)
+    file.copy(file.path(mig$template, "inst", "index.qmd"), index, overwrite = TRUE)
+    .fix_placeholders(index, pkg = mig$package, usr = mig$user)
+    .write_index(index, body)
+    .bd_mark(mig, mig$pages[1])
+    .commit_message(
+        "Use the BiocBook landing page",
+        paste0(
+            "The preamble of the book becomes the welcome part of the landing page of the ",
+            "template, which shows the package, its version and its licence at the top, and ",
+            "how to run the Docker image of the book at the bottom. Its headers are not numbered",
+            if (n) ", and the paths of its images start with pages/, where their folders moved",
+            "."
+        )
+    )
+}
+
+## 6. Cross-references, equation labels and the chunk labels they point to
+.bookdown_crossref_step <- function(mig) {
+
+    root <- mig$path
+    before <- mig$counts
+    for (p in mig$pages) {
+        lines <- .read_page(file.path(root, p))
+        code <- .code_lines(lines)
+        new <- lines
+        for (rule in .bookdown_rules[["bookdown"]]) {
+            hits <- which(!code & grepl(rule$pattern, new, perl = isTRUE(rule$perl)))
             for (h in hits) {
-                res <- .rewrite_text(lines[h], rule)
-                lines[h] <- res$line
-                count(rule$name, res$n)
+                res <- .rewrite_text(new[h], rule)
+                new[h] <- res$line
+                .bd_count(mig, rule$name, res$n)
             }
         }
-
         ## Header ids referenced as sections, e.g. `{#intro}` -> `{#sec-intro}`
-        for (id in sec_rename) {
+        for (id in mig$sec_rename) {
             pattern <- sprintf("(^#+ .*\\{[^}]*)#%s([ }])", .escape_regex(id))
-            hits <- !code & grepl(pattern, lines)
-            lines[hits] <- gsub(pattern, sprintf("\\1#sec-%s\\2", id), lines[hits])
-            count("header id `{#x}` -> `{#sec-x}`", sum(hits))
+            hits <- !code & grepl(pattern, new)
+            new[hits] <- gsub(pattern, sprintf("\\1#sec-%s\\2", id), new[hits])
+            .bd_count(mig, "header id `{#x}` -> `{#sec-x}`", sum(hits))
         }
-
         ## Equation labels go after the closing `$$` of their display math
-        eq <- .convert_equations(lines, code)
-        lines <- eq$lines
-        count("`(\\#eq:x)` -> `{#eq-x}`", eq$n)
-        for (label in eq$unresolved) add_todo(
-            "Equations to label by hand",
-            sprintf("`%s`: no closing `$$` found after `(\\#eq:%s)`", targets[i], label)
+        eq <- .convert_equations(new, code)
+        new <- eq$lines
+        .bd_count(mig, "`(\\#eq:x)` -> `{#eq-x}`", eq$n)
+        for (label in eq$unresolved) .bd_todo(
+            mig, "Equations to label by hand",
+            sprintf("`%s`: no closing `$$` found after `(\\#eq:%s)`", p, label)
         )
-
-        ## Chunk options and labels
-        ch <- .convert_chunks(lines, fig_refs, tab_refs)
-        lines <- ch$lines
-        for (name in names(ch$counts)) count(name, ch$counts[[name]])
-
-        ## Rules producing several lines: split them, and tidy the blank lines
-        pages[[i]] <- .tidy_blank_lines(.split_lines(lines))
+        ## Chunks of the figures and tables referenced
+        ch <- .convert_chunks(new, mig$fig_refs, mig$tab_refs, options = FALSE)
+        new <- ch$lines
+        for (name in names(ch$counts)) .bd_count(mig, name, ch$counts[[name]])
+        if (!identical(new, lines)) .bd_write(mig, new, p)
     }
 
     ## Labels referenced but never found
+    pages <- lapply(file.path(root, mig$pages), .read_page)
     found <- function(prefix) unique(unlist(lapply(pages, function(l) {
         m <- regmatches(l, regexpr(sprintf("^\\s*```+\\s*\\{r[ ,]+%s-[^ ,}]+", prefix), l))
         sub(sprintf("^.*%s-", prefix), "", m)
     })))
-    for (x in setdiff(fig_refs, found("fig"))) add_todo(
-        "Unresolved cross-references", sprintf("`@fig-%s`: no chunk labelled `%s` found", x, x)
+    for (x in setdiff(mig$fig_refs, found("fig"))) .bd_todo(
+        mig, "Unresolved cross-references", sprintf("`@fig-%s`: no chunk labelled `%s` found", x, x)
     )
-    for (x in setdiff(tab_refs, found("tbl"))) add_todo(
-        "Unresolved cross-references", sprintf("`@tbl-%s`: no chunk labelled `%s` found", x, x)
+    for (x in setdiff(mig$tab_refs, found("tbl"))) .bd_todo(
+        mig, "Unresolved cross-references", sprintf("`@tbl-%s`: no chunk labelled `%s` found", x, x)
     )
     ids <- unique(unlist(lapply(pages, function(l) {
         attrs <- sub("^#+ [^{]*", "", l[!.code_lines(l) & grepl("^#+ ", l)])
         sub("^#", "", unlist(regmatches(attrs, gregexpr("#[A-Za-z][A-Za-z0-9_.:-]*", attrs))))
     })))
-    for (x in sec_refs) {
+    for (x in mig$sec_refs) {
         target <- if (startsWith(x, "sec-")) x else paste0("sec-", x)
-        if (!target %in% ids) add_todo(
-            "Unresolved cross-references",
+        if (!target %in% ids) .bd_todo(
+            mig, "Unresolved cross-references",
             sprintf("`@%s`: no header with the id `{#%s}` found", target, target)
         )
     }
-    if (length(tab_refs)) add_todo(
-        "Tables",
+    if (length(mig$tab_refs)) .bd_todo(
+        mig, "Tables",
         "Check the captions of the tables now labelled `tbl-*`: quarto takes them from the `tbl-cap` chunk option"
     )
+    if (!length(mig$changed)) return(NULL)
 
-    ## -- Shared R session ----------------------------------------------------
-    new_session <- isTRUE(bd$config[["new_session"]]) || identical(bd$config[["new_session"]], "yes")
-    setup <- character(0)
-    if (!new_session) {
-        setup <- .setup_calls(pages[[1]])
-        script <- unlist(bd$config[["before_chapter_script"]])
-        for (s in script) {
-            f <- file.path(bd$path, s)
-            if (file.exists(f)) setup <- c(setup, readLines(f, warn = FALSE, encoding = "UTF-8"))
-        }
-        if (length(setup)) {
-            chunk <- c(
-                "```{r}", "#| include: false",
-                "## bookdown ran every chapter in a single R session, quarto runs",
-                "## each in its own: setup repeated by BiocBook::from_bookdown()",
-                setup, "```"
-            )
-            for (i in seq_along(pages)[-1]) pages[[i]] <- .insert_after_title(pages[[i]], chunk)
-            count("setup calls of `index.Rmd` repeated at the top of each chapter", length(pages) - 1L)
-        }
-        add_todo("Shared R session", paste(
-            "bookdown ran every chapter in a single R session, quarto renders each in",
-            "its own:", if (length(setup)) "the setup calls of `index.Rmd` are now repeated at the top of each chapter, but",
-            "objects created in a chapter and used in a later one must be recreated there.",
-            "The first full render shows which."
-        ))
-    }
-    if (length(bd$config[["after_chapter_script"]])) add_todo(
-        "Unknown options",
-        "`after_chapter_script` (`_bookdown.yml`) has no quarto equivalent"
+    done <- .bd_delta(mig$counts, before)
+    count <- function(pattern) sum(done[grepl(pattern, names(done))])
+    extra <- c(
+        if (count("^header id")) paste(.n(count("^header id"), "header id"), "now starting with sec-"),
+        if (count("eq:x\\)` -> `\\{#eq")) paste(.n(count("eq:x\\)` -> `\\{#eq"), "equation label"), "after its display math"),
+        if (count("^chunk")) paste(.n(count("^chunk"), "chunk label"), "starting with fig- or tbl-")
     )
-
-    ## -- Write pages ---------------------------------------------------------
-    inst <- file.path(book, "inst")
-    dirs <- .copy_bookdown_assets(bd, book)
-    index_body <- .index_body(pages[[1]], dirs)
-    count("asset paths of `index.Rmd` -> `pages/...`", attr(index_body, "n"))
-    .write_index(file.path(inst, "index.qmd"), index_body)
-    for (i in seq_along(pages)[-1]) {
-        writeLines(pages[[i]], file.path(inst, targets[i]), useBytes = TRUE)
-    }
-    cli::cli_alert_success(cli::col_grey("Converted {length(pages)} page{?s}"))
-
-    ## -- _book.yml, _format.yml ----------------------------------------------
-    .write_book_yml(file.path(inst, "assets", "_book.yml"), bd$meta, targets, part_of, appendix)
-    format_todo <- .write_format_yml(file.path(inst, "assets", "_format.yml"), bd, dirs)
-    for (item in format_todo) add_todo("Unknown options", item)
-    if (length(bd$config[["language"]])) add_todo(
-        "Unknown options",
-        "`language` (`_bookdown.yml`): translate the labels with quarto's `lang`/`language` options"
-    )
-
-    ## -- DESCRIPTION ---------------------------------------------------------
-    deps <- .write_bookdown_description(book, bd)
-
-    ## -- What still needs a human ---------------------------------------------
-    scan <- .scan_converted(book, targets)
-    for (section in names(scan)) for (item in scan[[section]]) add_todo(section, item)
-    for (item in .github_only(bd)) add_todo("Dependencies", item)
-    if (!skip_availability && length(deps)) {
-        for (item in .not_on_bioc(deps)) add_todo("Dependencies", item)
-    }
-    add_todo("DESCRIPTION", c(
-        "Replace the placeholder email of the maintainer (`cre`) in `Authors@R`",
-        "Check `Title`, `Description` and `License`: the template's MIT licence may not be the book's"
-    ))
-
-    list(
-        source = .bookdown_source(bd$path),
-        style = style,
-        format = bd$format,
-        files = data.frame(from = files, to = file.path("inst", targets)),
-        assets = attr(dirs, "copied"),
-        rules = counts,
-        deps = deps,
-        setup = setup,
-        todo = todo
+    refs <- count("\\\\@ref")
+    .commit_message(
+        "Rewrite cross-references for quarto",
+        paste(
+            "bookdown's \\@ref() renders a number only, while quarto's references render",
+            "\"Figure 2\", \"Chapter 3\"... by themselves: a type word right before a reference",
+            "is dropped, and the other references render their number only, as before."
+        ),
+        sprintf(
+            "%s, in %s%s.", .n(refs, "reference"), .n(length(unique(mig$changed)), "page"),
+            if (length(extra)) paste0("; ", .and(extra)) else ""
+        )
     )
 }
+
+## 7. msmbstyle's questions and solutions
+.bookdown_callout_step <- function(mig) {
+
+    if (!identical(mig$style, "msmbstyle")) return(NULL)
+    before <- mig$counts
+    for (p in mig$pages) {
+        lines <- .read_page(file.path(mig$path, p))
+        code <- .code_lines(lines)
+        touched <- logical(length(lines))
+        for (rule in .bookdown_rules[["msmbstyle"]]) {
+            hits <- which(!code & grepl(rule$pattern, lines, perl = isTRUE(rule$perl)))
+            for (h in hits) {
+                res <- .rewrite_text(lines[h], rule)
+                lines[h] <- res$line
+                touched[h] <- TRUE
+                .bd_count(mig, rule$name, res$n)
+            }
+        }
+        if (!any(touched)) next
+        parts <- lapply(lines, .split_lines)
+        .bd_write(mig, .tidy_touched(unlist(parts), rep(touched, lengths(parts))), p)
+    }
+    if (!length(mig$changed)) return(NULL)
+
+    done <- .bd_delta(mig$counts, before)
+    count <- function(name) if (is.na(done[name])) 0L else done[[name]]
+    .commit_message(
+        "Turn questions and solutions into callouts",
+        sprintf(paste(
+            "msmbstyle's question_begin()/question_end() and solution_begin()/solution_end()",
+            "become quarto callouts, the solutions collapsed: %s and %s."
+        ),
+            .n(count("`question_begin()` -> question callout"), "question"),
+            .n(count("`solution_begin()` -> collapsed answer callout"), "solution")
+        ),
+        paste(
+            "Each one is wrapped in a .callout-question or .callout-answer div, which the",
+            "BiocBook theme styles: quarto drops extra classes from callouts."
+        )
+    )
+}
+
+## 8. Figure layout options
+.bookdown_figure_step <- function(mig) {
+    before <- mig$counts
+    for (p in mig$pages) {
+        lines <- .read_page(file.path(mig$path, p))
+        ch <- .convert_chunks(lines, character(0), character(0), labels = FALSE)
+        for (name in names(ch$counts)) .bd_count(mig, name, ch$counts[[name]])
+        if (!identical(ch$lines, lines)) .bd_write(mig, ch$lines, p)
+    }
+    if (!length(mig$changed)) return(NULL)
+    .commit_message(
+        "Translate figure layout options",
+        sprintf(paste(
+            "fig.margin = TRUE and fig.fullwidth = TRUE become quarto's column: margin and",
+            "column: page, and fig.margin = FALSE and fig.fullwidth = FALSE, the defaults,",
+            "go: %s."
+        ), .n(sum(.bd_delta(mig$counts, before)), "chunk option"))
+    )
+}
+
+## 9. The setup of `index.Rmd`, at the top of every chapter
+.bookdown_setup_step <- function(mig) {
+
+    bd <- mig$bd
+    if (length(bd$config[["after_chapter_script"]])) .bd_todo(
+        mig, "Unknown options", "`after_chapter_script` (`_bookdown.yml`) has no quarto equivalent"
+    )
+    new_session <- isTRUE(bd$config[["new_session"]]) || identical(bd$config[["new_session"]], "yes")
+    if (new_session) return(NULL)
+    setup <- c(.setup_calls(bd$pages[[1]]), mig$script_lines)
+    mig$setup <- setup
+    .bd_todo(mig, "Shared R session", paste(
+        "bookdown ran every chapter in a single R session, quarto renders each in",
+        "its own:", if (length(setup)) "the setup calls of `index.Rmd` are now repeated at the top of each chapter, but",
+        "objects created in a chapter and used in a later one must be recreated there.",
+        "The first full render shows which."
+    ))
+    if (!length(setup)) return(NULL)
+    chunk <- c(
+        "```{r}", "#| include: false",
+        "## bookdown ran every chapter in a single R session, quarto runs",
+        "## each in its own: setup repeated by BiocBook::from_bookdown()",
+        setup, "```"
+    )
+    for (p in mig$pages[-1]) {
+        .bd_write(mig, .insert_after_title(.read_page(file.path(mig$path, p)), chunk), p)
+    }
+    .bd_count(mig, "setup calls of `index.Rmd` repeated at the top of each chapter", length(mig$pages) - 1L)
+    ## Its content is in every chapter now
+    for (s in mig$scripts) .bd_remove(mig, s)
+    .commit_message(
+        "Set up every chapter as index.Rmd did",
+        paste0(
+            "bookdown rendered all chapters in a single R session, quarto renders each in its ",
+            "own: the packages and options that index.Rmd sets up",
+            if (length(mig$scripts)) sprintf(", and %s,", .and(mig$scripts)),
+            " are now set up at the top of every chapter, in a hidden chunk."
+        )
+    )
+}
+
+## 10. DESCRIPTION
+.bookdown_description_step <- function(mig) {
+    res <- .write_bookdown_description(mig)
+    n <- length(res$deps)
+    imports <- if (n == 1L) "the package its pages use" else sprintf("the %d packages its pages use", n)
+    .commit_message(
+        "Describe the book in DESCRIPTION",
+        paste0(
+            "Title, description and authors from the book, ",
+            if (n) sprintf("%s in Imports, ", imports),
+            sprintf("and its licence, %s.", res$license)
+        ),
+        if (res$placeholder) "The email of the maintainer is a placeholder."
+    )
+}
+
+## ---------------------------------------------------------------------------
+## Changing the book in place
+## ---------------------------------------------------------------------------
+
+.read_page <- function(f) readLines(f, warn = FALSE, encoding = "UTF-8")
+
+.ends_with_newline <- function(f) {
+    size <- file.info(f)$size
+    if (is.na(size) || size == 0) return(TRUE)
+    con <- file(f, "rb")
+    on.exit(close(con))
+    seek(con, size - 1)
+    identical(readBin(con, "raw", 1L), as.raw(10L))
+}
+
+## Writes a page in UTF-8, keeping its final newline, or its absence
+.write_page <- function(lines, f) {
+    eol <- .ends_with_newline(f)
+    txt <- paste0(paste(enc2utf8(lines), collapse = "\n"), if (eol) "\n" else "")
+    writeBin(charToRaw(txt), f)
+}
+
+.bd_mark <- function(mig, paths) mig$changed <- c(mig$changed, paths)
+
+.bd_write <- function(mig, lines, rel) {
+    f <- file.path(mig$path, rel)
+    dir.create(dirname(f), recursive = TRUE, showWarnings = FALSE)
+    .write_page(lines, f)
+    .bd_mark(mig, rel)
+}
+
+.bd_copy <- function(mig, from, rel) {
+    to <- file.path(mig$path, rel)
+    dir.create(dirname(to), recursive = TRUE, showWarnings = FALSE)
+    file.copy(from, to, overwrite = TRUE)
+    .bd_mark(mig, rel)
+}
+
+## Moves a file, or the files of a folder (merged into one already there)
+.bd_move <- function(mig, from, to) {
+    src <- file.path(mig$path, from)
+    if (dir.exists(src)) {
+        for (f in list.files(src, recursive = TRUE, all.files = TRUE, no.. = TRUE)) {
+            .bd_move(mig, file.path(from, f), file.path(to, f))
+        }
+        unlink(src, recursive = TRUE)
+        return(invisible())
+    }
+    dest <- file.path(mig$path, to)
+    dir.create(dirname(dest), recursive = TRUE, showWarnings = FALSE)
+    if (file.exists(dest)) unlink(dest)
+    if (!file.rename(src, dest)) {
+        file.copy(src, dest, copy.date = TRUE)
+        unlink(src)
+    }
+    .bd_mark(mig, c(from, to))
+}
+
+.bd_remove <- function(mig, rel) {
+    f <- file.path(mig$path, rel)
+    if (dir.exists(f)) {
+        .bd_mark(mig, file.path(rel, list.files(f, recursive = TRUE, all.files = TRUE, no.. = TRUE)))
+        unlink(f, recursive = TRUE)
+    } else if (file.exists(f)) {
+        .bd_mark(mig, rel)
+        unlink(f)
+    }
+}
+
+.bd_count <- function(mig, name, n = 1L) {
+    if (n > 0) mig$counts[name] <- (if (is.na(mig$counts[name])) 0L else mig$counts[name]) + as.integer(n)
+}
+
+.bd_delta <- function(now, before) {
+    common <- intersect(names(now), names(before))
+    now[common] <- now[common] - before[common]
+    now[now > 0]
+}
+
+.bd_todo <- function(mig, section, item) mig$todo[[section]] <- c(mig$todo[[section]], item)
+
+.bookdown_fill <- function(lines, mig) {
+    lines <- gsub("<Package_name>", mig$package, lines)
+    lines <- gsub("<package_name>", tolower(mig$package), lines)
+    gsub("<github_user>", mig$user, lines)
+}
+
+.commit_message <- function(subject, ...) {
+    paragraphs <- Filter(function(p) length(p) && nzchar(p), list(...))
+    c(subject, unlist(lapply(paragraphs, function(p) c("", strwrap(p, width = 72)))))
+}
+
+.and <- function(x) {
+    if (length(x) < 2L) return(paste(x, collapse = ""))
+    paste(paste(utils::head(x, -1L), collapse = ", "), "and", utils::tail(x, 1L))
+}
+
+.n <- function(n, what) sprintf("%d %s%s", n, what, if (n == 1L) "" else "s")
+
+## Collapses the runs of blank lines that hold a line a rewrite touched (and
+## drops such a run at the top of a page): the blank lines of the book itself
+## are left alone
+.tidy_touched <- function(lines, touched) {
+    blank <- !nzchar(trimws(lines)) & !.code_lines(lines)
+    keep <- rep(TRUE, length(lines))
+    r <- rle(blank)
+    ends <- cumsum(r$lengths)
+    starts <- ends - r$lengths + 1L
+    for (k in which(r$values)) {
+        run <- seq(starts[k], ends[k])
+        if (!any(touched[run])) next
+        keep[if (starts[k] == 1L) run else run[-1]] <- FALSE
+    }
+    lines[keep]
+}
+
+## Drops lines, and the blank lines that would then pile up where they were
+.drop_lines <- function(lines, drop) {
+    i <- which(drop)
+    touched <- logical(length(lines))
+    touched[c(pmax(i - 1L, 1L), pmin(i + 1L, length(lines)))] <- TRUE
+    .tidy_touched(lines[!drop], touched[!drop])
+}
+
+## ---------------------------------------------------------------------------
+## Rewriting helpers
+## ---------------------------------------------------------------------------
 
 ## Which lines of a page are code: fenced blocks, fences included. A block
 ## closes on a bare fence at least as long as the one that opened it.
@@ -557,14 +1154,6 @@ from_bookdown <- function(
     if (endsWith(l, "\n")) parts <- c(parts, "")
     if (length(parts)) parts else ""
 }))
-
-.tidy_blank_lines <- function(lines) {
-    blank <- !nzchar(trimws(lines)) & !.code_lines(lines)
-    keep <- !(blank & c(TRUE, utils::head(blank, -1)))
-    lines <- lines[keep]
-    while (length(lines) && !nzchar(trimws(lines[1]))) lines <- lines[-1]
-    lines
-}
 
 ## Number of the code block each line belongs to (0 outside code)
 .code_blocks <- function(lines) {
@@ -616,15 +1205,14 @@ from_bookdown <- function(
 
 ## Chunk headers: options with a quarto equivalent, and labels of the figures
 ## and tables referenced in the text
-.convert_chunks <- function(lines, fig_refs, tab_refs) {
+.convert_chunks <- function(lines, fig_refs, tab_refs, options = TRUE, labels = TRUE) {
     counts <- list()
     out <- character(0)
-    code <- .code_lines(lines)
     header <- grepl("^\\s*```+\\s*\\{[rR][ ,}]", lines)
     for (i in seq_along(lines)) {
         line <- lines[i]
         extra <- character(0)
-        if (header[i]) {
+        if (header[i] && options) {
             for (rule in .bookdown_chunk_rules) {
                 after_comma <- sprintf("\\s*,\\s*%s\\b", rule$option)
                 first <- sprintf("(\\{[rR])\\s+%s\\b\\s*,?\\s*", rule$option)
@@ -636,6 +1224,8 @@ from_bookdown <- function(
                     counts[[rule$name]] <- (if (is.null(counts[[rule$name]])) 0L else counts[[rule$name]]) + 1L
                 }
             }
+        }
+        if (header[i] && labels) {
             for (ref in list(list(labels = fig_refs, prefix = "fig"), list(labels = tab_refs, prefix = "tbl"))) {
                 for (label in ref$labels) {
                     pattern <- sprintf("^(\\s*```+\\s*\\{[rR][ ,]+)%s(\\s*[,}])", .escape_regex(label))
@@ -688,26 +1278,6 @@ from_bookdown <- function(
     h1 <- which(!code & grepl("^# ", lines) & seq_along(lines) > yaml_end)[1]
     at <- if (is.na(h1)) yaml_end else h1
     append(lines, c("", chunk), after = at)
-}
-
-## Asset folders (e.g. `img/`) go next to the chapters, so that their relative
-## paths keep working; bibliographies and CSS go to `inst/assets/`.
-.copy_bookdown_assets <- function(bd, book) {
-    skip <- "^(docs|lib|_book|_bookdown_files|_freeze|renv|packrat|rsconnect|libs|site_libs)$|_(cache|files)$|^\\."
-    dirs <- list.dirs(bd$path, full.names = FALSE, recursive = FALSE)
-    dirs <- dirs[!grepl(skip, dirs)]
-    for (d in dirs) {
-        file.copy(file.path(bd$path, d), file.path(book, "inst", "pages"), recursive = TRUE)
-    }
-    assets <- file.path(book, "inst", "assets")
-    bibs <- list.files(bd$path, pattern = "\\.bib$")
-    css <- as.character(unlist(bd$options[["css"]]))
-    css <- css[file.exists(file.path(bd$path, css))]
-    file.copy(file.path(bd$path, c(bibs, css)), assets, overwrite = TRUE)
-    if (length(dirs)) cli::cli_alert_success(cli::col_grey(
-        "Copied {.file {dirs}} to {.file {file.path(book, 'inst', 'pages')}}"
-    ))
-    structure(dirs, bibs = bibs, css = basename(css), copied = c(paste0(dirs, "/"), bibs, basename(css)))
 }
 
 ## The landing page: BiocBook's own header chunk and its Docker, RStudio and
@@ -847,10 +1417,12 @@ from_bookdown <- function(
     author[nzchar(author)]
 }
 
-## Title, Description, Authors@R and Imports, from the bookdown project and
-## from the packages the converted pages use. Returns the dependencies added.
-.write_bookdown_description <- function(book, bd) {
-    d <- desc::desc(file = file.path(book, "DESCRIPTION"))
+## Title, Description, Authors@R, Imports and License, from the bookdown
+## project and from the packages the converted pages use
+.write_bookdown_description <- function(mig) {
+
+    bd <- mig$bd
+    d <- desc::desc(file = file.path(mig$path, "DESCRIPTION"))
     title <- bd$meta[["title"]]
     if (!is.null(title)) d$set("Title", tools::toTitleCase(gsub("[.]$", "", title)))
 
@@ -894,15 +1466,61 @@ from_bookdown <- function(
         d$set_authors(do.call(c, persons))
     }
 
-    ## Dependencies: the same scan as `check_deps()`, over the converted pages
-    found <- renv::dependencies(file.path(book, "inst"), quiet = TRUE)$Package
-    deps <- setdiff(sort(unique(found)), c(.bookdown_not_deps, book, d$get_deps()$package))
+    ## Dependencies: the same scan as `check_deps()`, over the converted pages,
+    ## and those of the DESCRIPTION the project had
+    found <- renv::dependencies(file.path(mig$path, "inst"), quiet = TRUE)$Package
+    deps <- setdiff(sort(unique(found)), c(.bookdown_not_deps, mig$package, d$get_deps()$package))
     for (pkg in deps) d$set_dep(pkg, "Imports")
+    old <- mig$old_deps
+    if (!is.null(old)) for (i in seq_len(nrow(old))) {
+        if (!old$package[i] %in% c(d$get_deps()$package, .bookdown_not_deps)) {
+            d$set_dep(old$package[i], old$type[i], old$version[i])
+        }
+    }
+    if (length(mig$old_remotes)) d$set_remotes(unique(c(d$get_remotes(), mig$old_remotes)))
+
+    license <- .bookdown_licence(mig)
+    d$set("License", license)
     d$write()
+    .bd_mark(mig, "DESCRIPTION")
+    mig$deps <- deps
     if (length(deps)) cli::cli_alert_success(cli::col_grey(
         "Added {length(deps)} dependenc{?y/ies} to {.file DESCRIPTION}: {.pkg {deps}}"
     ))
-    deps
+    placeholder <- length(authors) > 0
+    if (placeholder) .bd_todo(mig, "DESCRIPTION", "Replace the placeholder email of the maintainer (`cre`) in `Authors@R`")
+    .bd_todo(mig, "DESCRIPTION", "Check `Title` and `Description`")
+    list(deps = deps, license = license, placeholder = placeholder)
+}
+
+## The licence of the book: a Creative Commons licence its pages link to, its
+## LICENSE file, or else the MIT licence of the template, for its authors
+.bookdown_licence <- function(mig) {
+    cc <- .bookdown_cc(unlist(mig$bd$pages))
+    if (!is.null(cc)) return(cc)
+    if (mig$licence_file) return("file LICENSE")
+    year <- format(Sys.Date(), "%Y")
+    holder <- paste(.bookdown_author_names(mig$bd$meta[["author"]]), collapse = ", ")
+    if (!nzchar(holder)) holder <- mig$package
+    .bd_write(mig, c(paste("YEAR:", year), paste("COPYRIGHT HOLDER:", holder)), "LICENSE")
+    if (!file.exists(file.path(mig$path, "LICENSE.md"))) {
+        md <- readLines(file.path(mig$template, "LICENSE.md"), warn = FALSE)
+        md <- sub("^Copyright \\(c\\) .*$", sprintf("Copyright (c) %s %s", year, holder), md)
+        .bd_write(mig, md, "LICENSE.md")
+    }
+    .bd_todo(mig, "DESCRIPTION", "Check `License`: the book did not state one, it now has the MIT licence of the template")
+    "MIT + file LICENSE"
+}
+
+.bookdown_cc <- function(lines) {
+    m <- regmatches(lines, regexpr("creativecommons\\.org/licenses/[a-z-]+/[0-9.]+", lines))
+    if (!length(m)) return(NULL)
+    licence <- sprintf(
+        "CC %s %s",
+        toupper(sub("^.*/licenses/([a-z-]+)/.*$", "\\1", m[1])),
+        sub("^.*/", "", m[1])
+    )
+    if (licence %in% .bookdown_cc_licences) licence else NULL
 }
 
 ## GitHub-only packages installed by the book, e.g.
@@ -998,67 +1616,85 @@ from_bookdown <- function(
     todo
 }
 
-## How MIGRATION.md names the bookdown project: the URL of the git repository
-## it comes from (without credentials), or its folder name. Never its local
-## path, which would end up committed to the book's repository.
-.bookdown_source <- function(path) {
-    path <- normalizePath(path)
-    folder <- sprintf("`%s`", basename(path))
-    root <- tryCatch(normalizePath(gert::git_find(path)), error = function(e) NULL)
-    if (is.null(root)) return(folder)
-    remotes <- tryCatch(gert::git_remote_list(repo = root), error = function(e) NULL)
-    url <- if (is.null(remotes)) NA_character_ else remotes$url[match("origin", remotes$name)]
-    if (is.na(url) || !nzchar(url)) return(folder)
-    url <- sub("^git@([^:/]+):", "https://\\1/", url)
-    url <- sub("^(https?://)[^/@]*@", "\\1", url)
-    url <- sub("\\.git$", "", url)
-    if (identical(root, path)) return(sprintf("<%s>", url))
-    sprintf("`%s` of <%s>", substring(path, nchar(root) + 2L), url)
+## Top-level files that a BiocBook does not have, and that builds of the
+## package do not ignore
+.bookdown_leftovers <- function(root) {
+    known <- c(
+        "DESCRIPTION", "NAMESPACE", "NEWS.md", "NEWS", "README.md", "README.Rmd",
+        "LICENSE", "LICENSE.md", "CODE_OF_CONDUCT.md", "CONTRIBUTING.md", "MIGRATION.md",
+        "Dockerfile", "inst", "vignettes", "man", "R", "tests",
+        ".git", ".github", ".gitignore", ".Rbuildignore", ".Rproj.user", ".Rhistory",
+        ".RData", ".DS_Store", ".quarto"
+    )
+    top <- setdiff(list.files(root, all.files = TRUE, no.. = TRUE), known)
+    top <- top[!grepl("\\.Rproj$", top)]
+    top <- paste0(top, ifelse(dir.exists(file.path(root, top)), "/", ""))
+    ignored <- tryCatch(
+        gert::git_ignore_path_is_ignored(top, repo = root), error = function(e) rep(FALSE, length(top))
+    )
+    top <- top[!ignored]
+    buildignore <- file.path(root, ".Rbuildignore")
+    patterns <- if (file.exists(buildignore)) readLines(buildignore, warn = FALSE) else character(0)
+    patterns <- patterns[nzchar(trimws(patterns))]
+    excluded <- vapply(top, function(f) {
+        any(vapply(patterns, function(p) grepl(p, sub("/$", "", f), perl = TRUE), logical(1)))
+    }, logical(1))
+    top[!excluded]
 }
 
-.write_migration_report <- function(report, book) {
-    rules <- if (length(report$rules)) {
-        c("| Rule | Applied |", "|---|---:|", sprintf("| %s | %d |", names(report$rules), report$rules))
+.write_migration_report <- function(mig) {
+
+    for (f in .bookdown_leftovers(mig$path)) .bd_todo(
+        mig, "Files that are not part of a BiocBook",
+        sprintf("`%s`: remove it, or list it in `.Rbuildignore`", f)
+    )
+    scan <- .scan_converted(mig$path, mig$targets)
+    for (section in names(scan)) for (item in scan[[section]]) .bd_todo(mig, section, item)
+    for (item in .github_only(mig$bd)) .bd_todo(mig, "Dependencies", item)
+    if (!mig$skip_availability && length(mig$deps)) {
+        for (item in .not_on_bioc(mig$deps)) .bd_todo(mig, "Dependencies", item)
+    }
+
+    rules <- if (length(mig$counts)) {
+        c("| Rule | Applied |", "|---|---:|", sprintf("| %s | %d |", names(mig$counts), mig$counts))
     } else "No rule applied."
-    todo <- unlist(lapply(names(report$todo), function(section) c(
-        paste("###", section), "", paste("- [ ]", report$todo[[section]]), ""
+    todo <- unlist(lapply(names(mig$todo), function(section) c(
+        paste("###", section), "", paste("- [ ]", mig$todo[[section]]), ""
     )))
+    moved <- c(paste0(mig$dirs, "/"), mig$bibs, basename(mig$css))
     lines <- c(
         "# Migration from bookdown",
         "",
         sprintf(
-            "This book was converted from the bookdown project %s by `BiocBook::from_bookdown()` (BiocBook %s), with the `%s` style%s.",
-            report$source, utils::packageVersion("BiocBook"), report$style,
-            if (is.na(report$format)) "" else sprintf(" (output format: `%s`)", report$format)
+            "`BiocBook::from_bookdown()` (BiocBook %s) converted this book from bookdown, with the `%s` style%s%s.",
+            utils::packageVersion("BiocBook"), mig$style,
+            if (is.na(mig$bd$format)) "" else sprintf(" (output format: `%s`)", mig$bd$format),
+            if (length(mig$commits)) sprintf(", in %s", .n(length(mig$commits), "commit")) else ""
         ),
+        "This file is not part of the book: delete it once everything below is done.",
         "",
         "## Converted files",
         "",
         "| bookdown | BiocBook |", "|---|---|",
-        sprintf("| `%s` | `%s` |", report$files$from, report$files$to),
+        sprintf("| `%s` | `%s` |", mig$files, mig$pages),
         "",
-        if (length(report$assets)) c(
-            sprintf("Assets copied: %s.", paste0("`", report$assets, "`", collapse = ", ")), ""
+        if (length(moved)) c(
+            sprintf("Assets moved: %s.", paste0("`", moved, "`", collapse = ", ")), ""
         ),
         "## Automatic rewrites",
         "",
         rules,
         "",
-        if (length(report$deps)) c(
-            sprintf("Dependencies added to `Imports`: %s.", paste0("`", report$deps, "`", collapse = ", ")), ""
+        if (length(mig$deps)) c(
+            sprintf("Dependencies added to `Imports`: %s.", paste0("`", mig$deps, "`", collapse = ", ")), ""
         ),
-        if (length(report$setup)) c(
-            "Setup repeated at the top of each chapter:", "", "```r", report$setup, "```", ""
+        if (length(mig$setup)) c(
+            "Setup repeated at the top of each chapter:", "", "```r", mig$setup, "```", ""
         ),
         "## To do by hand",
         "",
         if (length(todo)) todo else "Nothing left to do."
     )
-    writeLines(lines, file.path(book, "MIGRATION.md"), useBytes = TRUE)
-    rbuildignore <- file.path(book, ".Rbuildignore")
-    writeLines(c(readLines(rbuildignore, warn = FALSE, encoding = "UTF-8"), "^MIGRATION\\.md$"), rbuildignore, useBytes = TRUE)
-    cli::cli_alert_success(cli::col_grey(
-        "Wrote the migration report to {.file {file.path(book, 'MIGRATION.md')}}"
-    ))
-    invisible(report)
+    writeLines(lines, file.path(mig$path, "MIGRATION.md"), useBytes = TRUE)
+    invisible(lines)
 }
