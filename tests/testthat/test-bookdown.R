@@ -62,8 +62,10 @@ test_that("from_bookdown() converts a bookdown book in place", {
     expect_true(        file.exists(file.path(inst, "assets", "refs.bib")))
     expect_true(        file.exists(file.path(inst, "assets", "style.css")))
 
-    ## The README gets the BiocBook badges
-    expect_true(        any(grepl("dummy/BookdownMini/actions/workflows/biocbook.yml", readLines(file.path(fx$book, "README.md")), fixed = TRUE)))
+    ## The README gets the BiocBook badges, emojis included, whatever the locale
+    readme <- readLines(file.path(fx$book, "README.md"), encoding = "UTF-8")
+    expect_true(        any(grepl("dummy/BookdownMini/actions/workflows/biocbook.yml", readme, fixed = TRUE)))
+    expect_identical(   charToRaw(readme[2])[1:4], as.raw(c(0xf0, 0x9f, 0x93, 0xa6)))
 
     ## A book is converted once
     expect_error(       from_bookdown(fx$book, package = "BookdownMini", user = "dummy"), "already a")
@@ -289,11 +291,15 @@ test_that("rewrites leave the blank lines of the book alone", {
     expect_identical(   .tidy_touched(c("", "", "# Title"), c(TRUE, FALSE, FALSE)), "# Title")
     expect_identical(   .drop_lines(c("Text.", "", "# (PART) X {-}", "", "# Title"), c(FALSE, FALSE, TRUE, FALSE, FALSE)), c("Text.", "", "# Title"))
 
-    ## A page without a final newline keeps it so
+    ## A page without a final newline keeps it so, and its bytes are kept
     f <- tempfile()
     on.exit(unlink(f), add = TRUE)
     writeBin(charToRaw("a\nb"), f)
     .write_page(c("a", "c"), f)
     expect_identical(   readChar(f, 10L, useBytes = TRUE), "a\nc")
+    utf8 <- rawToChar(as.raw(c(0x52, 0xc3, 0xa9, 0x73, 0x75, 0x6d, 0xc3, 0xa9, 0x20, 0xf0, 0x9f, 0x93, 0xa6)))
+    Encoding(utf8) <- "UTF-8"
+    .write_page(c("a", utf8), f)
+    expect_identical(   readBin(f, "raw", 100L), c(charToRaw("a\n"), charToRaw(utf8)))
 
 })

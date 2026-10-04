@@ -587,7 +587,7 @@ from_bookdown <- function(
     }
 
     ## README.md: the BiocBook badges, above the README of the book
-    badges <- .bookdown_fill(readLines(file.path(tpl, "README.md"), warn = FALSE), mig)
+    badges <- .bookdown_fill(readLines(file.path(tpl, "README.md"), warn = FALSE, encoding = "UTF-8"), mig)
     if (!file.exists(file.path(root, "README.md"))) {
         .bd_write(mig, badges, "README.md")
     } else {
@@ -599,7 +599,7 @@ from_bookdown <- function(
 
     ## .gitignore and .Rbuildignore: the entries of the template the book misses
     for (f in c(".gitignore", ".Rbuildignore")) {
-        new <- readLines(file.path(tpl, f), warn = FALSE)
+        new <- readLines(file.path(tpl, f), warn = FALSE, encoding = "UTF-8")
         old <- if (file.exists(file.path(root, f))) .read_page(file.path(root, f)) else character(0)
         if (length(setdiff(new, old))) .bd_write(mig, c(old, setdiff(new, old)), f)
     }
@@ -724,7 +724,7 @@ from_bookdown <- function(
     dropped <- FALSE
     if (length(mig$gitignore)) {
         lines <- .read_page(file.path(root, ".gitignore"))
-        template <- readLines(file.path(mig$template, ".gitignore"), warn = FALSE)
+        template <- readLines(file.path(mig$template, ".gitignore"), warn = FALSE, encoding = "UTF-8")
         entry <- gsub("^/+|/+$", "", trimws(lines))
         drop <- seq_along(lines) <= length(mig$gitignore) & entry %in% made & !lines %in% template
         if (any(drop)) {
@@ -997,11 +997,13 @@ from_bookdown <- function(
     identical(readBin(con, "raw", 1L), as.raw(10L))
 }
 
-## Writes a page in UTF-8, keeping its final newline, or its absence
+## Writes a page byte for byte, whatever the locale, keeping its final
+## newline, or its absence
 .write_page <- function(lines, f) {
     eol <- .ends_with_newline(f)
-    txt <- paste0(paste(enc2utf8(lines), collapse = "\n"), if (eol) "\n" else "")
-    writeBin(charToRaw(txt), f)
+    last <- seq_along(lines) == length(lines)
+    bytes <- Map(function(l, last) c(charToRaw(l), if (!last || eol) as.raw(10L)), lines, last)
+    writeBin(as.raw(unlist(bytes, use.names = FALSE)), f)
 }
 
 .bd_mark <- function(mig, paths) mig$changed <- c(mig$changed, paths)
@@ -1504,7 +1506,7 @@ from_bookdown <- function(
     if (!nzchar(holder)) holder <- mig$package
     .bd_write(mig, c(paste("YEAR:", year), paste("COPYRIGHT HOLDER:", holder)), "LICENSE")
     if (!file.exists(file.path(mig$path, "LICENSE.md"))) {
-        md <- readLines(file.path(mig$template, "LICENSE.md"), warn = FALSE)
+        md <- readLines(file.path(mig$template, "LICENSE.md"), warn = FALSE, encoding = "UTF-8")
         md <- sub("^Copyright \\(c\\) .*$", sprintf("Copyright (c) %s %s", year, holder), md)
         .bd_write(mig, md, "LICENSE.md")
     }
