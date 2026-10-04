@@ -357,7 +357,9 @@ from_bookdown <- function(
 ## The git repository whose current branch receives the conversion, or NULL
 ## when nothing is committed
 .bookdown_repo <- function(path, commit) {
-    root <- tryCatch(normalizePath(gert::git_find(path)), error = function(e) NULL)
+    ## The root of the working tree (`git_find()` gives the git folder of a
+    ## linked worktree instead)
+    root <- tryCatch(normalizePath(gert::git_info(repo = path)$path), error = function(e) NULL)
     if (is.null(root)) {
         if (commit) cli::cli_alert_info(cli::col_grey(
             "{.file {path}} is not a git repository: the conversion is not committed."

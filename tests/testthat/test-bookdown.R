@@ -219,6 +219,20 @@ test_that("from_bookdown() only applies the rules of the chosen style", {
 
 })
 
+test_that("from_bookdown() converts a book in a linked worktree", {
+
+    skip_if_not(        nzchar(Sys.which("git")))
+    book <- .bookdown_fixture()
+    worktree <- tempfile("bookdown-worktree")
+    on.exit(unlink(c(book, worktree), recursive = TRUE, force = TRUE), add = TRUE)
+    system2("git", c("-C", shQuote(book), "worktree", "add", "-q", "-b", "biocbook", shQuote(worktree)))
+    suppressMessages(from_bookdown(worktree, package = "BookdownMini", user = "dummy", skip_availability = TRUE))
+    expect_identical(   gert::git_branch(repo = worktree), "biocbook")
+    expect_identical(   nrow(gert::git_log(repo = worktree)), 11L)
+    expect_identical(   nrow(gert::git_log(repo = book)), 1L)
+
+})
+
 test_that("from_bookdown() converts without committing", {
 
     fx <- .convert_fixture(commit = FALSE)
