@@ -6,47 +6,51 @@
 #'
 #' `from_bookdown()` converts a `bookdown` project into a `BiocBook` in place:
 #' in its own folder and, when that folder is a git repository, on its current
-#' branch, one commit per step. Run it on a branch of its own: the conversion
-#' can then be reviewed step by step, and squashed or rebased onto the main
-#' branch like any other change.
+#' branch, one commit per step, numbered `[BiocBook 1/10]`, `[BiocBook 2/10]`,
+#' and so on. Run it on a branch of its own: the conversion can then be
+#' reviewed step by step, and squashed or rebased onto the main branch like any
+#' other change.
 #'
-#' 1. **Add the BiocBook template**: `DESCRIPTION`, the `Dockerfile`, the GitHub
-#'    workflows, the `quarto` configuration (`inst/_quarto.yml`, `inst/assets/`)
-#'    and `vignettes/Makefile`, filled in as `init()` does. The book keeps its
-#'    `README.md`, which gets the BiocBook badges, and its `.gitignore` and
-#'    `.Rbuildignore`, which get the entries of the template.
-#' 2. **Move the pages to `inst/`**: `index.Rmd` becomes `inst/index.qmd`, and
-#'    every chapter a page of `inst/pages/` that keeps its file name (e.g.
-#'    `10-raw.Rmd` becomes `inst/pages/10-raw.qmd`). Asset folders (e.g.
-#'    `img/`) move to `inst/pages/` too, so that the relative paths of the
-#'    chapters keep working. Nothing else changes, so that git follows every
-#'    file.
-#' 3. **Move the book settings to `_book.yml` and `_format.yml`**: the title,
-#'    authors and list of chapters, with their parts and appendices, go to
-#'    `_book.yml`; the bibliographies, the CSS and the output options `quarto`
-#'    has an equivalent for go to `_format.yml`. Bibliography files and CSS move
-#'    to `inst/assets/`.
-#' 4. **Remove the bookdown build**: `_bookdown.yml`, `_output.yml`, the
-#'    rendered book (`output_dir`), the intermediate files of `bookdown`, and
-#'    the `Makefile`, shell scripts or GitHub workflows that render the book
-#'    with `bookdown`.
+#' 1. **Add the BiocBook package files**: `DESCRIPTION`, the `Dockerfile`, the
+#'    GitHub workflows, the `quarto` configuration (`inst/_quarto.yml`,
+#'    `inst/assets/`) and `vignettes/Makefile`, filled in as `init()` does. The
+#'    book keeps its `README.md`, which gets the BiocBook badges, and its
+#'    `.gitignore` and `.Rbuildignore`, which get the entries of the template.
+#' 2. **Move the pages to `inst/`, as BiocBook expects**: `index.Rmd` becomes
+#'    `inst/index.qmd`, and every chapter a page of `inst/pages/` that keeps its
+#'    file name (e.g. `10-raw.Rmd` becomes `inst/pages/10-raw.qmd`). Asset
+#'    folders (e.g. `img/`) move to `inst/pages/` too, so that the relative
+#'    paths of the chapters keep working. Nothing else changes, so that git
+#'    follows every file.
+#' 3. **Move the book settings to the BiocBook config**: the title, authors and
+#'    list of chapters, with their parts and appendices, go to `_book.yml`; the
+#'    bibliographies, the CSS and the output options `quarto` has an equivalent
+#'    for go to `_format.yml`. Bibliography files and CSS move to
+#'    `inst/assets/`.
+#' 4. **Remove the build files BiocBook replaces**: `_bookdown.yml`,
+#'    `_output.yml`, the rendered book (`output_dir`), the intermediate files of
+#'    `bookdown`, and the `Makefile`, shell scripts or GitHub workflows that
+#'    render the book with `bookdown`.
 #' 5. **Use the BiocBook landing page**: the preamble of `index.Rmd` becomes the
 #'    welcome part of the landing page of the template.
-#' 6. **Rewrite cross-references** for `quarto` (see "Rewriting rules").
-#' 7. **Turn questions and solutions into callouts**, in `msmbstyle` books.
-#' 8. **Translate figure layout options**.
-#' 9. **Set up every chapter as `index.Rmd` did**: `bookdown` runs every
+#' 6. **Use BiocBook cross-references** (see "Rewriting rules").
+#' 7. **Turn questions and solutions into BiocBook callouts**, in `msmbstyle`
+#'    books.
+#' 8. **Use BiocBook figure layout options**.
+#' 9. **Set up each BiocBook page on its own**: `bookdown` runs every
 #'    chapter in a single R session (unless `new_session: yes`), while `quarto`
 #'    renders each chapter in its own. The `library()`, `require()` and
 #'    `options()` calls of `index.Rmd` (and the `before_chapter_script`) are
 #'    therefore repeated in a hidden chunk at the top of each chapter.
-#' 10. **Describe the book in `DESCRIPTION`**: title, description and authors
-#'    from the `index.Rmd` header, the packages the pages use in `Imports`, and
-#'    the licence of the book: a Creative Commons licence its pages link to,
-#'    its `LICENSE` file, or else the MIT licence of the template.
+#' 10. **Describe the BiocBook in `DESCRIPTION`**: title, description and
+#'    authors from the `index.Rmd` header, the packages the pages use in
+#'    `Imports`, and the licence of the book: a Creative Commons licence its
+#'    pages link to, its `LICENSE` file, or else the MIT licence of the
+#'    template.
 #'
-#' A step with nothing to change is skipped. Rewrites leave code chunks, inline
-#' code and the blank lines of the book alone.
+#' A step with nothing to change makes no commit, and the commits are numbered
+#' once they are all made. Rewrites leave code chunks, inline code and the
+#' blank lines of the book alone.
 #'
 #' `bookdown`'s `\@ref()` renders a number only, while `quarto`'s `@`
 #' references render their own "Figure", "Table" or "Chapter": a type word right
@@ -165,6 +169,7 @@ from_bookdown <- function(
         .bookdown_description_step
     )
     for (step in steps) .bookdown_step(mig, step)
+    if (length(mig$commits)) .bookdown_number_commits(mig)
     .write_migration_report(mig)
 
     cli::cli_text("")
@@ -376,6 +381,11 @@ from_bookdown <- function(
         "i" = "A BiocBook is the root of its repository: convert a bookdown project that is."
     ))
     if (!commit) return(NULL)
+    head <- gert::git_info(repo = root)$commit
+    if (!length(head) || is.na(head)) cli::cli_abort(c(
+        "{.file {path}} has no commits yet.",
+        "i" = "Commit the bookdown book first: the conversion is committed on top of it."
+    ))
     status <- gert::git_status(repo = root)
     dirty <- status$file[!(status$status == "new" & !status$staged)]
     if (length(dirty)) cli::cli_abort(c(
@@ -578,6 +588,34 @@ from_bookdown <- function(
     invisible(sha)
 }
 
+## Once every step is committed, numbers the commits: "[BiocBook 1/10] ...".
+## Each commit is made again, with the same files and the numbered message, on
+## top of the previous one: only HEAD and the index move, not the working tree
+.bookdown_number_commits <- function(mig) {
+    repo <- mig$repo
+    commits <- mig$commits
+    n <- length(commits)
+    sig <- gert::git_signature_default(repo = repo)
+    head <- gert::git_commit_info(commits[1], repo = repo)$parents
+    numbered <- character(0)
+    tryCatch({
+        for (i in seq_len(n)) {
+            message <- gert::git_commit_info(commits[i], repo = repo)$message
+            gert::git_reset_mixed(commits[i], repo = repo)
+            gert::git_reset_soft(head, repo = repo)
+            head <- gert::git_commit(
+                sprintf("[BiocBook %d/%d] %s", i, n, message), author = sig, committer = sig, repo = repo
+            )
+            numbered <- c(numbered, head)
+        }
+        mig$commits <- numbered
+    }, error = function(e) {
+        gert::git_reset_mixed(commits[n], repo = repo)
+        cli::cli_warn(c("The commits of the conversion could not be numbered.", "x" = conditionMessage(e)))
+    })
+    invisible(mig$commits)
+}
+
 ## 1. The files every BiocBook has, filled in as `init()` does
 .bookdown_template_step <- function(mig) {
 
@@ -616,14 +654,12 @@ from_bookdown <- function(
     ))
     version <- desc::desc_get_field("BiocBookTemplate", default = "", file = file.path(tpl, "DESCRIPTION"))
     .commit_message(
-        "Add the BiocBook template",
+        "Add the BiocBook package files",
         sprintf(paste(
-            "The package files every BiocBook has, from the BiocBook template%s, filled in",
-            "as BiocBook::init() does: DESCRIPTION, the Dockerfile, the GitHub workflows,",
-            "the quarto configuration (inst/_quarto.yml and inst/assets/) and",
-            "vignettes/Makefile, which renders the book when the package is built."
-        ), if (nzchar(version)) sprintf(" (%s)", version) else ""),
-        "README.md gets the BiocBook badges, .gitignore and .Rbuildignore the entries of the template."
+            "The files every BiocBook has%s, filled in as BiocBook::init() does, the",
+            "BiocBook badges in README.md, and the BiocBook entries of .gitignore and",
+            ".Rbuildignore."
+        ), if (nzchar(version)) sprintf(" (template %s)", version) else "")
     )
 }
 
@@ -632,15 +668,11 @@ from_bookdown <- function(
     for (i in seq_along(mig$files)) .bd_move(mig, mig$files[i], mig$pages[i])
     for (d in mig$dirs) .bd_move(mig, d, file.path("inst", "pages", d))
     .commit_message(
-        "Move the pages to inst/",
-        sprintf(
-            "%s becomes inst/index.qmd, and each chapter a page of inst/pages/ that keeps its file name.",
-            mig$files[1]
-        ),
-        if (length(mig$dirs)) sprintf(
-            "%s %s next to the chapters, so that their relative paths keep working.",
-            .and(paste0(mig$dirs, "/")), if (length(mig$dirs) == 1L) "moves" else "move"
-        )
+        "Move the pages to inst/, as BiocBook expects",
+        sprintf(paste(
+            "A BiocBook keeps its landing page in inst/index.qmd and its chapters in",
+            "inst/pages/%s. The files are only renamed, so that git follows them."
+        ), if (length(mig$dirs)) paste(", with", .and(paste0(mig$dirs, "/"))) else "")
     )
 }
 
@@ -691,24 +723,16 @@ from_bookdown <- function(
         "`language` (`_bookdown.yml`): translate the labels with quarto's `lang`/`language` options"
     )
 
-    options <- c(
-        if (isTRUE(bd$options[["margin_references"]])) "margin references",
-        if (!is.null(bd$options[["toc_depth"]])) "toc depth",
-        if (isTRUE(bd$meta[["link-citations"]]) || identical(bd$meta[["link-citations"]], "yes")) "linked citations"
-    )
     moved <- c(mig$bibs, basename(mig$css))
     .commit_message(
-        "Move the book settings to _book.yml and _format.yml",
+        "Move the book settings to the BiocBook config",
         paste0(
-            "quarto reads them from the configuration of the book rather than from the header of ",
-            mig$files[1], ": its title, authors and list of chapters",
-            if (any(!is.na(mig$part_of)) || any(mig$appendix)) ", with its parts and appendices,",
-            " go to _book.yml; its bibliographies, CSS and the output options quarto has an equivalent for",
-            if (length(options)) sprintf(" (%s)", .and(options)),
-            " go to _format.yml."
-        ),
-        if (length(moved)) sprintf(
-            "%s %s to inst/assets/.", .and(moved), if (length(moved) == 1L) "moves" else "move"
+            "A BiocBook keeps its settings in inst/assets/: title, authors and chapters in ",
+            "_book.yml, bibliographies, CSS and output options in _format.yml",
+            if (length(moved)) sprintf(
+                "; %s %s there too", .and(moved), if (length(moved) == 1L) "moves" else "move"
+            ),
+            "."
         )
     )
 }
@@ -747,14 +771,11 @@ from_bookdown <- function(
 
     removed <- paste0(gone, ifelse(gone %in% folders, "/", ""))
     .commit_message(
-        "Remove the bookdown build",
-        paste(
-            "BiocBook builds the book from vignettes/Makefile, and deploys it to the gh-pages",
-            "branch: the bookdown configuration, its build and the book it rendered go."
-        ),
-        sprintf(
-            "Removed: %s%s.", .and(removed), if (dropped) ", and their entries in .gitignore" else ""
-        )
+        "Remove the build files BiocBook replaces",
+        sprintf(paste(
+            "A BiocBook renders when its package builds, and deploys to the gh-pages",
+            "branch. Removed: %s%s."
+        ), .and(removed), if (dropped) ", and their entries in .gitignore" else "")
     )
 }
 
@@ -771,10 +792,9 @@ from_bookdown <- function(
     .commit_message(
         "Use the BiocBook landing page",
         paste0(
-            "The preamble of the book becomes the welcome part of the landing page of the ",
-            "template, which shows the package, its version and its licence at the top, and ",
-            "how to run the Docker image of the book at the bottom. Its headers are not numbered",
-            if (n) ", and the paths of its images start with pages/, where their folders moved",
+            "The preamble of the book opens the BiocBook landing page, which shows the ",
+            "version and licence of the book, and how to run its Docker image",
+            if (n) "; its image paths start with pages/",
             "."
         )
     )
@@ -851,21 +871,18 @@ from_bookdown <- function(
     done <- .bd_delta(mig$counts, before)
     count <- function(pattern) sum(done[grepl(pattern, names(done))])
     extra <- c(
-        if (count("^header id")) paste(.n(count("^header id"), "header id"), "now starting with sec-"),
-        if (count("eq:x\\)` -> `\\{#eq")) paste(.n(count("eq:x\\)` -> `\\{#eq"), "equation label"), "after its display math"),
-        if (count("^chunk")) paste(.n(count("^chunk"), "chunk label"), "starting with fig- or tbl-")
+        if (count("^header id")) .n(count("^header id"), "header id"),
+        if (count("eq:x\\)` -> `\\{#eq")) .n(count("eq:x\\)` -> `\\{#eq"), "equation label"),
+        if (count("^chunk")) .n(count("^chunk"), "chunk label")
     )
     refs <- count("\\\\@ref")
     .commit_message(
-        "Rewrite cross-references for quarto",
-        paste(
-            "bookdown's \\@ref() renders a number only, while quarto's references render",
-            "\"Figure 2\", \"Chapter 3\"... by themselves: a type word right before a reference",
-            "is dropped, and the other references render their number only, as before."
+        "Use BiocBook cross-references",
+        sprintf(paste(
+            "BiocBook references print their own label: \"Chapter \\@ref(x)\" becomes @sec-x,",
+            "and a bare \\@ref(x) [-@sec-x]. Rewritten: %s, in %s."
         ),
-        sprintf(
-            "%s, in %s%s.", .n(refs, "reference"), .n(length(unique(mig$changed)), "page"),
-            if (length(extra)) paste0("; ", .and(extra)) else ""
+            .and(c(if (refs) .n(refs, "reference"), extra)), .n(length(unique(mig$changed)), "page")
         )
     )
 }
@@ -897,17 +914,13 @@ from_bookdown <- function(
     done <- .bd_delta(mig$counts, before)
     count <- function(name) if (is.na(done[name])) 0L else done[[name]]
     .commit_message(
-        "Turn questions and solutions into callouts",
+        "Turn questions and solutions into BiocBook callouts",
         sprintf(paste(
-            "msmbstyle's question_begin()/question_end() and solution_begin()/solution_end()",
-            "become quarto callouts, the solutions collapsed: %s and %s."
+            "question_begin()/question_end() and solution_begin()/solution_end() become",
+            "callouts styled by the BiocBook theme, the solutions collapsed: %s and %s."
         ),
             .n(count("`question_begin()` -> question callout"), "question"),
             .n(count("`solution_begin()` -> collapsed answer callout"), "solution")
-        ),
-        paste(
-            "Each one is wrapped in a .callout-question or .callout-answer div, which the",
-            "BiocBook theme styles: quarto drops extra classes from callouts."
         )
     )
 }
@@ -923,11 +936,10 @@ from_bookdown <- function(
     }
     if (!length(mig$changed)) return(NULL)
     .commit_message(
-        "Translate figure layout options",
+        "Use BiocBook figure layout options",
         sprintf(paste(
-            "fig.margin = TRUE and fig.fullwidth = TRUE become quarto's column: margin and",
-            "column: page, and fig.margin = FALSE and fig.fullwidth = FALSE, the defaults,",
-            "go: %s."
+            "fig.margin = TRUE and fig.fullwidth = TRUE become column: margin and column:",
+            "page, and their defaults, FALSE, go: %s."
         ), .n(sum(.bd_delta(mig$counts, before)), "chunk option"))
     )
 }
@@ -963,12 +975,11 @@ from_bookdown <- function(
     ## Its content is in every chapter now
     for (s in mig$scripts) .bd_remove(mig, s)
     .commit_message(
-        "Set up every chapter as index.Rmd did",
+        "Set up each BiocBook page on its own",
         paste0(
-            "bookdown rendered all chapters in a single R session, quarto renders each in its ",
-            "own: the packages and options that index.Rmd sets up",
-            if (length(mig$scripts)) sprintf(", and %s,", .and(mig$scripts)),
-            " are now set up at the top of every chapter, in a hidden chunk."
+            "A BiocBook renders each page in its own R session: the setup of index.Rmd",
+            if (length(mig$scripts)) sprintf(" and %s", .and(mig$scripts)),
+            " is repeated at the top of every chapter, in a hidden chunk."
         )
     )
 }
@@ -979,13 +990,13 @@ from_bookdown <- function(
     n <- length(res$deps)
     imports <- if (n == 1L) "the package its pages use" else sprintf("the %d packages its pages use", n)
     .commit_message(
-        "Describe the book in DESCRIPTION",
+        "Describe the BiocBook in DESCRIPTION",
         paste0(
-            "Title, description and authors from the book, ",
-            if (n) sprintf("%s in Imports, ", imports),
-            sprintf("and its licence, %s.", res$license)
-        ),
-        if (res$placeholder) "The email of the maintainer is a placeholder."
+            sprintf("Title, description, authors and licence (%s) of the book", res$license),
+            if (n) sprintf(", and %s in Imports", imports),
+            if (res$placeholder) "; the email of the maintainer is a placeholder",
+            "."
+        )
     )
 }
 

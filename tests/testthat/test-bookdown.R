@@ -87,17 +87,20 @@ test_that("from_bookdown() commits one step at a time", {
     log <- gert::git_log(repo = fx$book)
     expect_identical(   rev(sub("\n.*$", "", log$message)), c(
         "A bookdown book",
-        "Add the BiocBook template",
-        "Move the pages to inst/",
-        "Move the book settings to _book.yml and _format.yml",
-        "Remove the bookdown build",
-        "Use the BiocBook landing page",
-        "Rewrite cross-references for quarto",
-        "Turn questions and solutions into callouts",
-        "Translate figure layout options",
-        "Set up every chapter as index.Rmd did",
-        "Describe the book in DESCRIPTION"
+        "[BiocBook 1/10] Add the BiocBook package files",
+        "[BiocBook 2/10] Move the pages to inst/, as BiocBook expects",
+        "[BiocBook 3/10] Move the book settings to the BiocBook config",
+        "[BiocBook 4/10] Remove the build files BiocBook replaces",
+        "[BiocBook 5/10] Use the BiocBook landing page",
+        "[BiocBook 6/10] Use BiocBook cross-references",
+        "[BiocBook 7/10] Turn questions and solutions into BiocBook callouts",
+        "[BiocBook 8/10] Use BiocBook figure layout options",
+        "[BiocBook 9/10] Set up each BiocBook page on its own",
+        "[BiocBook 10/10] Describe the BiocBook in DESCRIPTION"
     ))
+    ## Terse messages: a subject, a short body and the version of BiocBook
+    expect_true(        all(nchar(sub("\n.*$", "", log$message)) <= 72L))
+    expect_true(        all(lengths(strsplit(log$message[-nrow(log)], "\n")) <= 8L))
     expect_true(        all(grepl("Done by BiocBook::from_bookdown()", log$message[-nrow(log)], fixed = TRUE)))
     expect_true(        all(log$author == "Jane Doe <jane@example.com>"))
 
@@ -216,7 +219,9 @@ test_that("from_bookdown() only applies the rules of the chosen style", {
     book_yml <- yaml::read_yaml(file.path(fx$book, "inst", "assets", "_book.yml"))$book
     expect_identical(   unlist(book_yml$appendices), c("pages/01-intro.qmd", "pages/02-annex.qmd"))
     log <- gert::git_log(repo = fx$book)
-    expect_false(       any(grepl("^Turn questions and solutions into callouts", log$message)))
+    expect_false(       any(grepl("Turn questions and solutions into BiocBook callouts", log$message)))
+    ## The commits that were made are numbered without gaps
+    expect_identical(   rev(substr(log$message[-nrow(log)], 1L, 14L)), sprintf("[BiocBook %d/9]", 1:9))
 
 })
 
@@ -272,6 +277,12 @@ test_that("from_bookdown() checks its input before changing anything", {
     expect_error(       from_bookdown(book, package = "BookdownMini", user = "dummy"), "uncommitted changes")
     expect_true(        file.exists(file.path(book, "index.Rmd")))
     expect_false(       file.exists(file.path(book, "DESCRIPTION")))
+    ## A repository with no commits to convert on top of
+    unborn <- .bookdown_fixture(git = FALSE)
+    on.exit(unlink(unborn, recursive = TRUE, force = TRUE), add = TRUE)
+    gert::git_init(unborn)
+    expect_error(       from_bookdown(unborn, package = "BookdownMini", user = "dummy"), "no commits")
+    expect_false(       file.exists(file.path(unborn, "DESCRIPTION")))
     ## A name that cannot be a package name
     expect_error(       .bookdown_package("my-book", list(config = list(), path = book)), "valid package name")
 

@@ -48,48 +48,52 @@ A \code{BiocBook} object, invisibly.
 \description{
 \code{from_bookdown()} converts a \code{bookdown} project into a \code{BiocBook} in place:
 in its own folder and, when that folder is a git repository, on its current
-branch, one commit per step. Run it on a branch of its own: the conversion
-can then be reviewed step by step, and squashed or rebased onto the main
-branch like any other change.
+branch, one commit per step, numbered \verb{[BiocBook 1/10]}, \verb{[BiocBook 2/10]},
+and so on. Run it on a branch of its own: the conversion can then be
+reviewed step by step, and squashed or rebased onto the main branch like any
+other change.
 \enumerate{
-\item \strong{Add the BiocBook template}: \code{DESCRIPTION}, the \code{Dockerfile}, the GitHub
-workflows, the \code{quarto} configuration (\verb{inst/_quarto.yml}, \verb{inst/assets/})
-and \code{vignettes/Makefile}, filled in as \code{init()} does. The book keeps its
-\code{README.md}, which gets the BiocBook badges, and its \code{.gitignore} and
-\code{.Rbuildignore}, which get the entries of the template.
-\item \strong{Move the pages to \verb{inst/}}: \code{index.Rmd} becomes \code{inst/index.qmd}, and
-every chapter a page of \verb{inst/pages/} that keeps its file name (e.g.
-\code{10-raw.Rmd} becomes \code{inst/pages/10-raw.qmd}). Asset folders (e.g.
-\verb{img/}) move to \verb{inst/pages/} too, so that the relative paths of the
-chapters keep working. Nothing else changes, so that git follows every
-file.
-\item \strong{Move the book settings to \verb{_book.yml} and \verb{_format.yml}}: the title,
-authors and list of chapters, with their parts and appendices, go to
-\verb{_book.yml}; the bibliographies, the CSS and the output options \code{quarto}
-has an equivalent for go to \verb{_format.yml}. Bibliography files and CSS move
-to \verb{inst/assets/}.
-\item \strong{Remove the bookdown build}: \verb{_bookdown.yml}, \verb{_output.yml}, the
-rendered book (\code{output_dir}), the intermediate files of \code{bookdown}, and
-the \code{Makefile}, shell scripts or GitHub workflows that render the book
-with \code{bookdown}.
+\item \strong{Add the BiocBook package files}: \code{DESCRIPTION}, the \code{Dockerfile}, the
+GitHub workflows, the \code{quarto} configuration (\verb{inst/_quarto.yml},
+\verb{inst/assets/}) and \code{vignettes/Makefile}, filled in as \code{init()} does. The
+book keeps its \code{README.md}, which gets the BiocBook badges, and its
+\code{.gitignore} and \code{.Rbuildignore}, which get the entries of the template.
+\item \strong{Move the pages to \verb{inst/}, as BiocBook expects}: \code{index.Rmd} becomes
+\code{inst/index.qmd}, and every chapter a page of \verb{inst/pages/} that keeps its
+file name (e.g. \code{10-raw.Rmd} becomes \code{inst/pages/10-raw.qmd}). Asset
+folders (e.g. \verb{img/}) move to \verb{inst/pages/} too, so that the relative
+paths of the chapters keep working. Nothing else changes, so that git
+follows every file.
+\item \strong{Move the book settings to the BiocBook config}: the title, authors and
+list of chapters, with their parts and appendices, go to \verb{_book.yml}; the
+bibliographies, the CSS and the output options \code{quarto} has an equivalent
+for go to \verb{_format.yml}. Bibliography files and CSS move to
+\verb{inst/assets/}.
+\item \strong{Remove the build files BiocBook replaces}: \verb{_bookdown.yml},
+\verb{_output.yml}, the rendered book (\code{output_dir}), the intermediate files of
+\code{bookdown}, and the \code{Makefile}, shell scripts or GitHub workflows that
+render the book with \code{bookdown}.
 \item \strong{Use the BiocBook landing page}: the preamble of \code{index.Rmd} becomes the
 welcome part of the landing page of the template.
-\item \strong{Rewrite cross-references} for \code{quarto} (see "Rewriting rules").
-\item \strong{Turn questions and solutions into callouts}, in \code{msmbstyle} books.
-\item \strong{Translate figure layout options}.
-\item \strong{Set up every chapter as \code{index.Rmd} did}: \code{bookdown} runs every
+\item \strong{Use BiocBook cross-references} (see "Rewriting rules").
+\item \strong{Turn questions and solutions into BiocBook callouts}, in \code{msmbstyle}
+books.
+\item \strong{Use BiocBook figure layout options}.
+\item \strong{Set up each BiocBook page on its own}: \code{bookdown} runs every
 chapter in a single R session (unless \code{new_session: yes}), while \code{quarto}
 renders each chapter in its own. The \code{library()}, \code{require()} and
 \code{options()} calls of \code{index.Rmd} (and the \code{before_chapter_script}) are
 therefore repeated in a hidden chunk at the top of each chapter.
-\item \strong{Describe the book in \code{DESCRIPTION}}: title, description and authors
-from the \code{index.Rmd} header, the packages the pages use in \code{Imports}, and
-the licence of the book: a Creative Commons licence its pages link to,
-its \code{LICENSE} file, or else the MIT licence of the template.
+\item \strong{Describe the BiocBook in \code{DESCRIPTION}}: title, description and
+authors from the \code{index.Rmd} header, the packages the pages use in
+\code{Imports}, and the licence of the book: a Creative Commons licence its
+pages link to, its \code{LICENSE} file, or else the MIT licence of the
+template.
 }
 
-A step with nothing to change is skipped. Rewrites leave code chunks, inline
-code and the blank lines of the book alone.
+A step with nothing to change makes no commit, and the commits are numbered
+once they are all made. Rewrites leave code chunks, inline code and the
+blank lines of the book alone.
 
 \code{bookdown}'s \verb{\\@ref()} renders a number only, while \code{quarto}'s \code{@}
 references render their own "Figure", "Table" or "Chapter": a type word right

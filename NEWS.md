@@ -4,13 +4,15 @@
 
 - `from_bookdown()` converts a `bookdown` book in place, in its own
   repository and on its current branch, rather than into a new repository.
-  Each step is a commit of its own (the template, the pages moved to `inst/`
-  as they are, the book settings, the removal of the `bookdown` build, the
-  landing page, cross-references, callouts, figure options, the shared setup
-  and `DESCRIPTION`), so that the conversion can be reviewed step by step,
-  and squashed or rebased like any other change. `package` (by default the
-  `book_filename` of the book) replaces `new_package`, `commit` replaces
-  `push`, and `user` defaults to the owner of the `origin` remote.
+  Each step is a commit of its own, numbered `[BiocBook 1/10]`,
+  `[BiocBook 2/10]`... (the package files, the pages moved to `inst/` as they
+  are, the book settings, the removal of the `bookdown` build, the landing
+  page, cross-references, callouts, figure options, the setup of each page
+  and `DESCRIPTION`), with a short message, so that the conversion can be
+  reviewed step by step, and squashed or rebased like any other change. The
+  repository needs a first commit to convert on top of. `package` (by
+  default the `book_filename` of the book) replaces `new_package`, `commit`
+  replaces `push`, and `user` defaults to the owner of the `origin` remote.
 - `from_bookdown()` takes the licence of the book from a Creative Commons
   licence its pages link to, or from its `LICENSE` file, and otherwise
   writes the MIT licence of the template for the authors of the book.
