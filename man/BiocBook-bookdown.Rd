@@ -3,28 +3,30 @@
 \name{BiocBook-bookdown}
 \alias{BiocBook-bookdown}
 \alias{from_bookdown}
-\title{Migrating a \code{bookdown} book to a BiocBook}
+\title{Converting a \code{bookdown} book to a BiocBook}
 \usage{
 from_bookdown(
-  path,
-  new_package,
+  path = ".",
+  package = NULL,
   user = NULL,
   style = c("auto", "bookdown", "msmbstyle"),
   appendices = NULL,
-  push = NA,
-  skip_availability = FALSE,
-  .local = FALSE
+  commit = TRUE,
+  skip_availability = FALSE
 )
 }
 \arguments{
 \item{path}{Path to the \code{bookdown} project, i.e. the folder holding
-\code{index.Rmd} (and optionally \verb{_bookdown.yml}).}
+\code{index.Rmd} (and optionally \verb{_bookdown.yml}). When it is in a git
+repository, it must be the root of the repository.}
 
-\item{new_package}{Name of the new book package, as in \code{init()}.}
+\item{package}{Name of the book package. Defaults to the \code{book_filename} of
+\verb{_bookdown.yml}, else to the name of the folder.}
 
-\item{user}{GitHub user or organization of the new book, used in the
-template's links and \code{Docker} image name. Defaults to the user \code{init()}
-logs in with (\code{"dummy"} with \code{.local = TRUE}).}
+\item{user}{GitHub user or organization of the book, used in the links of
+the template and in the name of its \code{Docker} image. Defaults to the owner
+of the \code{origin} remote of the repository, when it is on GitHub, else to the
+user of the GitHub token.}
 
 \item{style}{Syntax to convert: \code{"bookdown"}, \code{"msmbstyle"} (\code{bookdown}
 with the \code{msmbstyle} question and solution blocks), or \code{"auto"} to detect
@@ -34,38 +36,64 @@ it from the output format and the pages.}
 (file names, with or without extension), in addition to those following a
 \verb{# (APPENDIX)} header.}
 
-\item{push, skip_availability, .local}{As in \code{init()}. \code{skip_availability}
-also skips checking that the dependencies of the book are on CRAN or
-Bioconductor, which requires network access.}
+\item{commit}{Whether to commit each step, when \code{path} is a git repository.
+Its working tree must then have no uncommitted changes.}
+
+\item{skip_availability}{Whether to skip checking that the dependencies of
+the book are on CRAN or Bioconductor, which requires network access.}
 }
 \value{
 A \code{BiocBook} object, invisibly.
 }
 \description{
-\code{from_bookdown()} turns a \code{bookdown} project into a new \code{BiocBook} in one
-call. It creates the book package from the \code{BiocBook} template, as \code{init()}
-does, and converts the \code{bookdown} project into it:
-\itemize{
-\item \strong{Pages}: \code{index.Rmd} becomes the landing page (\code{inst/index.qmd}), and
-every chapter a page in \verb{inst/pages/}, keeping its file name (e.g.
-\code{10-raw.Rmd} becomes \code{inst/pages/10-raw.qmd}). They are listed in
-\verb{_book.yml} in the \code{bookdown} order, with its parts and appendices.
-\item \strong{Syntax}: \code{bookdown} cross-references and figure layout options, and
-\code{msmbstyle} question and solution blocks, are rewritten for \code{quarto}
-(outside code chunks, see "Rewriting rules").
-\item \strong{Assets}: bibliography files and CSS are copied to \verb{inst/assets/}, and
-asset folders (e.g. \verb{img/}) to \verb{inst/pages/}, so that relative paths in
-chapters keep working. The \code{bookdown} output options are translated
-where \code{quarto} has an equivalent.
-\item \strong{DESCRIPTION}: title, description and authors are taken from the
-\code{index.Rmd} header, and the packages the pages use are added to
-\code{Imports}.
-\item \strong{Shared session}: \code{bookdown} runs every chapter in a single R session
-(unless \code{new_session: yes}), while \code{quarto} renders each chapter in its
-own. The \code{library()}, \code{require()} and \code{options()} calls of \code{index.Rmd}
-(and the \code{before_chapter_script}) are therefore repeated in a hidden
-chunk at the top of each chapter.
+\code{from_bookdown()} converts a \code{bookdown} project into a \code{BiocBook} in place:
+in its own folder and, when that folder is a git repository, on its current
+branch, one commit per step, numbered \verb{[BiocBook 1/10]}, \verb{[BiocBook 2/10]},
+and so on. Run it on a branch of its own: the conversion can then be
+reviewed step by step, and squashed or rebased onto the main branch like any
+other change.
+\enumerate{
+\item \strong{Add the BiocBook package files}: \code{DESCRIPTION}, the \code{Dockerfile}, the
+GitHub workflows, the \code{quarto} configuration (\verb{inst/_quarto.yml},
+\verb{inst/assets/}) and \code{vignettes/Makefile}, filled in as \code{init()} does. The
+book keeps its \code{README.md}, which gets the BiocBook badges, and its
+\code{.gitignore} and \code{.Rbuildignore}, which get the entries of the template.
+\item \strong{Move the pages to \verb{inst/}, as BiocBook expects}: \code{index.Rmd} becomes
+\code{inst/index.qmd}, and every chapter a page of \verb{inst/pages/} that keeps its
+file name (e.g. \code{10-raw.Rmd} becomes \code{inst/pages/10-raw.qmd}). Asset
+folders (e.g. \verb{img/}) move to \verb{inst/pages/} too, so that the relative
+paths of the chapters keep working. Nothing else changes, so that git
+follows every file.
+\item \strong{Move the book settings to the BiocBook config}: the title, authors and
+list of chapters, with their parts and appendices, go to \verb{_book.yml}; the
+bibliographies, the CSS and the output options \code{quarto} has an equivalent
+for go to \verb{_format.yml}. Bibliography files and CSS move to
+\verb{inst/assets/}.
+\item \strong{Remove the build files BiocBook replaces}: \verb{_bookdown.yml},
+\verb{_output.yml}, the rendered book (\code{output_dir}), the intermediate files of
+\code{bookdown}, and the \code{Makefile}, shell scripts or GitHub workflows that
+render the book with \code{bookdown}.
+\item \strong{Use the BiocBook landing page}: the preamble of \code{index.Rmd} becomes the
+welcome part of the landing page of the template.
+\item \strong{Use BiocBook cross-references} (see "Rewriting rules").
+\item \strong{Turn questions and solutions into BiocBook callouts}, in \code{msmbstyle}
+books.
+\item \strong{Use BiocBook figure layout options}.
+\item \strong{Set up each BiocBook page on its own}: \code{bookdown} runs every
+chapter in a single R session (unless \code{new_session: yes}), while \code{quarto}
+renders each chapter in its own. The \code{library()}, \code{require()} and
+\code{options()} calls of \code{index.Rmd} (and the \code{before_chapter_script}) are
+therefore repeated in a hidden chunk at the top of each chapter.
+\item \strong{Describe the BiocBook in \code{DESCRIPTION}}: title, description and
+authors from the \code{index.Rmd} header, the packages the pages use in
+\code{Imports}, and the licence of the book: a Creative Commons licence its
+pages link to, its \code{LICENSE} file, or else the MIT licence of the
+template.
 }
+
+A step with nothing to change makes no commit, and the commits are numbered
+once they are all made. Rewrites leave code chunks, inline code and the
+blank lines of the book alone.
 
 \code{bookdown}'s \verb{\\@ref()} renders a number only, while \code{quarto}'s \code{@}
 references render their own "Figure", "Table" or "Chapter": a type word right
@@ -73,10 +101,11 @@ before a reference is therefore dropped, and other references render their
 number only, as in \code{bookdown}.
 
 What still needs a human is listed in \code{MIGRATION.md}, at the root of the
-new book: downloads during the build, cached chunks, \code{knitr::write_bib()}
-calls, unresolved cross-references, dependencies that are not on CRAN or
-Bioconductor, and output options with no \code{quarto} equivalent. It also
-records how often each rewriting rule was applied.
+book, which is not committed: downloads during the build, cached chunks,
+\code{knitr::write_bib()} calls, unresolved cross-references, dependencies that
+are not on CRAN or Bioconductor, output options that were not translated,
+and files that are not part of a BiocBook. It also records how
+often each rewriting rule was applied. Delete it once done.
 }
 \section{Rewriting rules}{
 \tabular{ll}{
@@ -96,7 +125,7 @@ records how often each rewriting rule was applied.
 }
 
 \examples{
-## A minimal bookdown project
+## A minimal bookdown project, in a git repository
 bd <- file.path(tempdir(), "bookdown-example")
 dir.create(bd)
 writeLines(c(
@@ -107,14 +136,17 @@ writeLines(
     c("# Introduction {#intro}", "", "Some text."),
     file.path(bd, "01-intro.Rmd")
 )
+gert::git_init(bd)
+gert::git_config_set("user.name", "Jane Doe", repo = bd)
+gert::git_config_set("user.email", "jane@example.com", repo = bd)
+gert::git_add(".", repo = bd)
+gert::git_commit("A bookdown book", repo = bd)
 
-## In practice, you should not use `.local` argument.
-unique_id <- as.numeric(Sys.time())
-bookname <- paste(Sys.info()[['sysname']], unique_id, sep = '.')
-bb <- from_bookdown(bd, bookname, .local = TRUE, skip_availability = TRUE)
+## Converted in place, one commit per step
+bb <- from_bookdown(bd, package = "myBook", user = "jane", skip_availability = TRUE)
 chapters(bb)
-readLines(file.path(bookname, "inst", "pages", "01-intro.qmd"))
-unlink(c(bd, bookname), recursive = TRUE)
+gert::git_log(repo = bd)$message
+unlink(bd, recursive = TRUE)
 }
 \seealso{
 \code{\link{BiocBook}}
