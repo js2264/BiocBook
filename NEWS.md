@@ -23,6 +23,9 @@
 - `MIGRATION.md` is no longer committed, nor listed in `.Rbuildignore`: the
   commits say what was done, and the file what is left to do, now including
   the files that are not part of a BiocBook.
+- `MIGRATION.md` no longer claims that the output options it does not
+  translate have no `quarto` equivalent: for `highlight`, it gives the
+  `highlight-style` that keeps the code highlighting of the book.
 
 # BiocBook 1.11.3
 

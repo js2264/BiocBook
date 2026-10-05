@@ -191,6 +191,7 @@ test_that("from_bookdown() reports what still needs a human", {
     expect_true(        any(grepl("inst/index.qmd` line [0-9]+: generate the `.bib` file", todo)))
     expect_true(        any(grepl("`someone/somepkg` is installed from GitHub", todo, fixed = TRUE)))
     expect_true(        any(grepl("highlight: tango", todo, fixed = TRUE)))
+    expect_true(        any(grepl("set `highlight-style: tango` in `inst/assets/_format.yml`", todo, fixed = TRUE)))
     expect_true(        any(grepl("placeholder email", todo, fixed = TRUE)))
     expect_true(        any(grepl("`build-notes.R`: remove it, or list it in `.Rbuildignore`", todo, fixed = TRUE)))
     ## Intended leftovers (code, inline code) are not reported

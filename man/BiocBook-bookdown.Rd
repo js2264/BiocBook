@@ -99,8 +99,8 @@ number only, as in \code{bookdown}.
 What still needs a human is listed in \code{MIGRATION.md}, at the root of the
 book, which is not committed: downloads during the build, cached chunks,
 \code{knitr::write_bib()} calls, unresolved cross-references, dependencies that
-are not on CRAN or Bioconductor, output options with no \code{quarto}
-equivalent, and files that are not part of a BiocBook. It also records how
+are not on CRAN or Bioconductor, output options that were not translated,
+and files that are not part of a BiocBook. It also records how
 often each rewriting rule was applied. Delete it once done.
 }
 \section{Rewriting rules}{

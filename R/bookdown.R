@@ -56,8 +56,8 @@
 #' What still needs a human is listed in `MIGRATION.md`, at the root of the
 #' book, which is not committed: downloads during the build, cached chunks,
 #' `knitr::write_bib()` calls, unresolved cross-references, dependencies that
-#' are not on CRAN or Bioconductor, output options with no `quarto`
-#' equivalent, and files that are not part of a BiocBook. It also records how
+#' are not on CRAN or Bioconductor, output options that were not translated,
+#' and files that are not part of a BiocBook. It also records how
 #' often each rewriting rule was applied. Delete it once done.
 #'
 #' @section Rewriting rules:
@@ -343,6 +343,11 @@ from_bookdown <- function(
     "bookdown", "msmbstyle", "rmarkdown", "knitr", "BiocBook",
     "base", "compiler", "datasets", "graphics", "grDevices", "grid", "methods",
     "parallel", "splines", "stats", "stats4", "tcltk", "tools", "utils"
+)
+
+## The highlight styles of rmarkdown that quarto has too
+.bookdown_highlight_styles <- c(
+    "arrow", "breezedark", "espresso", "haddock", "kate", "monochrome", "pygments", "tango", "zenburn"
 )
 
 ## The licences of R's licence database a Creative Commons link can name
@@ -1397,8 +1402,20 @@ from_bookdown <- function(
         known <- c(known, "split_by")
     }
     known <- c(known, "split_by")
+    ## Code highlighting is part of the look of the book: the BiocBook theme's
+    if (!is.null(opts[["highlight"]])) {
+        style <- paste(format(opts[["highlight"]]), collapse = ", ")
+        todo <- c(todo, if (style %in% .bookdown_highlight_styles) sprintf(
+            "Output option `highlight: %s`: the book uses the code highlighting of the BiocBook theme. To keep its own, set `highlight-style: %s` in `inst/assets/_format.yml`",
+            style, style
+        ) else sprintf(
+            "Output option `highlight: %s`: the book uses the code highlighting of the BiocBook theme (`highlight-style` in `inst/assets/_format.yml`)",
+            style
+        ))
+        known <- c(known, "highlight")
+    }
     for (opt in setdiff(names(opts), known)) todo <- c(todo, sprintf(
-        "Output option `%s: %s` has no quarto equivalent and was not migrated",
+        "Output option `%s: %s` was not migrated: set its quarto equivalent, if any, in `inst/assets/_format.yml`",
         opt, paste(format(opts[[opt]]), collapse = ", ")
     ))
     unknown_meta <- setdiff(names(bd$meta), c(
