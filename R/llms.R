@@ -119,7 +119,8 @@ enrich_llms_txt <- function(output_dir = "docs", project_dir = ".") {
     }, logical(1)))
     python <- NULL
     if (has_python && file.exists(req_f)) {
-        python <- unlist(yaml::read_yaml(req_f, readLines.warn = FALSE)[["dependencies"]])
+        reqs <- .read_requirements(req_f)
+        python <- list(conda = reqs$conda, pip = reqs$pip)
     }
 
     list(
@@ -193,9 +194,12 @@ enrich_llms_txt <- function(output_dir = "docs", project_dir = ".") {
             ))
         ))
     }
-    if (length(info$python)) lines <- c(lines, paste0(
+    if (length(info$python$conda)) lines <- c(lines, paste0(
         "- Python environment (conda): ",
-        paste(code(info$python), collapse = ", "),
+        paste(code(info$python$conda), collapse = ", "),
+        if (length(info$python$pip)) paste0(
+            "; from PyPI: ", paste(code(info$python$pip), collapse = ", ")
+        ),
         ", provisioned by ", code("BiocBook::setup_python()"),
         " from ", code("inst/requirements.yml")
     ))

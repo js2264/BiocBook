@@ -24,7 +24,8 @@ python_envs(remove = NULL)
 
 \item{quiet}{Whether to suppress progress messages.}
 
-\item{requirements}{Path to a \code{conda} environment file. If \code{NULL},
+\item{requirements}{Path to a \code{conda} environment file, which may hold a
+\verb{pip:} section (see "Python libraries and the R session"). If \code{NULL},
 \code{inst/requirements.yml} is located by walking up from the working directory
 to the folder holding \verb{_quarto.yml}, which works both while \code{quarto}
 renders a page and from a normal R session.}
@@ -63,12 +64,13 @@ executed on every render, including with GHA or when the \emph{Bioconductor Buil
 The consequence is that the \code{python} packages a book uses must be installed
 at build time, wherever the book is built. \code{setup_python()} does that from
 within the book itself, building the \code{conda} environment declared in
-\code{inst/requirements.yml}, so the book carries its own \code{python} environment
-rather than relying on one being present.
+\code{inst/requirements.yml} (including its \verb{pip:} section, if any), so the book
+carries its own \code{python} environment rather than relying on one being
+present.
 \itemize{
 \item \code{setup_python()}: provision and activate the book's \code{conda} environment
-from \code{inst/requirements.yml}. Call it from any page that needs
-\code{python}.
+from \code{inst/requirements.yml}, and put its command-line tools on the
+\code{PATH}. Call it from any page that needs \code{python}.
 \item \code{python_envs()}: list the \code{conda} environments \code{setup_python()} has
 cached on this machine, and remove the ones that are no longer needed.
 \item \code{micromamba()}: path to the \code{micromamba} binary the book provisions with,
@@ -116,18 +118,60 @@ it keeps the book's house style (\code{collapse}, \code{comment}, \code{fig.alig
 \code{jupyter}, so a \code{jupyter} page cannot be rendered there at all.
 }
 
-\section{matplotlib on the Bioconductor images}{
+\section{Python libraries and the R session}{
 
 
-\code{matplotlib} >= 3.11, as built by \code{conda-forge}, links \code{libraqm}, which
-needs a more recent \code{harfbuzz} than the Bioconductor images (Ubuntu 24.04)
-ship. The \code{R} session has already loaded the system's \code{harfbuzz}
-when a page starts rendering, and a process cannot load a second library
-under the same name: \verb{import matplotlib} then fails with
-\verb{undefined symbol: hb_ft_font_get_ft_face}, directly or through any package
-that uses it. Importing \code{python} packages before attaching \code{R} packages does
-not help. Pin it below 3.11 in \code{inst/requirements.yml} instead, e.g.
-\code{- matplotlib-base=3.10}.
+\code{python} chunks run through \code{reticulate}, inside the \code{R} process that
+renders the page. A process holds a single copy of each shared library
+name: once \code{R} has loaded one, e.g. the system's \code{libssl.so.3} through an
+\code{R} package using OpenSSL, a \code{python} package needing a library of the same
+name gets that copy, whatever version it was built against. \code{conda}
+packages link such libraries under their usual names, and are usually built
+against more recent versions than a Linux distribution ships, hence errors
+like these on the Bioconductor builders (Ubuntu 24.04):
+\itemize{
+\item \verb{ImportError: ... libssl.so.3: version 'OPENSSL_3.2.0' not found (required by .../libcurl.so.4)}, importing \code{h5py} (and \code{cooler}), whose
+\code{HDF5} links \code{libcurl};
+\item \verb{undefined symbol: hb_ft_font_get_ft_face}, importing \code{matplotlib} >=
+3.11, which links \code{libraqm} and therefore \code{harfbuzz}.
+}
+
+Which libraries \code{R} has loaded first depends on the machine and on the
+page, so a book can build in its \code{Docker} image and fail on the
+Bioconductor builders, and importing \code{python} packages before attaching
+\code{R} packages does not help.
+
+Wheels from PyPI carry their compiled dependencies under names of their own,
+so they cannot pick up a library \code{R} has loaded. Declare the packages that
+\code{python} chunks import in a \verb{pip:} section of \code{inst/requirements.yml}:
+\code{setup_python()} installs them with the environment's own \code{pip}, once the
+\code{conda} packages are in place.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{dependencies:
+    - python=3.12
+    - samtools=1.24
+    - pip:
+        - cooler==0.10.4
+        - matplotlib==3.11.2
+}\if{html}{\out{</div>}}
+\itemize{
+\item List under \verb{pip:}, with pinned versions, every package that \code{python}
+chunks import. Their own compiled dependencies (\code{numpy}, \code{h5py}...) then
+come from PyPI too. \code{pip} does not replace a package that \code{conda} has
+already installed, so do not let a \code{conda} package bring them in.
+\item Keep the \code{conda} part for \code{python} itself and for command-line tools,
+e.g. \code{samtools} from \code{bioconda}. A tool runs in its own process, with its
+own libraries, so it cannot clash with the \code{R} session. \code{setup_python()}
+puts the environment's tools on the \code{PATH}, for \code{system2()}, \code{bash} chunks
+and \code{python}'s \code{subprocess}.
+\item Some \code{conda} packages bring \code{python} libraries along: \code{bioconda}'s
+\code{deeptools} pulls \code{numpy}, \code{matplotlib}, \code{pysam} and \code{pyBigWig} from
+\code{conda}. Install such a package under \verb{pip:} instead (\code{deeptools} is on
+PyPI).
+\item A package without a wheel for the build machine (Linux \code{x86_64} for the
+Bioconductor builders) is compiled from source, against the libraries of
+the environment, and can clash again.
+}
 }
 
 \examples{

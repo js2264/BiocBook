@@ -1,3 +1,28 @@
+# BiocBook 1.11.5
+
+## New features
+
+- `setup_python()` installs the `pip:` section of `inst/requirements.yml`,
+  with the environment's own `pip`, once its `conda` packages are in place.
+  Wheels from PyPI carry their compiled dependencies under names of their
+  own, so the `python` packages a book imports can no longer pick up a library
+  the `R` session has already loaded. On the Bioconductor builders, `conda`
+  builds of `h5py` (and so `cooler`) failed to import with
+  `OPENSSL_3.2.0 not found`, and `matplotlib` >= 3.11 with
+  `undefined symbol: hb_ft_font_get_ft_face`. `?BiocBook-python` explains
+  which packages to declare under `pip:`, and which to keep under `conda`,
+  such as command-line tools.
+- `setup_python()` puts the command-line tools of the book's environment
+  (e.g. `samtools`) on the `PATH` from the first chunk on, rather than once
+  `python` has started.
+- `llms.txt` lists the packages of the `pip:` section after the `conda`
+  ones.
+
+## Bug fixes
+
+- `setup_python()` removes an environment whose build failed half way,
+  rather than re-using it on the next render.
+
 # BiocBook 1.11.4
 
 ## New features

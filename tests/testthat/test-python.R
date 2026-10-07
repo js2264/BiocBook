@@ -123,15 +123,122 @@ test_that("setup_python() leaves an already configured python alone", {
 
     ## The book's Docker image sets RETICULATE_PYTHON: nothing must be
     ## provisioned, whatever requirements.yml says
-    fake <- tempfile(); file.create(fake)
+    fake <- file.path(tempfile("env"), "bin", "python")
+    dir.create(dirname(fake), recursive = TRUE); file.create(fake)
     old <- Sys.getenv("RETICULATE_PYTHON", unset = NA)
+    old_path <- Sys.getenv("PATH")
     Sys.setenv(RETICULATE_PYTHON = fake)
     on.exit({
         if (is.na(old)) Sys.unsetenv("RETICULATE_PYTHON")
         else Sys.setenv(RETICULATE_PYTHON = old)
-        unlink(fake)
+        Sys.setenv(PATH = old_path)
+        unlink(dirname(dirname(fake)), recursive = TRUE)
     }, add = TRUE)
     expect_identical(   suppressMessages(setup_python(conda = "/nonexistent")), fake)
+
+    ## ... but the tools of its environment are put on the PATH
+    path <- strsplit(Sys.getenv("PATH"), .Platform$path.sep, fixed = TRUE)[[1]]
+    expect_identical(   path[1], dirname(fake))
+
+})
+
+test_that("requirements.yml can declare a pip: section", {
+
+    req <- tempfile(fileext = ".yml")
+    on.exit(unlink(req), add = TRUE)
+
+    ## conda packages only: nothing for pip, and pip is not added
+    writeLines(c("name:", "    Book", "channels:", "    - conda-forge",
+        "dependencies:", "    - python=3.12", "    - samtools=1.24"), req)
+    reqs <- BiocBook:::.read_requirements(req)
+    expect_identical(   reqs$name, "Book")
+    expect_identical(   reqs$channels, "conda-forge")
+    expect_identical(   reqs$conda, c("python=3.12", "samtools=1.24"))
+    expect_length(      reqs$pip, 0L)
+
+    ## A pip: section: its packages are for pip, and pip joins the conda
+    ## packages, since the environment needs it to install them
+    writeLines(c("dependencies:", "    - python=3.12", "    - pip:",
+        "        - cooler==0.10.4", "        - matplotlib>=3.11,<3.12"), req)
+    reqs <- BiocBook:::.read_requirements(req)
+    expect_identical(   reqs$conda, c("python=3.12", "pip"))
+    expect_identical(   reqs$pip, c("cooler==0.10.4", "matplotlib>=3.11,<3.12"))
+
+    ## ... unless the file already declares pip, pinned or not
+    writeLines(c("dependencies:", "    - python=3.12", "    - pip=24.2",
+        "    - pip:", "        - cooler==0.10.4"), req)
+    expect_identical(   BiocBook:::.read_requirements(req)$conda, c("python=3.12", "pip=24.2"))
+    writeLines(c("dependencies:", "    - conda-forge::pip", "    - pip:", "        - six"), req)
+    expect_identical(   BiocBook:::.read_requirements(req)$conda, "conda-forge::pip")
+
+    ## A package named like pip is not pip
+    writeLines(c("dependencies:", "    - pip-tools", "    - pip:", "        - six"), req)
+    expect_identical(   BiocBook:::.read_requirements(req)$conda, c("pip-tools", "pip"))
+
+    ## Other blocks are refused rather than silently dropped
+    writeLines(c("dependencies:", "    - python=3.12", "    - uv:", "        - six"), req)
+    expect_error(       BiocBook:::.read_requirements(req), "unsupported block")
+
+})
+
+test_that("the pip: section is installed after the conda packages", {
+
+    prefix <- file.path(tempfile("envs"), "Book-0123456789ab")
+    on.exit(unlink(dirname(prefix), recursive = TRUE), add = TRUE)
+    reqs <- list(conda = c("python=3.12", "pip"), channels = "conda-forge",
+        pip = c("cooler==0.10.4", "h5py==3.16.0"))
+    calls <- character(0)
+    local_mocked_bindings(
+        .setup_conda_env = function(prefix, packages, channels, conda) {
+            calls <<- c(calls, paste("conda:", paste(packages, collapse = " ")))
+            dir.create(prefix, recursive = TRUE)
+        },
+        .pip_install = function(python, packages) {
+            calls <<- c(calls, paste("pip:", python, paste(packages, collapse = " ")))
+        }
+    )
+    BiocBook:::.build_env(prefix, reqs, conda = "micromamba")
+    expect_identical(   calls, c(
+        "conda: python=3.12 pip",
+        paste("pip:", BiocBook:::.env_python(prefix), "cooler==0.10.4 h5py==3.16.0")
+    ))
+    expect_true(        dir.exists(prefix))
+
+    ## Without a pip: section, pip is not run at all
+    calls <- character(0); unlink(prefix, recursive = TRUE)
+    BiocBook:::.build_env(prefix, modifyList(reqs, list(pip = character(0))), "micromamba")
+    expect_identical(   calls, "conda: python=3.12 pip")
+
+})
+
+test_that("an environment whose build fails is not left behind", {
+
+    prefix <- file.path(tempfile("envs"), "Book-0123456789ab")
+    on.exit(unlink(dirname(prefix), recursive = TRUE), add = TRUE)
+    local_mocked_bindings(
+        .setup_conda_env = function(prefix, packages, channels, conda) {
+            dir.create(prefix, recursive = TRUE)
+        },
+        .pip_install = function(python, packages) stop("no wheel for this machine")
+    )
+    reqs <- list(conda = "python=3.12", channels = NULL, pip = "cooler==0.10.4")
+
+    ## Otherwise the next render would re-use it as if it were complete
+    expect_error(       BiocBook:::.build_env(prefix, reqs, "micromamba"), "no wheel")
+    expect_false(       dir.exists(prefix))
+
+})
+
+test_that(".prepend_path() puts a directory first on the PATH, once", {
+
+    old_path <- Sys.getenv("PATH")
+    on.exit(Sys.setenv(PATH = old_path), add = TRUE)
+    dir <- tempfile("bin")
+    BiocBook:::.prepend_path(dir)
+    BiocBook:::.prepend_path(dir)
+    path <- strsplit(Sys.getenv("PATH"), .Platform$path.sep, fixed = TRUE)[[1]]
+    expect_identical(   path[1], dir)
+    expect_identical(   sum(path == dir), 1L)
 
 })
 
