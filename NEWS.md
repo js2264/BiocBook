@@ -17,6 +17,10 @@
   `python` has started.
 - `llms.txt` lists the packages of the `pip:` section after the `conda`
   ones.
+- New books are created from template 1.1.1, whose `inst/requirements.yml`
+  declares the `python` packages a book imports under `pip:`, and keeps
+  `conda` for `python` itself and for command-line tools, rather than pinning
+  `matplotlib` below 3.11.
 
 ## Bug fixes
 
