@@ -27,7 +27,31 @@
 #' markers, and replaced rather than duplicated. It also tidies two quirks of
 #' `quarto`'s output: chapter numbers rendered as raw `pandoc` spans in
 #' `llms.txt` links, and code blocks labelled `downlit` (by `code-link: true`)
-#' rather than `r` in the `.llms.md` pages.
+#' rather than `r` in the Markdown copies of the pages.
+#'
+#' @section Markdown copies of the pages:
+#'
+#' `enrich_llms_txt()` renames the Markdown copy of each page from
+#' `<page>.llms.md` to `<page>.md`, so that a page's Markdown lives at its URL
+#' with `.md` in place of `.html` (e.g. `pages/intro.md` for
+#' `pages/intro.html`). The links of `llms.txt`, and those between the copies,
+#' follow. It then links every page to its copy:
+#'
+#' - in the page's `<head>`, with
+#'   `<link rel="alternate" type="text/markdown" href="intro.md">`, which is
+#'   how AI assistants find the Markdown version of a page;
+#' - under the page's title, with a "View as Markdown" link, for readers. To
+#'   hide it, add `.biocbook-md-link { display: none; }` to the book's
+#'   `inst/assets/book.scss`.
+#'
+#' Unless a site holds a `.nojekyll` file, GitHub Pages runs `Jekyll` on it,
+#' which turns every `.md` file into an HTML page of the same name: the
+#' rendering of `<page>.md` would then collide with the book's own
+#' `<page>.html`. The `biocbook` workflow of books created from template 1.1.3
+#' or later writes `.nojekyll` at the root of the site. In older books, add
+#' `touch llms-index/.nojekyll` to the "Index the llms.txt of every deployed
+#' version" step of `.github/workflows/biocbook.yml`, right after
+#' `mkdir -p llms-index`.
 #'
 #' @param output_dir Folder holding the rendered book. In a post-render
 #'   script, `quarto` provides it as the `QUARTO_PROJECT_OUTPUT_DIR`
@@ -65,8 +89,10 @@ enrich_llms_txt <- function(output_dir = "docs", project_dir = ".") {
 
     if (file.exists(llms_txt)) {
         lines <- .llms_insert_block(readLines(llms_txt, warn = FALSE, encoding = "UTF-8"), block, info)
-        lines <- .llms_tidy_titles(lines)
+        lines <- .llms_twin_links(.llms_tidy_titles(lines))
         .llms_tidy_pages(output_dir)
+        twins <- .llms_rename_twins(output_dir)
+        .llms_link_twins(twins)
         msg <- "Added BiocBook context to {.file {llms_txt}}"
     }
     else {
@@ -266,6 +292,65 @@ enrich_llms_txt <- function(output_dir = "docs", project_dir = ".") {
         if (!identical(fixed, lines)) writeLines(fixed, page, useBytes = TRUE)
     }
     invisible(length(pages))
+}
+
+## quarto writes the Markdown copy of `<page>.html` as `<page>.llms.md`.
+## Renamed `<page>.md`, it lives at the page's URL with `.md` in place of
+## `.html`. A copy left by a previous render is replaced: quarto only writes
+## `<page>.llms.md` for the pages it has just rendered.
+.llms_rename_twins <- function(output_dir) {
+    olds <- list.files(output_dir, pattern = "\\.llms\\.md$", recursive = TRUE, full.names = TRUE)
+    news <- sub("\\.llms\\.md$", ".md", olds)
+    for (i in seq_along(olds)) {
+        lines <- readLines(olds[i], warn = FALSE, encoding = "UTF-8")
+        writeLines(.llms_twin_links(lines), news[i], useBytes = TRUE)
+        unlink(olds[i])
+    }
+    invisible(news)
+}
+
+## Relative links to `<page>.llms.md` (with or without an anchor) point at
+## `<page>.md` instead. URLs are left alone: their scheme has a colon.
+.llms_twin_links <- function(lines) {
+    gsub(
+        "(\\]\\(<?[^):#\\s>]*)\\.llms\\.md(?=[#)>\\s])",
+        "\\1.md",
+        lines,
+        perl = TRUE
+    )
+}
+
+## Every HTML page with a Markdown copy links to it: in its `<head>`, as an
+## alternate version for AI assistants, and under its title, for readers.
+## Pages that already link to it are left as they are.
+.llms_link_twins <- function(twins) {
+    for (md in twins) {
+        html_f <- sub("\\.md$", ".html", md)
+        if (!file.exists(html_f)) next
+        html <- paste(readLines(html_f, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+        href <- basename(md)
+        linked <- html
+        if (!grepl('rel="alternate" type="text/markdown"', linked, fixed = TRUE)) {
+            alternate <- sprintf('<link rel="alternate" type="text/markdown" href="%s">', href)
+            linked <- sub("</head>", paste0(alternate, "\n</head>"), linked, fixed = TRUE)
+        }
+        if (!grepl("biocbook-md-link", linked, fixed = TRUE)) {
+            link <- sprintf(paste0(
+                '<p class="biocbook-md-link small"><a href="%s" type="text/markdown">',
+                '<i class="bi bi-markdown" aria-hidden="true"></i> View as Markdown</a></p>'
+            ), href)
+            ## Right after the title block, else at the top of the page content.
+            ## The navbar comes first and has a `</header>` of its own.
+            if (grepl('id="title-block-header"', linked, fixed = TRUE)) {
+                linked <- sub('(?s)(id="title-block-header".*?</header>)', paste0("\\1", link), linked, perl = TRUE)
+            }
+            else {
+                linked <- sub('(<main[^>]*id="quarto-document-content"[^>]*>)', paste0("\\1", link), linked, perl = TRUE)
+            }
+        }
+        if (!identical(linked, html)) writeLines(linked, html_f, useBytes = TRUE)
+    }
+    invisible(twins)
 }
 
 ## Chapter list for a minimal llms.txt, following `_book.yml`: parts become

@@ -77,13 +77,15 @@ test_that("enrich_llms_txt() adds the BiocBook context to quarto's llms.txt", {
     expect_identical(   llms[5], "<!-- biocbook:start -->")
     expect_true(        "## Pages" %in% llms)
 
-    ## Chapter numbering spans are flattened
-    expect_true(        "- [1 First chapter](pages/first-chapter.llms.md)" %in% llms)
-    expect_true(        "- [2 Py chapter](pages/py-chapter.llms.md)" %in% llms)
+    ## Chapter numbering spans are flattened, and links point at the pages'
+    ## Markdown copies under their new names
+    expect_true(        "- [1 First chapter](pages/first-chapter.md)" %in% llms)
+    expect_true(        "- [2 Py chapter](pages/py-chapter.md)" %in% llms)
     expect_false(       any(grepl("chapter-number|section-identifier", llms)))
 
     ## R code blocks are labelled as such, other languages are left alone
-    page <- readLines(file.path(fx$docs, "pages", "first-chapter.llms.md"))
+    expect_false(       file.exists(file.path(fx$docs, "pages", "first-chapter.llms.md")))
+    page <- readLines(file.path(fx$docs, "pages", "first-chapter.md"))
     expect_false(       any(grepl("downlit", page)))
     expect_true(        "``` r" %in% page)
     expect_true(        "> ``` r" %in% page)
@@ -108,6 +110,72 @@ test_that("enrich_llms_txt() keeps a summary quarto already wrote", {
     llms <- readLines(file.path(fx$docs, "llms.txt"))
     expect_identical(   llms[1:5], c("# A book", "", "> What the book is about.", "", "<!-- biocbook:start -->"))
     expect_length(      grep("^>", llms), 1L)
+
+})
+
+test_that("enrich_llms_txt() names Markdown copies after their page, which links to them", {
+
+    fx <- .llms_fixture()
+    on.exit(unlink(fx$book, recursive = TRUE, force = TRUE), add = TRUE)
+
+    ## As written by quarto 1.11: a navbar, then the page's own title block
+    page_html <- function(title) c(
+        "<!DOCTYPE html>", "<html><head>", "<title>x</title>", "</head><body>",
+        '<header id="quarto-header"><nav class="navbar">Menu</nav></header>',
+        '<main class="content" id="quarto-document-content">',
+        '<header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">',
+        sprintf('<h1 class="title">%s</h1>', title), "</div>", "</header>",
+        "<p>Text.</p>", "</main>", "</body></html>"
+    )
+    writeLines(page_html("Home"), file.path(fx$docs, "index.html"))
+    writeLines(page_html("First chapter"), file.path(fx$docs, "pages", "first-chapter.html"))
+    writeLines(page_html("Py chapter"), file.path(fx$docs, "pages", "py-chapter.html"))
+    writeLines(
+        c(paste("#", fx$book), "", "## Pages", "", "- [Home](index.llms.md)",
+          "- [First chapter](pages/first-chapter.llms.md)"),
+        file.path(fx$docs, "llms.txt")
+    )
+    writeLines(
+        c("# Home", "", "See [the first chapter](pages/first-chapter.llms.md#intro)."),
+        file.path(fx$docs, "index.llms.md")
+    )
+    writeLines(
+        c("# 1 First chapter", "", "Back [home](../index.llms.md), or [elsewhere](https://example.org/notes.llms.md)."),
+        file.path(fx$docs, "pages", "first-chapter.llms.md")
+    )
+    suppressMessages(enrich_llms_txt(fx$docs, project_dir = fx$project))
+
+    ## Each copy lives at its page's URL, with `.md` in place of `.html`
+    expect_true(        file.exists(file.path(fx$docs, "index.md")))
+    expect_true(        file.exists(file.path(fx$docs, "pages", "first-chapter.md")))
+    expect_length(      list.files(fx$docs, pattern = "\\.llms\\.md$", recursive = TRUE), 0L)
+
+    ## Links follow, anchors included, and URLs are left alone
+    llms <- readLines(file.path(fx$docs, "llms.txt"))
+    expect_true(        "- [Home](index.md)" %in% llms)
+    expect_true(        "- [First chapter](pages/first-chapter.md)" %in% llms)
+    expect_true(        any(grepl("(pages/first-chapter.md#intro)", readLines(file.path(fx$docs, "index.md")), fixed = TRUE)))
+    chapter <- readLines(file.path(fx$docs, "pages", "first-chapter.md"))
+    expect_true(        any(grepl("(../index.md)", chapter, fixed = TRUE)))
+    expect_true(        any(grepl("(https://example.org/notes.llms.md)", chapter, fixed = TRUE)))
+
+    ## Pages link to their copy in their <head>, and right under their title
+    html <- readLines(file.path(fx$docs, "pages", "first-chapter.html"))
+    expect_true(        '<link rel="alternate" type="text/markdown" href="first-chapter.md">' %in% html)
+    link <- grep("biocbook-md-link", html)
+    expect_length(      link, 1L)
+    expect_match(       html[link], '^</header><p class="biocbook-md-link small"><a href="first-chapter.md"')
+    expect_true(        link > grep('id="title-block-header"', html))
+    expect_true(        any(grepl('href="index.md"', readLines(file.path(fx$docs, "index.html")), fixed = TRUE)))
+
+    ## A page without a Markdown copy is left alone
+    expect_identical(   readLines(file.path(fx$docs, "pages", "py-chapter.html")), page_html("Py chapter"))
+
+    ## Running it again changes nothing
+    files <- file.path(fx$docs, c("llms.txt", "index.md", "index.html", "pages/first-chapter.md", "pages/first-chapter.html"))
+    before <- lapply(files, readLines)
+    suppressMessages(enrich_llms_txt(fx$docs, project_dir = fx$project))
+    expect_identical(   lapply(files, readLines), before)
 
 })
 

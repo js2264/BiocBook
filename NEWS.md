@@ -1,3 +1,24 @@
+# BiocBook 1.11.7
+
+## New features
+
+- `enrich_llms_txt()` names the Markdown copy of each page after the page,
+  `<page>.md` rather than `quarto`'s `<page>.llms.md`, so that it lives at the
+  page's URL with `.md` in place of `.html` (e.g. `pages/Chapter-2.md` for
+  `pages/Chapter-2.html`). The links of `llms.txt`, and those between the
+  copies, follow.
+- Every page of a book links to its Markdown copy: in its `<head>`
+  (`<link rel="alternate" type="text/markdown">`), for AI assistants, and
+  under its title ("View as Markdown"), for readers. `?BiocBook-llms` says how
+  to hide the latter.
+- New books are created from template 1.1.3, whose `biocbook` GitHub workflow
+  writes a `.nojekyll` file at the root of the book's GitHub Pages site.
+  Otherwise, GitHub Pages runs `Jekyll`, which renders every `.md` file into
+  an HTML page of the same name, colliding with the book's own pages. Books
+  created from an earlier template need the same change: in
+  `.github/workflows/biocbook.yml`, add `touch llms-index/.nojekyll` right
+  after `mkdir -p llms-index`.
+
 # BiocBook 1.11.6
 
 ## Bug fixes
