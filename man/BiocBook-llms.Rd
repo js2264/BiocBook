@@ -44,8 +44,35 @@ is kept between \verb{<!-- biocbook:start -->} and \verb{<!-- biocbook:end -->}
 markers, and replaced rather than duplicated. It also tidies two quirks of
 \code{quarto}'s output: chapter numbers rendered as raw \code{pandoc} spans in
 \code{llms.txt} links, and code blocks labelled \code{downlit} (by \code{code-link: true})
-rather than \code{r} in the \code{.llms.md} pages.
+rather than \code{r} in the Markdown copies of the pages.
 }
+\section{Markdown copies of the pages}{
+
+
+\code{enrich_llms_txt()} renames the Markdown copy of each page from
+\verb{<page>.llms.md} to \verb{<page>.md}, so that a page's Markdown lives at its URL
+with \code{.md} in place of \code{.html} (e.g. \code{pages/intro.md} for
+\code{pages/intro.html}). The links of \code{llms.txt}, and those between the copies,
+follow. It then links every page to its copy:
+\itemize{
+\item in the page's \verb{<head>}, with
+\verb{<link rel="alternate" type="text/markdown" href="intro.md">}, which is
+how AI assistants find the Markdown version of a page;
+\item under the page's title, with a "View as Markdown" link, for readers. To
+hide it, add \verb{.biocbook-md-link \{ display: none; \}} to the book's
+\code{inst/assets/book.scss}.
+}
+
+Unless a site holds a \code{.nojekyll} file, GitHub Pages runs \code{Jekyll} on it,
+which turns every \code{.md} file into an HTML page of the same name: the
+rendering of \verb{<page>.md} would then collide with the book's own
+\verb{<page>.html}. The \code{biocbook} workflow of books created from template 1.1.3
+or later writes \code{.nojekyll} at the root of the site. In older books, add
+\verb{touch llms-index/.nojekyll} to the "Index the llms.txt of every deployed
+version" step of \code{.github/workflows/biocbook.yml}, right after
+\verb{mkdir -p llms-index}.
+}
+
 \examples{
 ## In practice, `enrich_llms_txt()` runs after every render of the book,
 ## from `inst/assets/post-render.R`

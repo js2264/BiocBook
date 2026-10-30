@@ -50,8 +50,14 @@ test_that("a new book renders python chunks through reticulate", {
     links <- links[!grepl("^[a-z]+://", links)]
     expect_true(        length(links) >= 2L)
     expect_true(        all(file.exists(file.path(docs, links))))
+    ## With quarto >= 1.11, each page has a Markdown copy at its URL with `.md`
+    ## in place of `.html`, and links to it
     if (!is.null(profile)) {
-        expect_true(    file.exists(file.path(docs, "pages", "py-chapter.llms.md")))
+        expect_true(    file.exists(file.path(docs, "pages", "py-chapter.md")))
+        expect_false(   file.exists(file.path(docs, "pages", "py-chapter.llms.md")))
+        page <- readLines(file.path(docs, "pages", "py-chapter.html"), warn = FALSE)
+        expect_true(    any(grepl('<link rel="alternate" type="text/markdown" href="py-chapter.md">', page, fixed = TRUE)))
+        expect_true(    any(grepl('class="biocbook-md-link', page, fixed = TRUE)))
     }
 
 })
