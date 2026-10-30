@@ -1,3 +1,14 @@
+# BiocBook 1.11.6
+
+## Bug fixes
+
+- New books are created from template 1.1.2, whose `biocbook` GitHub
+  workflow no longer uses `catchpoint/workflow-telemetry-action`. Its
+  repository no longer exists, so every run failed before building
+  anything. Books created from an earlier template need the same change:
+  remove the "Collect Workflow Telemetry" step from
+  `.github/workflows/biocbook.yml`.
+
 # BiocBook 1.11.5
 
 ## New features
