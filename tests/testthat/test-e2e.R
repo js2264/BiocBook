@@ -18,6 +18,15 @@ test_that("a new book renders python chunks through reticulate", {
         "```{r}", "cat('y from R:', reticulate::py$y)", "```",
         file = page, sep = "\n", append = TRUE)
 
+    ## h5py from PyPI, imported once R has loaded the system's OpenSSL (as R
+    ## packages using it do on the Bioconductor builders): conda's h5py fails
+    ## there, as its HDF5 links a libcurl needing a more recent OpenSSL
+    cat("", "    - pip:", "        - h5py==3.16.0",
+        file = file.path(book, "inst", "requirements.yml"), sep = "\n", append = TRUE)
+    cat("", "```{r}", "invisible(openssl::sha256('loads the system libssl'))", "```", "",
+        "```{python}", "import h5py", "print('h5py from PyPI:', h5py.__version__)", "```",
+        file = page, sep = "\n", append = TRUE)
+
     ## Render the way `vignettes/Makefile` does: with the `llms` profile when
     ## quarto supports it
     profile <- if (quarto::quarto_version() >= "1.11") "llms" else NULL
@@ -28,12 +37,14 @@ test_that("a new book renders python chunks through reticulate", {
     html <- readLines(file.path(docs, "pages", "py-chapter.html"), warn = FALSE)
     expect_true(        any(grepl("sum from python: 6", html)))
     expect_true(        any(grepl("y from R: 42", html)))
+    expect_true(        any(grepl("h5py from PyPI: 3.16.0", html)))
 
     ## The post-render hook wrote llms.txt, with BiocBook context and only
     ## working links
     llms <- readLines(file.path(docs, "llms.txt"), warn = FALSE)
     expect_true(        "<!-- biocbook:start -->" %in% llms)
     expect_true(        any(grepl("Python environment (conda)", llms, fixed = TRUE)))
+    expect_true(        any(grepl("from PyPI: `h5py==3.16.0`", llms, fixed = TRUE)))
     links <- unlist(regmatches(llms, gregexpr("\\]\\([^)]+\\)", llms)))
     links <- gsub("^\\]\\(|\\)$", "", links)
     links <- links[!grepl("^[a-z]+://", links)]

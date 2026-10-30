@@ -12,12 +12,13 @@
 #' The consequence is that the `python` packages a book uses must be installed
 #' at build time, wherever the book is built. `setup_python()` does that from
 #' within the book itself, building the `conda` environment declared in
-#' `inst/requirements.yml`, so the book carries its own `python` environment
-#' rather than relying on one being present.
+#' `inst/requirements.yml` (including its `pip:` section, if any), so the book
+#' carries its own `python` environment rather than relying on one being
+#' present.
 #'
 #' - `setup_python()`: provision and activate the book's `conda` environment
-#'   from `inst/requirements.yml`. Call it from any page that needs
-#'   `python`.
+#'   from `inst/requirements.yml`, and put its command-line tools on the
+#'   `PATH`. Call it from any page that needs `python`.
 #' - `python_envs()`: list the `conda` environments `setup_python()` has
 #'   cached on this machine, and remove the ones that are no longer needed.
 #' - `micromamba()`: path to the `micromamba` binary the book provisions with,
@@ -60,19 +61,62 @@
 #' -- and, decisively, the Bioconductor builders provide `python3` but not
 #' `jupyter`, so a `jupyter` page cannot be rendered there at all.
 #'
-#' @section matplotlib on the Bioconductor images:
+#' @section Python libraries and the R session:
 #'
-#' `matplotlib` >= 3.11, as built by `conda-forge`, links `libraqm`, which
-#' needs a more recent `harfbuzz` than the Bioconductor images (Ubuntu 24.04)
-#' ship. The `R` session has already loaded the system's `harfbuzz`
-#' when a page starts rendering, and a process cannot load a second library
-#' under the same name: `import matplotlib` then fails with
-#' `undefined symbol: hb_ft_font_get_ft_face`, directly or through any package
-#' that uses it. Importing `python` packages before attaching `R` packages does
-#' not help. Pin it below 3.11 in `inst/requirements.yml` instead, e.g.
-#' `- matplotlib-base=3.10`.
+#' `python` chunks run through `reticulate`, inside the `R` process that
+#' renders the page. A process holds a single copy of each shared library
+#' name: once `R` has loaded one, e.g. the system's `libssl.so.3` through an
+#' `R` package using OpenSSL, a `python` package needing a library of the same
+#' name gets that copy, whatever version it was built against. `conda`
+#' packages link such libraries under their usual names, and are usually built
+#' against more recent versions than a Linux distribution ships, hence errors
+#' like these on the Bioconductor builders (Ubuntu 24.04):
 #'
-#' @param requirements Path to a `conda` environment file. If `NULL`,
+#' - `ImportError: ... libssl.so.3: version 'OPENSSL_3.2.0' not found
+#'   (required by .../libcurl.so.4)`, importing `h5py` (and `cooler`), whose
+#'   `HDF5` links `libcurl`;
+#' - `undefined symbol: hb_ft_font_get_ft_face`, importing `matplotlib` >=
+#'   3.11, which links `libraqm` and therefore `harfbuzz`.
+#'
+#' Which libraries `R` has loaded first depends on the machine and on the
+#' page, so a book can build in its `Docker` image and fail on the
+#' Bioconductor builders, and importing `python` packages before attaching
+#' `R` packages does not help.
+#'
+#' Wheels from PyPI carry their compiled dependencies under names of their own,
+#' so they cannot pick up a library `R` has loaded. Declare the packages that
+#' `python` chunks import in a `pip:` section of `inst/requirements.yml`:
+#' `setup_python()` installs them with the environment's own `pip`, once the
+#' `conda` packages are in place.
+#'
+#' ```
+#' dependencies:
+#'     - python=3.12
+#'     - samtools=1.24
+#'     - pip:
+#'         - cooler==0.10.4
+#'         - matplotlib==3.11.2
+#' ```
+#'
+#' - List under `pip:`, with pinned versions, every package that `python`
+#'   chunks import. Their own compiled dependencies (`numpy`, `h5py`...) then
+#'   come from PyPI too. `pip` does not replace a package that `conda` has
+#'   already installed, so do not let a `conda` package bring them in.
+#' - Keep the `conda` part for `python` itself and for command-line tools,
+#'   e.g. `samtools` from `bioconda`. A tool runs in its own process, with its
+#'   own libraries, so it cannot clash with the `R` session. `setup_python()`
+#'   puts the environment's tools on the `PATH`, for `system2()`, `bash` chunks
+#'   and `python`'s `subprocess`.
+#' - Some `conda` packages bring `python` libraries along: `bioconda`'s
+#'   `deeptools` pulls `numpy`, `matplotlib`, `pysam` and `pyBigWig` from
+#'   `conda`. Install such a package under `pip:` instead (`deeptools` is on
+#'   PyPI).
+#' - A package without a wheel for the build machine (Linux `x86_64` for the
+#'   Bioconductor builders) is compiled from source, against the libraries of
+#'   the environment, and can clash again.
+#'
+#' @param requirements Path to a `conda` environment file, which may hold a
+#'   `pip:` section (see "Python libraries and the R session"). If `NULL`,
 #'   `inst/requirements.yml` is located by walking up from the working directory
 #'   to the folder holding `_quarto.yml`, which works both while `quarto`
 #'   renders a page and from a normal R session.
@@ -137,6 +181,7 @@ setup_python <- function(
             "Using the `python` already configured for this session: \\
             {.file {chosen}}"
         ))
+        .prepend_path(dirname(chosen))
         return(invisible(chosen))
     }
 
@@ -152,22 +197,10 @@ setup_python <- function(
                {.code edit_requirements_yml(book)}."
     ))
 
-    spec <- yaml::read_yaml(requirements)
+    reqs <- .read_requirements(requirements)
     if (is.null(envname)) {
-        envname <- if (is.null(spec[["name"]])) "BiocBook" else trimws(spec[["name"]])
+        envname <- if (is.null(reqs$name)) "BiocBook" else trimws(reqs$name)
     }
-
-    ## `conda` environment files may carry a `pip:` block. This book stack is
-    ## deliberately conda-only, so say so rather than silently dropping packages.
-    deps <- spec[["dependencies"]]
-    is_pip <- vapply(deps, is.list, logical(1))
-    if (any(is_pip)) cli::cli_abort(c(
-        "{.file {basename(requirements)}} contains a `pip:` section.",
-        "x" = "`BiocBook` provisions `conda` environments only.",
-        "i" = "Declare these packages as `conda` packages instead, from the \\
-               `conda-forge` or `bioconda` channels."
-    ))
-    packages <- unlist(deps)
 
     ## Address the environment by its full path, never by name. Environments
     ## of the same name can exist under several `conda` root prefixes at once,
@@ -183,7 +216,7 @@ setup_python <- function(
         cli::cli_alert_info(cli::col_grey(
             "Creating `conda` environment {.file {prefix}}"
         ))
-        .setup_conda_env(prefix, packages, spec[["channels"]], conda)
+        .build_env(prefix, reqs, conda)
     }
 
     ## `reticulate` rediscovers an environment's `conda` binary from the
@@ -201,11 +234,25 @@ setup_python <- function(
             because the `conda` binary that created it has moved. Rebuilding it."
         ))
         unlink(prefix, recursive = TRUE, force = TRUE)
-        .setup_conda_env(prefix, packages, spec[["channels"]], conda)
+        .build_env(prefix, reqs, conda)
         reticulate::use_condaenv(prefix, required = TRUE, conda = conda)
     }
 
+    ## Command-line tools of the environment (e.g. `samtools`) must be found by
+    ## `system2()`, `bash` chunks and `python`'s `subprocess` from the first
+    ## chunk on. `reticulate` only adds the environment to the `PATH` once
+    ## `python` starts.
+    .prepend_path(dirname(.env_python(prefix)))
+
     invisible(prefix)
+}
+
+.prepend_path <- function(dir) {
+    path <- strsplit(Sys.getenv("PATH"), .Platform$path.sep, fixed = TRUE)[[1]]
+    if (!dir %in% path) {
+        Sys.setenv(PATH = paste(c(dir, path), collapse = .Platform$path.sep))
+    }
+    invisible(dir)
 }
 
 ## Book environments live under BiocBook's own cache, so that a book always
@@ -281,6 +328,70 @@ python_envs <- function(remove = NULL) {
         path, recursive = TRUE, full.names = TRUE, all.files = TRUE, no.. = TRUE
     )
     round(sum(file.size(files), na.rm = TRUE) / 1024^2, 1)
+}
+
+## What a `conda` environment file declares: its `conda` packages, and the
+## packages of its `pip:` section, if any. `pip` itself must be in the
+## environment to install that section, so add it when the file does not.
+.read_requirements <- function(requirements) {
+    spec <- yaml::read_yaml(requirements, readLines.warn = FALSE)
+    deps <- spec[["dependencies"]]
+    is_block <- vapply(deps, is.list, logical(1))
+    blocks <- unlist(lapply(deps[is_block], names))
+    if (length(setdiff(blocks, "pip"))) cli::cli_abort(c(
+        "{.file {basename(requirements)}} declares an unsupported block of \\
+         dependencies: {.val {setdiff(blocks, 'pip')}}.",
+        "i" = "List `conda` packages, and `PyPI` packages under `pip:`."
+    ))
+    pip <- unlist(lapply(deps[is_block], `[[`, "pip"), use.names = FALSE)
+    conda <- unlist(deps[!is_block], use.names = FALSE)
+    if (length(pip) && !any(grepl("^([^:]+::)?pip([^[:alnum:]_.-]|$)", conda))) {
+        conda <- c(conda, "pip")
+    }
+    list(
+        name = spec[["name"]],
+        channels = unlist(spec[["channels"]]),
+        conda = conda,
+        pip = pip
+    )
+}
+
+## Build the environment: its `conda` packages first, then its `pip:` section
+## with the environment's own interpreter. A build that fails half way is
+## removed, or the next render would re-use it as if it were complete.
+.build_env <- function(prefix, reqs, conda) {
+    built <- FALSE
+    on.exit(if (!built) unlink(prefix, recursive = TRUE, force = TRUE), add = TRUE)
+    .setup_conda_env(prefix, reqs$conda, reqs$channels, conda)
+    if (length(reqs$pip)) .pip_install(.env_python(prefix), reqs$pip)
+    built <- TRUE
+    invisible(prefix)
+}
+
+.env_python <- function(prefix) {
+    if (.Platform$OS.type == "windows") {
+        file.path(prefix, "python.exe")
+    } else {
+        file.path(prefix, "bin", "python")
+    }
+}
+
+## Wheels from PyPI carry their compiled dependencies under names of their
+## own, so what `pip` installs here never binds to a library the `R` session
+## has already loaded (see "Python libraries and the R session").
+.pip_install <- function(python, packages) {
+    cli::cli_alert_info(cli::col_grey(
+        "Installing {length(packages)} package{?s} from PyPI: {.val {packages}}"
+    ))
+    status <- system2(python, c(
+        "-m", "pip", "install", "--no-input", "--disable-pip-version-check",
+        shQuote(packages)
+    ))
+    if (!identical(as.integer(status), 0L)) cli::cli_abort(c(
+        "Could not install the `pip:` section of the book's environment.",
+        "x" = "{.code pip install} exited with status {status}."
+    ))
+    invisible(packages)
 }
 
 ## Deliberately `conda create` rather than `conda env create -f <file>`.

@@ -111,6 +111,23 @@ test_that("enrich_llms_txt() keeps a summary quarto already wrote", {
 
 })
 
+test_that("enrich_llms_txt() lists the pip: section after the conda packages", {
+
+    fx <- .llms_fixture()
+    on.exit(unlink(fx$book, recursive = TRUE, force = TRUE), add = TRUE)
+    writeLines(
+        c("dependencies:", "    - python=3.12", "    - samtools=1.24", "    - pip:",
+          "        - cooler==0.10.4"),
+        file.path(fx$project, "requirements.yml")
+    )
+    out <- suppressMessages(enrich_llms_txt(fx$docs, project_dir = fx$project))
+    expect_true(        any(grepl(
+        "conda): `python=3.12`, `samtools=1.24`, `pip`; from PyPI: `cooler==0.10.4`, provisioned",
+        readLines(out), fixed = TRUE
+    )))
+
+})
+
 test_that("enrich_llms_txt() only mentions python when the book runs some", {
 
     book <- paste0("LLMS", paste(sample(LETTERS, 6, replace = TRUE), collapse = ""))
